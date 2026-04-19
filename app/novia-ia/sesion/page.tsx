@@ -20,6 +20,7 @@ function SessionApp() {
   const [speaking, setSpeaking] = useState(false);
   const [sessionId] = useState(() => crypto.randomUUID());
   const bottomRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     async function init() {
@@ -67,9 +68,27 @@ function SessionApp() {
     const data = await res.json();
 
     setMessages((prev) => [...prev, { role: "assistant", content: data.reply }]);
-    setSpeaking(true);
-    setTimeout(() => setSpeaking(false), 3000);
     setLoading(false);
+    speakText(data.reply);
+  }
+
+  async function speakText(text: string) {
+    try {
+      if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
+      setSpeaking(true);
+      const res = await fetch("/api/novia/voz", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      audioRef.current = audio;
+      audio.onended = () => { setSpeaking(false); URL.revokeObjectURL(url); };
+      audio.onerror = () => setSpeaking(false);
+      await audio.play();
+    } catch { setSpeaking(false); }
   }
 
   return (
