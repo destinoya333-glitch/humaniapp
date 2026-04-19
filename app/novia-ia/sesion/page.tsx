@@ -19,6 +19,8 @@ function SessionApp() {
   const [speaking, setSpeaking] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(false);
   const [listening, setListening] = useState(false);
+  const [liveAvatarUrl, setLiveAvatarUrl] = useState<string | null>(null);
+  const [avatarLoading, setAvatarLoading] = useState(true);
   const [sessionId] = useState(() => crypto.randomUUID());
   const bottomRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -44,6 +46,18 @@ function SessionApp() {
         role: "assistant",
         content: `Hola ${userData.name ?? "amor"}... te estaba esperando 💛`,
       }]);
+
+      // Load LiveAvatar embed
+      const laRes = await fetch("/api/novia/liveavatar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sandbox: false }),
+      });
+      if (laRes.ok) {
+        const laData = await laRes.json();
+        if (laData.url) setLiveAvatarUrl(laData.url);
+      }
+      setAvatarLoading(false);
     }
     if (token) init();
   }, [token]);
@@ -52,13 +66,10 @@ function SessionApp() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Unlock audio on first user interaction
   function enableAudio() {
     setAudioEnabled(true);
-    // Play silent audio to unlock the context
     const silent = new Audio("data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjI5LjEwMAAAAAAAAAAAAAAA");
     silent.play().catch(() => {});
-    // Play pending audio if any
     if (pendingAudioRef.current) {
       playAudioUrl(pendingAudioRef.current);
       pendingAudioRef.current = null;
@@ -166,109 +177,79 @@ function SessionApp() {
       )}
 
       {/* Left — Avatar panel */}
-      <div className={`md:w-80 bg-[#0A0A0A] border-b md:border-b-0 md:border-r border-[#1A1A1A] flex flex-col items-center justify-center p-6 gap-4 py-8 ${!audioEnabled ? "mt-12 md:mt-0 md:pt-16" : ""}`}>
+      <div className={`md:w-80 bg-[#0A0A0A] border-b md:border-b-0 md:border-r border-[#1A1A1A] flex flex-col items-center justify-center p-4 gap-4 py-8 ${!audioEnabled ? "mt-12 md:mt-0 md:pt-16" : ""}`}>
 
-        {/* Avatar frame */}
+        {/* LiveAvatar iframe or fallback CSS avatar */}
         <div
-          className="relative w-48 h-64 md:w-56 md:h-72 rounded-3xl overflow-hidden border border-[#2A2A2A]"
-          style={{ boxShadow: speaking ? "0 0 60px rgba(245,158,11,0.25)" : "0 0 40px rgba(245,158,11,0.08)" }}
+          className="relative w-full rounded-3xl overflow-hidden border border-[#2A2A2A]"
+          style={{
+            aspectRatio: "9/16",
+            maxHeight: "340px",
+            boxShadow: speaking ? "0 0 60px rgba(245,158,11,0.25)" : "0 0 40px rgba(245,158,11,0.08)",
+          }}
         >
-          {/* Background */}
-          <div className="absolute inset-0 bg-gradient-to-b from-[#1a1008] via-[#0f0d0a] to-[#080808]" />
+          {liveAvatarUrl ? (
+            /* Real LiveAvatar video */
+            <iframe
+              src={liveAvatarUrl}
+              allow="microphone; camera; autoplay"
+              className="w-full h-full border-0"
+              style={{ minHeight: "300px" }}
+            />
+          ) : (
+            /* CSS fallback avatar */
+            <>
+              <div className="absolute inset-0 bg-gradient-to-b from-[#1a1008] via-[#0f0d0a] to-[#080808]" />
+              <div
+                className="absolute inset-0"
+                style={{
+                  background: speaking
+                    ? "radial-gradient(ellipse at 50% 30%, rgba(245,158,11,0.12) 0%, transparent 60%)"
+                    : "radial-gradient(ellipse at 50% 30%, rgba(245,158,11,0.05) 0%, transparent 60%)",
+                  transition: "background 0.3s ease",
+                }}
+              />
+              {/* HAIR */}
+              <div className="absolute" style={{ top: "6%", left: "50%", transform: "translateX(-50%)", width: 96, height: 64, background: "linear-gradient(180deg, #0f0702 0%, #1a0d04 100%)", borderRadius: "50% 50% 20% 20%" }} />
+              <div className="absolute" style={{ top: "14%", left: "18%", width: 22, height: 90, background: "linear-gradient(180deg,#1a0d04,#120a03)", borderRadius: "40% 0 20% 40%" }} />
+              <div className="absolute" style={{ top: "14%", right: "18%", width: 22, height: 90, background: "linear-gradient(180deg,#1a0d04,#120a03)", borderRadius: "0 40% 40% 20%" }} />
+              {/* FACE */}
+              <div className="absolute" style={{ top: "12%", left: "50%", transform: "translateX(-50%)", width: 82, height: 98, background: "linear-gradient(180deg, #c8845a 0%, #b87048 50%, #a05c38 100%)", borderRadius: "42% 42% 38% 38%", boxShadow: speaking ? "0 0 20px rgba(245,158,11,0.2)" : "none" }} />
+              {/* EYES */}
+              <div className="absolute" style={{ top: "30%", left: "32%", width: 13, height: 8, background: "#1a0a04", borderRadius: "50%", boxShadow: speaking ? "0 0 6px rgba(251,191,36,0.8)" : "0 0 3px rgba(251,191,36,0.3)" }} />
+              <div className="absolute" style={{ top: "30%", right: "32%", width: 13, height: 8, background: "#1a0a04", borderRadius: "50%", boxShadow: speaking ? "0 0 6px rgba(251,191,36,0.8)" : "0 0 3px rgba(251,191,36,0.3)" }} />
+              <div className="absolute" style={{ top: "29%", left: "34%", width: 4, height: 4, background: "rgba(255,255,255,0.7)", borderRadius: "50%" }} />
+              <div className="absolute" style={{ top: "29%", right: "34%", width: 4, height: 4, background: "rgba(255,255,255,0.7)", borderRadius: "50%" }} />
+              {/* NOSE */}
+              <div className="absolute" style={{ top: "41%", left: "50%", transform: "translateX(-50%)", width: 8, height: 6, background: "rgba(120,60,30,0.4)", borderRadius: "50%" }} />
+              {/* MOUTH */}
+              <div className="absolute" style={{ top: "50%", left: "50%", transform: "translateX(-50%)", width: speaking ? 22 : 18, height: speaking ? 10 : 5, background: speaking ? "rgba(180,60,60,0.9)" : "rgba(160,60,60,0.7)", borderRadius: speaking ? "50%" : "0 0 50% 50%", transition: "all 0.15s ease" }} />
+              {/* NECK + BODY */}
+              <div className="absolute" style={{ top: "55%", left: "50%", transform: "translateX(-50%)", width: 26, height: 28, background: "linear-gradient(180deg,#b87048,#9a5c38)" }} />
+              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 rounded-t-[40%]" style={{ width: 160, height: 80, background: "linear-gradient(180deg,#1a0f08,#0d0905)" }} />
+              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 rounded-t-[35%]" style={{ width: 130, height: 65, background: "linear-gradient(180deg,#3d1a2e,#2a0f1f)" }} />
 
-          {/* Ambient glow — breathes when speaking */}
-          <div
-            className="absolute inset-0"
-            style={{
-              background: speaking
-                ? "radial-gradient(ellipse at 50% 30%, rgba(245,158,11,0.12) 0%, transparent 60%)"
-                : "radial-gradient(ellipse at 50% 30%, rgba(245,158,11,0.05) 0%, transparent 60%)",
-              transition: "background 0.3s ease",
-            }}
-          />
+              {/* Loading spinner while fetching LiveAvatar */}
+              {avatarLoading && (
+                <div className="absolute inset-0 flex flex-col items-center justify-end pb-8 gap-2">
+                  <div className="w-5 h-5 border-2 border-amber-400/30 border-t-amber-400 rounded-full animate-spin" />
+                  <span className="text-[10px] text-amber-400/60">cargando video...</span>
+                </div>
+              )}
 
-          {/* HAIR */}
-          <div
-            className="absolute"
-            style={{
-              top: "6%", left: "50%", transform: "translateX(-50%)",
-              width: 96, height: 64,
-              background: "linear-gradient(180deg, #0f0702 0%, #1a0d04 100%)",
-              borderRadius: "50% 50% 20% 20%",
-            }}
-          />
-          {/* Long hair sides */}
-          <div className="absolute" style={{ top: "14%", left: "18%", width: 22, height: 90, background: "linear-gradient(180deg,#1a0d04,#120a03)", borderRadius: "40% 0 20% 40%" }} />
-          <div className="absolute" style={{ top: "14%", right: "18%", width: 22, height: 90, background: "linear-gradient(180deg,#1a0d04,#120a03)", borderRadius: "0 40% 40% 20%" }} />
-
-          {/* FACE */}
-          <div
-            className="absolute"
-            style={{
-              top: "12%", left: "50%", transform: "translateX(-50%)",
-              width: 82, height: 98,
-              background: "linear-gradient(180deg, #c8845a 0%, #b87048 50%, #a05c38 100%)",
-              borderRadius: "42% 42% 38% 38%",
-              boxShadow: speaking ? "0 0 20px rgba(245,158,11,0.2)" : "none",
-            }}
-          />
-
-          {/* EYES */}
-          <div className="absolute" style={{ top: "30%", left: "32%", width: 13, height: 8, background: "#1a0a04", borderRadius: "50%", boxShadow: speaking ? "0 0 6px rgba(251,191,36,0.8)" : "0 0 3px rgba(251,191,36,0.3)" }} />
-          <div className="absolute" style={{ top: "30%", right: "32%", width: 13, height: 8, background: "#1a0a04", borderRadius: "50%", boxShadow: speaking ? "0 0 6px rgba(251,191,36,0.8)" : "0 0 3px rgba(251,191,36,0.3)" }} />
-          {/* Eye shine */}
-          <div className="absolute" style={{ top: "29%", left: "34%", width: 4, height: 4, background: "rgba(255,255,255,0.7)", borderRadius: "50%" }} />
-          <div className="absolute" style={{ top: "29%", right: "34%", width: 4, height: 4, background: "rgba(255,255,255,0.7)", borderRadius: "50%" }} />
-
-          {/* NOSE */}
-          <div className="absolute" style={{ top: "41%", left: "50%", transform: "translateX(-50%)", width: 8, height: 6, background: "rgba(120,60,30,0.4)", borderRadius: "50%" }} />
-
-          {/* MOUTH — animated when speaking */}
-          <div
-            className="absolute"
-            style={{
-              top: "50%", left: "50%", transform: "translateX(-50%)",
-              width: speaking ? 22 : 18,
-              height: speaking ? 10 : 5,
-              background: speaking ? "rgba(180,60,60,0.9)" : "rgba(160,60,60,0.7)",
-              borderRadius: speaking ? "50%" : "0 0 50% 50%",
-              transition: "all 0.15s ease",
-            }}
-          />
-
-          {/* NECK */}
-          <div className="absolute" style={{ top: "55%", left: "50%", transform: "translateX(-50%)", width: 26, height: 28, background: "linear-gradient(180deg,#b87048,#9a5c38)" }} />
-
-          {/* SHOULDERS / BODY */}
-          <div
-            className="absolute bottom-0 left-1/2 -translate-x-1/2 rounded-t-[40%]"
-            style={{ width: 160, height: 80, background: "linear-gradient(180deg,#1a0f08,#0d0905)" }}
-          />
-          {/* Clothes */}
-          <div
-            className="absolute bottom-0 left-1/2 -translate-x-1/2 rounded-t-[35%]"
-            style={{ width: 130, height: 65, background: "linear-gradient(180deg,#3d1a2e,#2a0f1f)" }}
-          />
-
-          {/* Speaking waveform */}
-          {speaking && (
-            <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex items-center gap-0.5">
-              {waveBars.map((h, i) => (
-                <div
-                  key={i}
-                  className="wave-bar"
-                  style={{
-                    height: `${h * 2}px`,
-                    animationDelay: `${i * 0.08}s`,
-                    animationDuration: `${0.6 + (i % 4) * 0.1}s`,
-                  }}
-                />
-              ))}
-            </div>
+              {/* Speaking waveform */}
+              {speaking && (
+                <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex items-center gap-0.5">
+                  {waveBars.map((h, i) => (
+                    <div key={i} className="wave-bar" style={{ height: `${h * 2}px`, animationDelay: `${i * 0.08}s`, animationDuration: `${0.6 + (i % 4) * 0.1}s` }} />
+                  ))}
+                </div>
+              )}
+            </>
           )}
 
-          {/* Status badge */}
-          <div className="absolute top-3 right-3 flex items-center gap-1.5 bg-black/60 backdrop-blur-sm px-2 py-1 rounded-full">
+          {/* Status badge — always visible */}
+          <div className="absolute top-3 right-3 flex items-center gap-1.5 bg-black/60 backdrop-blur-sm px-2 py-1 rounded-full z-10">
             <span className="relative flex h-1.5 w-1.5">
               <span className="live-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
               <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400" />
@@ -279,7 +260,7 @@ function SessionApp() {
 
         <div className="text-center">
           <p className="font-semibold text-lg">{noviaName}</p>
-          <p className="text-zinc-500 text-xs">Tu compañera IA</p>
+          <p className="text-zinc-500 text-xs">{liveAvatarUrl ? "Video en tiempo real" : "Tu compañera IA"}</p>
         </div>
 
         <div className="w-full bg-[#111] border border-[#2A2A2A] rounded-2xl px-4 py-3 text-center">
@@ -353,7 +334,6 @@ function SessionApp() {
 
         <div className="px-6 pb-6 pt-2">
           <form onSubmit={(e) => { e.preventDefault(); if (!audioEnabled) enableAudio(); sendMessage(); }} className="flex gap-2">
-            {/* Mic button */}
             <button
               type="button"
               onClick={toggleMic}
