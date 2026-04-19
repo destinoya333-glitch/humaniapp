@@ -1,9 +1,19 @@
 "use client";
 
-import { useState, useEffect, useRef, Suspense } from "react";
+import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import { Room, RoomEvent, Track } from "livekit-client";
 
 interface Message { role: "user" | "assistant"; content: string; }
+
+interface LASession {
+  session_id: string;
+  livekit_url: string;
+  livekit_token: string;
+  ws_url: string;
+}
+
+const CHUNK_SIZE = 43200; // ~1s of PCM 24kHz 16-bit
 
 function SessionApp() {
   const params = useSearchParams();
@@ -16,13 +26,63 @@ function SessionApp() {
   const [minutesLeft, setMinutesLeft] = useState(0);
   const [speaking, setSpeaking] = useState(false);
   const [listening, setListening] = useState(false);
-  const [embedUrl, setEmbedUrl] = useState<string | null>(null);
-  const [embedLoading, setEmbedLoading] = useState(true);
+  const [laStatus, setLaStatus] = useState<"loading" | "ready" | "error">("loading");
   const [sessionId] = useState(() => crypto.randomUUID());
 
   const bottomRef = useRef<HTMLDivElement>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const roomRef = useRef<Room | null>(null);
+  const wsRef = useRef<WebSocket | null>(null);
+  const wsReadyRef = useRef(false);
   const recognitionRef = useRef<{ stop: () => void } | null>(null);
+
+  const connectLiveAvatar = useCallback(async () => {
+    try {
+      const res = await fetch("/api/novia/liveavatar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ max_duration: 1200 }),
+      });
+      if (!res.ok) { setLaStatus("error"); return; }
+
+      const la: LASession = await res.json();
+      if (!la.livekit_url) { setLaStatus("error"); return; }
+
+      // Connect LiveKit room for video stream
+      const room = new Room();
+      roomRef.current = room;
+
+      room.on(RoomEvent.TrackSubscribed, (track) => {
+        if (track.kind === Track.Kind.Video && videoRef.current) {
+          track.attach(videoRef.current);
+        }
+      });
+
+      await room.connect(la.livekit_url, la.livekit_token, { autoSubscribe: true });
+
+      // Open WebSocket for audio commands
+      const ws = new WebSocket(la.ws_url);
+      wsRef.current = ws;
+
+      ws.onopen = () => { /* wait for session.state_updated */ };
+      ws.onmessage = (evt) => {
+        try {
+          const msg = JSON.parse(evt.data as string);
+          if (msg.type === "session.state_updated" && msg.state === "connected") {
+            wsReadyRef.current = true;
+            setLaStatus("ready");
+          }
+          if (msg.type === "agent.speak_started") setSpeaking(true);
+          if (msg.type === "agent.speak_ended") setSpeaking(false);
+        } catch { /* ignore */ }
+      };
+      ws.onerror = () => setLaStatus("error");
+      ws.onclose = () => { wsReadyRef.current = false; };
+
+    } catch {
+      setLaStatus("error");
+    }
+  }, []);
 
   useEffect(() => {
     async function init() {
@@ -39,47 +99,54 @@ function SessionApp() {
       const userData = await userRes.json();
       setNoviaName(userData.novia_name ?? "Sofía");
 
-      setMessages([{
-        role: "assistant",
-        content: `Hola ${userData.name ?? "amor"}... te estaba esperando 💛`,
-      }]);
+      setMessages([{ role: "assistant", content: `Hola ${userData.name ?? "amor"}... te estaba esperando 💛` }]);
 
-      // Get LiveAvatar embed URL
-      const laRes = await fetch("/api/novia/liveavatar", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
-      });
-      if (laRes.ok) {
-        const laData = await laRes.json();
-        if (laData.url) setEmbedUrl(laData.url);
-      }
-      setEmbedLoading(false);
+      connectLiveAvatar();
     }
     if (token) init();
-  }, [token]);
+    return () => { roomRef.current?.disconnect(); wsRef.current?.close(); };
+  }, [token, connectLiveAvatar]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   async function speakText(text: string) {
+    setSpeaking(true);
     try {
-      setSpeaking(true);
       const res = await fetch("/api/novia/voz", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({ text, format: wsReadyRef.current ? "pcm" : "mp3" }),
       });
       if (!res.ok) { setSpeaking(false); return; }
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      if (audioRef.current) audioRef.current.pause();
-      const audio = new Audio(url);
-      audioRef.current = audio;
-      audio.onended = () => { setSpeaking(false); URL.revokeObjectURL(url); };
-      audio.onerror = () => setSpeaking(false);
-      audio.play().catch(() => setSpeaking(false));
+
+      const buffer = await res.arrayBuffer();
+
+      if (wsReadyRef.current && wsRef.current?.readyState === WebSocket.OPEN) {
+        // Send PCM chunks to LiveAvatar for lip-sync
+        const bytes = new Uint8Array(buffer);
+        const eventId = crypto.randomUUID();
+
+        for (let i = 0; i < bytes.length; i += CHUNK_SIZE) {
+          const chunk = bytes.slice(i, i + CHUNK_SIZE);
+          // btoa with chunked string conversion to handle large arrays
+          let binary = "";
+          chunk.forEach((b) => { binary += String.fromCharCode(b); });
+          const b64 = btoa(binary);
+          wsRef.current.send(JSON.stringify({ type: "agent.speak", audio: b64 }));
+          if (i + CHUNK_SIZE < bytes.length) await new Promise((r) => setTimeout(r, 40));
+        }
+        wsRef.current.send(JSON.stringify({ type: "agent.speak_end", event_id: eventId }));
+      } else {
+        // Fallback: play MP3 directly in browser
+        const blob = new Blob([buffer], { type: "audio/mpeg" });
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        audio.onended = () => { setSpeaking(false); URL.revokeObjectURL(url); };
+        audio.onerror = () => setSpeaking(false);
+        audio.play().catch(() => setSpeaking(false));
+      }
     } catch { setSpeaking(false); }
   }
 
@@ -111,7 +178,6 @@ function SessionApp() {
     if (!msg || loading) return;
     setInput("");
     setLoading(true);
-
     setMessages((prev) => [...prev, { role: "user", content: msg }]);
 
     const res = await fetch("/api/novia/chat", {
@@ -126,51 +192,59 @@ function SessionApp() {
     speakText(reply);
   }
 
+  const statusColor = laStatus === "ready" ? "bg-emerald-400" : laStatus === "error" ? "bg-red-400" : "bg-amber-400";
+  const statusText = speaking ? "hablando" : laStatus === "ready" ? "en vivo" : laStatus === "error" ? "sin video" : "conectando";
+
   return (
     <div className="min-h-screen flex flex-col md:flex-row font-sans bg-[#080808]">
 
-      {/* LEFT — Avatar video (takes most space) */}
+      {/* LEFT — Avatar video */}
       <div className="md:w-[420px] lg:w-[480px] bg-[#0A0A0A] flex flex-col border-b md:border-b-0 md:border-r border-[#1A1A1A]">
 
-        {/* Embed frame — fills available height */}
-        <div className="relative flex-1" style={{ minHeight: "70vh" }}>
-          {embedUrl ? (
-            <iframe
-              src={embedUrl}
-              allow="microphone; camera; autoplay; display-capture"
-              className="absolute inset-0 w-full h-full border-0"
-              style={{ borderRadius: 0 }}
-            />
-          ) : (
+        <div className="relative flex-1" style={{ minHeight: "72vh" }}>
+          {/* LiveKit video */}
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{ display: laStatus === "ready" ? "block" : "none" }}
+          />
+
+          {/* Loading / error state */}
+          {laStatus !== "ready" && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#0A0A0A]">
-              {embedLoading ? (
+              {laStatus === "loading" ? (
                 <>
                   <div className="w-10 h-10 border-2 border-amber-400/20 border-t-amber-400 rounded-full animate-spin" />
-                  <p className="text-amber-400/50 text-sm">Conectando con {noviaName}...</p>
+                  <p className="text-amber-400/60 text-sm">Conectando con {noviaName}...</p>
                 </>
               ) : (
-                <p className="text-zinc-600 text-sm">No se pudo conectar el video</p>
+                <p className="text-zinc-600 text-sm">Video no disponible</p>
               )}
             </div>
           )}
 
-          {/* Speaking glow overlay on frame */}
+          {/* Glow when speaking */}
           {speaking && (
-            <div className="absolute inset-0 pointer-events-none rounded-none" style={{ boxShadow: "inset 0 0 40px rgba(245,158,11,0.15)" }} />
+            <div className="absolute inset-0 pointer-events-none" style={{ boxShadow: "inset 0 0 60px rgba(245,158,11,0.2)" }} />
           )}
+
+          {/* Status badge */}
+          <div className="absolute top-3 right-3 flex items-center gap-1.5 bg-black/70 backdrop-blur-sm px-2.5 py-1 rounded-full z-10">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className={`live-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${statusColor}`} />
+              <span className={`relative inline-flex rounded-full h-1.5 w-1.5 ${statusColor}`} />
+            </span>
+            <span className="text-[10px] text-white/70">{statusText}</span>
+          </div>
         </div>
 
-        {/* Bottom info bar */}
+        {/* Info bar */}
         <div className="px-4 py-3 border-t border-[#1A1A1A] flex items-center justify-between">
           <div>
             <p className="font-semibold text-sm">{noviaName}</p>
-            <p className="text-zinc-500 text-xs flex items-center gap-1.5">
-              <span className="relative flex h-1.5 w-1.5">
-                <span className={`live-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${speaking ? "bg-amber-400" : "bg-emerald-400"}`} />
-                <span className={`relative inline-flex rounded-full h-1.5 w-1.5 ${speaking ? "bg-amber-400" : "bg-emerald-400"}`} />
-              </span>
-              {speaking ? "hablando..." : "en vivo"}
-            </p>
+            <p className="text-zinc-500 text-[11px]">Tu compañera IA</p>
           </div>
           <div className="text-right">
             <p className="text-amber-400 font-bold">{minutesLeft} min</p>
@@ -180,16 +254,19 @@ function SessionApp() {
         </div>
       </div>
 
-      {/* RIGHT — Chat with Sofía (Claude + ElevenLabs) */}
+      {/* RIGHT — Chat */}
       <div className="flex-1 flex flex-col min-h-0">
         <div className="border-b border-[#1A1A1A] px-5 py-3 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 text-sm">♡</div>
             <div>
               <p className="font-medium text-sm">{noviaName}</p>
-              <p className="text-zinc-500 text-xs">{speaking ? "respondiendo..." : "escuchándote"}</p>
+              <p className="text-zinc-500 text-xs">{speaking ? "hablando..." : "escuchándote"}</p>
             </div>
           </div>
+          {laStatus === "ready" && !speaking && (
+            <span className="text-[11px] text-emerald-400/70">📹 video + voz sincronizados</span>
+          )}
           {speaking && (
             <div className="flex items-center gap-1.5 text-xs text-amber-400 bg-amber-400/10 px-2.5 py-1 rounded-full animate-pulse">
               🔊 hablando
@@ -244,7 +321,7 @@ function SessionApp() {
               →
             </button>
           </form>
-          <p className="text-center text-zinc-600 text-[11px] mt-2">🎙️ Habla o escribe · Voz de Sofía activada</p>
+          <p className="text-center text-zinc-600 text-[11px] mt-2">🎙️ Micrófono · La chica habla con tu voz de Sofía</p>
         </div>
       </div>
     </div>
