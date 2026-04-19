@@ -56,6 +56,12 @@ function SessionApp() {
         if (track.kind === Track.Kind.Video && videoRef.current) {
           track.attach(videoRef.current);
         }
+        if (track.kind === Track.Kind.Audio) {
+          // Create an audio element and attach — required for audio to play
+          const audioEl = track.attach();
+          audioEl.autoplay = true;
+          document.body.appendChild(audioEl);
+        }
       });
 
       await room.connect(la.livekit_url, la.livekit_token, { autoSubscribe: true });
@@ -104,7 +110,12 @@ function SessionApp() {
       connectLiveAvatar();
     }
     if (token) init();
-    return () => { roomRef.current?.disconnect(); wsRef.current?.close(); };
+    return () => {
+      roomRef.current?.disconnect();
+      wsRef.current?.close();
+      // Remove any injected audio elements
+      document.querySelectorAll("audio[data-lk]").forEach((el) => el.remove());
+    };
   }, [token, connectLiveAvatar]);
 
   useEffect(() => {
