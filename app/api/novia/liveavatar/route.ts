@@ -4,7 +4,7 @@ const LA_BASE = "https://api.liveavatar.com";
 const API_KEY = process.env.LIVEAVATAR_API_KEY!;
 
 // Default avatar if none selected
-const DEFAULT_AVATAR_ID = "65cca4cf-b7c8-4619-871f-84e2cf8b21d4"; // Katya Sitting Portrait
+const DEFAULT_AVATAR_ID = "7299c55d-1f45-482d-915c-e5efdc9dd266"; // Elenora Fitness Coach 2 — tank top, full body
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));

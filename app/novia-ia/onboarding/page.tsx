@@ -14,22 +14,22 @@ const personalities = [
 // For fully custom sensual avatars → create at app.liveavatar.com > Avatars > Create
 const avatars = [
   {
-    id: "9d4d6cdd-38a1-448e-a336-1ac682ba6a27",
-    name: "Marianne",
-    tag: "Latina · Vestido rojo · Sensual",
-    preview: "https://files2.heygen.ai/avatar/v3/e32d7d1047a24c34a70c54c2b77441c0_55890/preview_target.webp",
+    id: "7299c55d-1f45-482d-915c-e5efdc9dd266",
+    name: "Elenora",
+    tag: "Tank top · Cuerpo completo · Fitness",
+    preview: "https://files2.heygen.ai/avatar/v3/e097a0182d5e4f5a8dabc656fd39c063_45610/preview_target.webp",
   },
   {
     id: "9a4f4b1f-86f9-4acf-9a37-b81c21ae95e4",
-    name: "Elenora",
-    tag: "Fitness · Ropa deportiva · Curvilínea",
+    name: "Sofía",
+    tag: "Ropa deportiva · Activa · Atractiva",
     preview: "https://files2.heygen.ai/avatar/v3/4e5afdfe8bdb44f3ae18b90281ab034c_45610/preview_talk_1.webp",
   },
   {
-    id: "69cf601f-b35b-4d1b-a701-c854d223b5a5",
-    name: "Katya",
-    tag: "Europea · Traje rosa · Elegante",
-    preview: "https://files2.heygen.ai/avatar/v3/348ddf503c654b9bbbb8bea9f9210ead_55870/preview_target.webp",
+    id: "65ee9a5b-00ae-4c96-acf2-3326d9566467",
+    name: "Anastasia",
+    tag: "Cabello castaño · Casual · Sensual",
+    preview: "https://files2.heygen.ai/avatar/v3/6428cf3872094995af8f40696ddd6ef3_55790/preview_target.webp",
   },
 ];
 
