@@ -18,10 +18,12 @@ function SessionApp() {
   const [minutesLeft, setMinutesLeft] = useState(0);
   const [speaking, setSpeaking] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(false);
+  const [listening, setListening] = useState(false);
   const [sessionId] = useState(() => crypto.randomUUID());
   const bottomRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const pendingAudioRef = useRef<string | null>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
 
   useEffect(() => {
     async function init() {
@@ -90,6 +92,41 @@ function SessionApp() {
         setSpeaking(false);
       }
     } catch { setSpeaking(false); }
+  }
+
+  function toggleMic() {
+    if (!audioEnabled) enableAudio();
+
+    const SpeechRecognition =
+      (window as typeof window & { SpeechRecognition?: typeof window.SpeechRecognition; webkitSpeechRecognition?: typeof window.SpeechRecognition }).SpeechRecognition ||
+      (window as typeof window & { webkitSpeechRecognition?: typeof window.SpeechRecognition }).webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      alert("Tu navegador no soporta reconocimiento de voz. Usa Chrome.");
+      return;
+    }
+
+    if (listening) {
+      recognitionRef.current?.stop();
+      setListening(false);
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = "es-PE";
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognitionRef.current = recognition;
+
+    recognition.onstart = () => setListening(true);
+    recognition.onend = () => setListening(false);
+    recognition.onerror = () => setListening(false);
+    recognition.onresult = (e: SpeechRecognitionEvent) => {
+      const transcript = e.results[0][0].transcript;
+      if (transcript.trim()) sendMessage(transcript.trim());
+    };
+
+    recognition.start();
   }
 
   async function sendMessage(text?: string) {
@@ -315,12 +352,26 @@ function SessionApp() {
         </div>
 
         <div className="px-6 pb-6 pt-2">
-          <form onSubmit={(e) => { e.preventDefault(); if (!audioEnabled) enableAudio(); sendMessage(); }} className="flex gap-3">
+          <form onSubmit={(e) => { e.preventDefault(); if (!audioEnabled) enableAudio(); sendMessage(); }} className="flex gap-2">
+            {/* Mic button */}
+            <button
+              type="button"
+              onClick={toggleMic}
+              className={`px-4 py-3 rounded-2xl font-semibold transition-all text-lg ${
+                listening
+                  ? "bg-red-500 text-white animate-pulse"
+                  : "bg-[#111] border border-[#2A2A2A] text-zinc-400 hover:border-amber-500/40 hover:text-amber-400"
+              }`}
+              title={listening ? "Detener micrófono" : "Hablar con micrófono"}
+            >
+              {listening ? "⏹" : "🎙️"}
+            </button>
+
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder={`Escríbele a ${noviaName}...`}
+              placeholder={listening ? "Escuchando..." : `Escríbele a ${noviaName}...`}
               className="flex-1 bg-[#111] border border-[#2A2A2A] rounded-2xl px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-amber-500/50"
             />
             <button
@@ -331,6 +382,7 @@ function SessionApp() {
               →
             </button>
           </form>
+          <p className="text-center text-zinc-600 text-xs mt-2">🎙️ Toca el micrófono para hablar · Chrome recomendado</p>
         </div>
       </div>
     </div>
