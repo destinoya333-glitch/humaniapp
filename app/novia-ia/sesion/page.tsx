@@ -101,11 +101,16 @@ function SessionApp() {
       const userRes = await fetch(`/api/novia/perfil?token=${token}`);
       const userData = await userRes.json();
       setNoviaName(userData.novia_name ?? "Sofía");
-      if (userData.avatar_id) setAvatarId(userData.avatar_id);
+
+      // avatar_id: prefer DB, fallback to localStorage
+      const savedAvatarId = userData.avatar_id
+        || (typeof window !== "undefined" ? localStorage.getItem(`avatar_id_${token}`) : null)
+        || "";
+      if (savedAvatarId) setAvatarId(savedAvatarId);
 
       setMessages([{ role: "assistant", content: `Hola ${userData.name ?? "amor"}... te estaba esperando 💛` }]);
 
-      connectLiveAvatar(userData.avatar_id ?? "");
+      connectLiveAvatar(savedAvatarId);
     }
     if (token) init();
     return () => {
