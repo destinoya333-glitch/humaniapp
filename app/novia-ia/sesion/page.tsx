@@ -25,7 +25,7 @@ function SessionApp() {
   const bottomRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const pendingAudioRef = useRef<string | null>(null);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const recognitionRef = useRef<{ stop: () => void } | null>(null);
 
   useEffect(() => {
     async function init() {
@@ -108,11 +108,11 @@ function SessionApp() {
   function toggleMic() {
     if (!audioEnabled) enableAudio();
 
-    const SpeechRecognition =
-      (window as typeof window & { SpeechRecognition?: typeof window.SpeechRecognition; webkitSpeechRecognition?: typeof window.SpeechRecognition }).SpeechRecognition ||
-      (window as typeof window & { webkitSpeechRecognition?: typeof window.SpeechRecognition }).webkitSpeechRecognition;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const w = window as any;
+    const SR = w.SpeechRecognition || w.webkitSpeechRecognition;
 
-    if (!SpeechRecognition) {
+    if (!SR) {
       alert("Tu navegador no soporta reconocimiento de voz. Usa Chrome.");
       return;
     }
@@ -123,7 +123,8 @@ function SessionApp() {
       return;
     }
 
-    const recognition = new SpeechRecognition();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const recognition: any = new SR();
     recognition.lang = "es-PE";
     recognition.continuous = false;
     recognition.interimResults = false;
@@ -132,8 +133,9 @@ function SessionApp() {
     recognition.onstart = () => setListening(true);
     recognition.onend = () => setListening(false);
     recognition.onerror = () => setListening(false);
-    recognition.onresult = (e: SpeechRecognitionEvent) => {
-      const transcript = e.results[0][0].transcript;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    recognition.onresult = (e: any) => {
+      const transcript: string = e.results[0][0].transcript;
       if (transcript.trim()) sendMessage(transcript.trim());
     };
 
