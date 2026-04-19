@@ -8,7 +8,7 @@ const AVATAR_ID = "b475a5c1-c6a9-45d1-9f86-79b97cf0091f";
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
-  const maxDuration: number = body.max_duration ?? 1200;
+  const maxDuration: number = Math.min(body.max_duration ?? 300, 300);
 
   // Step 1: create LITE session token
   const tokenRes = await fetch(`${LA_BASE}/v1/sessions/token`, {

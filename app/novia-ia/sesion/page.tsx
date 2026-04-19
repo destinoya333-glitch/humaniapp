@@ -41,7 +41,7 @@ function SessionApp() {
       const res = await fetch("/api/novia/liveavatar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ max_duration: 1200 }),
+        body: JSON.stringify({ max_duration: 300 }),
       });
       if (!res.ok) { setLaStatus("error"); return; }
 
