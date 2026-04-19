@@ -16,7 +16,7 @@ const services = [
       { plan: "VIP Anual",     price: "S/ 63",  note: "Ilimitado · todos los servicios" },
     ],
     cta: "Probar ahora",
-    href: "https://wa.me/",
+    href: "https://wa.me/51979385499",
     highlight: null,
   },
   {

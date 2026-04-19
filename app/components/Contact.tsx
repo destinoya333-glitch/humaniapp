@@ -12,7 +12,7 @@ export default function Contact() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const whatsapp = `https://wa.me/51999999999?text=${encodeURIComponent(
+    const whatsapp = `https://wa.me/51979385499?text=${encodeURIComponent(
       `Hola HumaniApp! Soy ${form.name} (${form.email}). Tipo: ${form.type}. ${form.message}`
     )}`;
     window.open(whatsapp, "_blank");
