@@ -57,10 +57,7 @@ function SessionApp() {
         if (track.kind === Track.Kind.Video && videoRef.current) {
           track.attach(videoRef.current);
         }
-        if (track.kind === Track.Kind.Audio && audioRef.current) {
-          track.attach(audioRef.current);
-          audioRef.current.play().catch(() => {});
-        }
+        // LITE mode: no audio track from LiveKit — audio comes from ElevenLabs MP3
       });
 
       await room.connect(la.livekit_url, la.livekit_token, { autoSubscribe: true });
@@ -122,38 +119,47 @@ function SessionApp() {
   async function speakText(text: string) {
     setSpeaking(true);
     try {
-      const res = await fetch("/api/novia/voz", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text, format: wsReadyRef.current ? "pcm" : "mp3" }),
-      });
-      if (!res.ok) { setSpeaking(false); return; }
+      // Always fetch MP3 for browser audio — LITE mode doesn't stream audio back
+      const [mp3Res, pcmRes] = await Promise.all([
+        fetch("/api/novia/voz", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text, format: "mp3" }),
+        }),
+        wsReadyRef.current && wsRef.current?.readyState === WebSocket.OPEN
+          ? fetch("/api/novia/voz", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ text, format: "pcm" }),
+            })
+          : Promise.resolve(null),
+      ]);
 
-      const buffer = await res.arrayBuffer();
-
-      if (wsReadyRef.current && wsRef.current?.readyState === WebSocket.OPEN) {
-        // Send PCM chunks to LiveAvatar for lip-sync
-        const bytes = new Uint8Array(buffer);
-        const eventId = crypto.randomUUID();
-
-        for (let i = 0; i < bytes.length; i += CHUNK_SIZE) {
-          const chunk = bytes.slice(i, i + CHUNK_SIZE);
-          // btoa with chunked string conversion to handle large arrays
-          let binary = "";
-          chunk.forEach((b) => { binary += String.fromCharCode(b); });
-          const b64 = btoa(binary);
-          wsRef.current.send(JSON.stringify({ type: "agent.speak", audio: b64 }));
-          if (i + CHUNK_SIZE < bytes.length) await new Promise((r) => setTimeout(r, 40));
-        }
-        wsRef.current.send(JSON.stringify({ type: "agent.speak_end", event_id: eventId }));
-      } else {
-        // Fallback: play MP3 directly in browser
-        const blob = new Blob([buffer], { type: "audio/mpeg" });
+      // Play MP3 in browser
+      if (mp3Res.ok) {
+        const blob = await mp3Res.blob();
         const url = URL.createObjectURL(blob);
         const audio = new Audio(url);
         audio.onended = () => { setSpeaking(false); URL.revokeObjectURL(url); };
         audio.onerror = () => setSpeaking(false);
         audio.play().catch(() => setSpeaking(false));
+      } else {
+        setSpeaking(false);
+      }
+
+      // Send PCM to LiveAvatar for lip-sync video (fire and forget)
+      if (pcmRes && pcmRes.ok && wsRef.current?.readyState === WebSocket.OPEN) {
+        const buffer = await pcmRes.arrayBuffer();
+        const bytes = new Uint8Array(buffer);
+        const eventId = crypto.randomUUID();
+        for (let i = 0; i < bytes.length; i += CHUNK_SIZE) {
+          const chunk = bytes.slice(i, i + CHUNK_SIZE);
+          let binary = "";
+          chunk.forEach((b) => { binary += String.fromCharCode(b); });
+          wsRef.current.send(JSON.stringify({ type: "agent.speak", audio: btoa(binary) }));
+          if (i + CHUNK_SIZE < bytes.length) await new Promise((r) => setTimeout(r, 40));
+        }
+        wsRef.current.send(JSON.stringify({ type: "agent.speak_end", event_id: eventId }));
       }
     } catch { setSpeaking(false); }
   }
