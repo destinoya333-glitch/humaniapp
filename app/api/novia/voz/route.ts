@@ -4,11 +4,15 @@ import { NextRequest, NextResponse } from "next/server";
 const VOICE_ID = "EXAVITQu4vr4xnSDxMaL";
 
 export async function POST(req: NextRequest) {
-  const { text } = await req.json();
+  const { text, format } = await req.json();
   if (!text) return NextResponse.json({ error: "no text" }, { status: 400 });
 
+  // format=pcm returns raw PCM 24kHz for LiveAvatar LITE lip-sync
+  const usePcm = format === "pcm";
+  const outputFormat = usePcm ? "pcm_24000" : "mp3_44100_128";
+
   const res = await fetch(
-    `https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`,
+    `https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}?output_format=${outputFormat}`,
     {
       method: "POST",
       headers: {
@@ -37,8 +41,9 @@ export async function POST(req: NextRequest) {
 
   return new NextResponse(audioBuffer, {
     headers: {
-      "Content-Type": "audio/mpeg",
+      "Content-Type": usePcm ? "audio/pcm" : "audio/mpeg",
       "Content-Length": audioBuffer.byteLength.toString(),
+      "X-Audio-Format": outputFormat,
     },
   });
 }

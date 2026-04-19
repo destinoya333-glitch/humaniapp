@@ -3,42 +3,54 @@ import { NextRequest, NextResponse } from "next/server";
 const LA_BASE = "https://api.liveavatar.com";
 const API_KEY = process.env.LIVEAVATAR_API_KEY!;
 
-// Default Sofía avatar (Anastasia Sitting Portrait — female, warm look)
-const DEFAULT_AVATAR_ID = "b475a5c1-c6a9-45d1-9f86-79b97cf0091f";
-// "Welcome to LiveAvatar" context — we override language to Spanish
-const DEFAULT_CONTEXT_ID = "28783467-c466-4094-bdc6-9545c02aa014";
+// Anastasia Sitting Portrait — female, warm look
+const AVATAR_ID = "b475a5c1-c6a9-45d1-9f86-79b97cf0091f";
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
-  const avatarId: string = body.avatar_id ?? DEFAULT_AVATAR_ID;
-  const contextId: string = body.context_id ?? DEFAULT_CONTEXT_ID;
-  const sandbox: boolean = body.sandbox ?? false;
+  const maxDuration: number = body.max_duration ?? 600; // 10 min default
 
-  const res = await fetch(`${LA_BASE}/v2/embeddings`, {
+  // Step 1: create session token in LITE mode
+  const tokenRes = await fetch(`${LA_BASE}/v1/sessions/token`, {
     method: "POST",
-    headers: {
-      "X-API-KEY": API_KEY,
-      "Content-Type": "application/json",
-    },
+    headers: { "X-API-KEY": API_KEY, "Content-Type": "application/json" },
     body: JSON.stringify({
-      avatar_id: avatarId,
-      context_id: contextId,
-      default_language: "es",
-      is_sandbox: sandbox,
+      avatar_id: AVATAR_ID,
+      mode: "LITE",
+      max_session_duration: maxDuration,
     }),
   });
 
-  const data = await res.json();
-
-  if (!res.ok) {
-    return NextResponse.json(
-      { error: "LiveAvatar error", detail: data },
-      { status: res.status }
-    );
+  if (!tokenRes.ok) {
+    const err = await tokenRes.json();
+    return NextResponse.json({ error: "token_failed", detail: err }, { status: tokenRes.status });
   }
 
+  const tokenData = await tokenRes.json();
+  const sessionId: string = tokenData.data.session_id;
+  const sessionToken: string = tokenData.data.session_token;
+
+  // Step 2: start the session
+  const startRes = await fetch(`${LA_BASE}/v1/sessions/start`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${sessionToken}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!startRes.ok) {
+    const err = await startRes.json();
+    return NextResponse.json({ error: "start_failed", detail: err }, { status: startRes.status });
+  }
+
+  const startData = await startRes.json();
+  const d = startData.data;
+
   return NextResponse.json({
-    url: data.data?.url ?? null,
-    script: data.data?.script ?? null,
+    session_id: sessionId,
+    livekit_url: d.livekit_url,
+    livekit_token: d.livekit_client_token,
+    ws_url: d.ws_url,
   });
 }

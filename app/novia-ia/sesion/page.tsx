@@ -1,11 +1,26 @@
 "use client";
 
-import { useState, useEffect, useRef, Suspense } from "react";
+import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import {
+  Room,
+  RoomEvent,
+  Track,
+  RemoteParticipant,
+  RemoteTrackPublication,
+} from "livekit-client";
 
 const waveBars = [3, 6, 9, 5, 8, 4, 7, 10, 6, 4, 8, 5, 9, 3, 7];
+const CHUNK_MS = 900; // ~1 second PCM chunks @ 24kHz 16-bit = 43200 bytes
+const PCM_BYTES_PER_MS = 48; // 24000 Hz * 2 bytes / 1000ms
 
 interface Message { role: "user" | "assistant"; content: string; }
+
+interface LASession {
+  ws_url: string;
+  livekit_url: string;
+  livekit_token: string;
+}
 
 function SessionApp() {
   const params = useSearchParams();
@@ -17,15 +32,61 @@ function SessionApp() {
   const [noviaName, setNoviaName] = useState("Sofía");
   const [minutesLeft, setMinutesLeft] = useState(0);
   const [speaking, setSpeaking] = useState(false);
-  const [audioEnabled, setAudioEnabled] = useState(false);
   const [listening, setListening] = useState(false);
-  const [liveAvatarUrl, setLiveAvatarUrl] = useState<string | null>(null);
-  const [avatarLoading, setAvatarLoading] = useState(true);
+  const [laReady, setLaReady] = useState(false);
+  const [laError, setLaError] = useState(false);
   const [sessionId] = useState(() => crypto.randomUUID());
+
   const bottomRef = useRef<HTMLDivElement>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const pendingAudioRef = useRef<string | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const roomRef = useRef<Room | null>(null);
+  const wsRef = useRef<WebSocket | null>(null);
   const recognitionRef = useRef<{ stop: () => void } | null>(null);
+
+  // Connect to LiveAvatar LITE session
+  const connectLiveAvatar = useCallback(async () => {
+    try {
+      const res = await fetch("/api/novia/liveavatar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ max_duration: 1800 }),
+      });
+      if (!res.ok) { setLaError(true); return; }
+      const la: LASession = await res.json();
+
+      // Connect LiveKit room for video
+      const room = new Room();
+      roomRef.current = room;
+
+      room.on(RoomEvent.TrackSubscribed, (track, _pub, _participant) => {
+        if (track.kind === Track.Kind.Video && videoRef.current) {
+          track.attach(videoRef.current);
+        }
+      });
+
+      await room.connect(la.livekit_url, la.livekit_token, { autoSubscribe: true });
+
+      // Open WebSocket for audio commands
+      const ws = new WebSocket(la.ws_url);
+      wsRef.current = ws;
+
+      ws.onmessage = (evt) => {
+        try {
+          const msg = JSON.parse(evt.data as string);
+          if (msg.type === "session.state_updated" && msg.state === "connected") {
+            setLaReady(true);
+          }
+          if (msg.type === "agent.speak_started") setSpeaking(true);
+          if (msg.type === "agent.speak_ended") setSpeaking(false);
+        } catch { /* ignore */ }
+      };
+
+      ws.onerror = () => setLaError(true);
+
+    } catch {
+      setLaError(true);
+    }
+  }, []);
 
   useEffect(() => {
     async function init() {
@@ -47,47 +108,65 @@ function SessionApp() {
         content: `Hola ${userData.name ?? "amor"}... te estaba esperando 💛`,
       }]);
 
-      // Load LiveAvatar embed
-      const laRes = await fetch("/api/novia/liveavatar", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sandbox: false }),
-      });
-      if (laRes.ok) {
-        const laData = await laRes.json();
-        if (laData.url) setLiveAvatarUrl(laData.url);
-      }
-      setAvatarLoading(false);
+      connectLiveAvatar();
     }
     if (token) init();
-  }, [token]);
+
+    return () => {
+      roomRef.current?.disconnect();
+      wsRef.current?.close();
+    };
+  }, [token, connectLiveAvatar]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  function enableAudio() {
-    setAudioEnabled(true);
-    const silent = new Audio("data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjI5LjEwMAAAAAAAAAAAAAAA");
-    silent.play().catch(() => {});
-    if (pendingAudioRef.current) {
-      playAudioUrl(pendingAudioRef.current);
-      pendingAudioRef.current = null;
+  // Send PCM audio to LiveAvatar in chunks
+  async function speakText(text: string) {
+    setSpeaking(true);
+    try {
+      // Get PCM 24kHz audio from ElevenLabs
+      const res = await fetch("/api/novia/voz", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, format: "pcm" }),
+      });
+      if (!res.ok) { setSpeaking(false); return; }
+
+      const pcmBuffer = await res.arrayBuffer();
+      const ws = wsRef.current;
+
+      if (!ws || ws.readyState !== WebSocket.OPEN || !laReady) {
+        // Fallback: play MP3 in browser if LiveAvatar not ready
+        await speakMp3Fallback(text);
+        return;
+      }
+
+      // Send PCM in ~1-second chunks
+      const bytes = new Uint8Array(pcmBuffer);
+      const chunkSize = PCM_BYTES_PER_MS * CHUNK_MS;
+      const eventId = crypto.randomUUID();
+
+      for (let i = 0; i < bytes.length; i += chunkSize) {
+        const chunk = bytes.slice(i, i + chunkSize);
+        const b64 = btoa(String.fromCharCode(...chunk));
+        ws.send(JSON.stringify({ type: "agent.speak", audio: b64 }));
+        // Small delay between chunks to avoid overwhelming the buffer
+        if (i + chunkSize < bytes.length) {
+          await new Promise((r) => setTimeout(r, 50));
+        }
+      }
+      // Signal end of speech
+      ws.send(JSON.stringify({ type: "agent.speak_end", event_id: eventId }));
+
+    } catch {
+      setSpeaking(false);
     }
   }
 
-  function playAudioUrl(url: string) {
-    if (audioRef.current) { audioRef.current.pause(); }
-    const audio = new Audio(url);
-    audioRef.current = audio;
-    audio.onended = () => { setSpeaking(false); URL.revokeObjectURL(url); };
-    audio.onerror = () => setSpeaking(false);
-    audio.play().catch(() => setSpeaking(false));
-  }
-
-  async function speakText(text: string) {
+  async function speakMp3Fallback(text: string) {
     try {
-      setSpeaking(true);
       const res = await fetch("/api/novia/voz", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -96,50 +175,36 @@ function SessionApp() {
       if (!res.ok) { setSpeaking(false); return; }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
-      if (audioEnabled) {
-        playAudioUrl(url);
-      } else {
-        pendingAudioRef.current = url;
-        setSpeaking(false);
-      }
+      const audio = new Audio(url);
+      audio.onended = () => { setSpeaking(false); URL.revokeObjectURL(url); };
+      audio.onerror = () => setSpeaking(false);
+      audio.play().catch(() => setSpeaking(false));
     } catch { setSpeaking(false); }
   }
 
   function toggleMic() {
-    if (!audioEnabled) enableAudio();
-
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const w = window as any;
     const SR = w.SpeechRecognition || w.webkitSpeechRecognition;
+    if (!SR) { alert("Tu navegador no soporta voz. Usa Chrome."); return; }
 
-    if (!SR) {
-      alert("Tu navegador no soporta reconocimiento de voz. Usa Chrome.");
-      return;
-    }
-
-    if (listening) {
-      recognitionRef.current?.stop();
-      setListening(false);
-      return;
-    }
+    if (listening) { recognitionRef.current?.stop(); setListening(false); return; }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const recognition: any = new SR();
-    recognition.lang = "es-PE";
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognitionRef.current = recognition;
-
-    recognition.onstart = () => setListening(true);
-    recognition.onend = () => setListening(false);
-    recognition.onerror = () => setListening(false);
+    const rec: any = new SR();
+    rec.lang = "es-PE";
+    rec.continuous = false;
+    rec.interimResults = false;
+    recognitionRef.current = rec;
+    rec.onstart = () => setListening(true);
+    rec.onend = () => setListening(false);
+    rec.onerror = () => setListening(false);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    recognition.onresult = (e: any) => {
-      const transcript: string = e.results[0][0].transcript;
-      if (transcript.trim()) sendMessage(transcript.trim());
+    rec.onresult = (e: any) => {
+      const t: string = e.results[0][0].transcript;
+      if (t.trim()) sendMessage(t.trim());
     };
-
-    recognition.start();
+    rec.start();
   }
 
   async function sendMessage(text?: string) {
@@ -147,7 +212,6 @@ function SessionApp() {
     if (!msg || loading) return;
     setInput("");
     setLoading(true);
-    setSpeaking(false);
 
     setMessages((prev) => [...prev, { role: "user", content: msg }]);
 
@@ -157,149 +221,124 @@ function SessionApp() {
       body: JSON.stringify({ token, message: msg, session_id: sessionId }),
     });
     const data = await res.json();
-    setMessages((prev) => [...prev, { role: "assistant", content: data.reply }]);
+    const reply: string = data.reply;
+    setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
     setLoading(false);
-    speakText(data.reply);
+    speakText(reply);
   }
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row font-sans">
 
-      {/* Audio enable banner */}
-      {!audioEnabled && (
-        <div className="fixed top-0 left-0 right-0 z-50 bg-amber-500 text-black px-4 py-3 flex items-center justify-between">
-          <span className="text-sm font-medium">🔊 Activa el audio para escuchar la voz de {noviaName}</span>
-          <button
-            onClick={enableAudio}
-            className="px-4 py-1.5 bg-black text-amber-400 rounded-full text-sm font-bold hover:bg-zinc-900 transition-colors"
-          >
-            Activar voz
-          </button>
-        </div>
-      )}
+      {/* Left — Avatar video panel */}
+      <div className="md:w-72 lg:w-80 bg-[#0A0A0A] border-b md:border-b-0 md:border-r border-[#1A1A1A] flex flex-col items-center justify-between p-4 gap-3">
 
-      {/* Left — Avatar panel */}
-      <div className={`md:w-80 bg-[#0A0A0A] border-b md:border-b-0 md:border-r border-[#1A1A1A] flex flex-col items-center justify-center p-4 gap-4 py-8 ${!audioEnabled ? "mt-12 md:mt-0 md:pt-16" : ""}`}>
-
-        {/* LiveAvatar iframe or fallback CSS avatar */}
+        {/* Video container */}
         <div
-          className="relative w-full rounded-3xl overflow-hidden border border-[#2A2A2A]"
+          className="relative w-full rounded-3xl overflow-hidden border border-[#2A2A2A] flex-1"
           style={{
-            aspectRatio: "9/16",
-            maxHeight: "340px",
-            boxShadow: speaking ? "0 0 60px rgba(245,158,11,0.25)" : "0 0 40px rgba(245,158,11,0.08)",
+            minHeight: "300px",
+            maxHeight: "calc(100vh - 160px)",
+            boxShadow: speaking
+              ? "0 0 60px rgba(245,158,11,0.3)"
+              : "0 0 30px rgba(245,158,11,0.08)",
+            transition: "box-shadow 0.3s ease",
           }}
         >
-          {liveAvatarUrl ? (
-            /* Real LiveAvatar video */
-            <iframe
-              src={liveAvatarUrl}
-              allow="microphone; camera; autoplay"
-              className="w-full h-full border-0"
-              style={{ minHeight: "300px" }}
-            />
-          ) : (
-            /* CSS fallback avatar */
-            <>
-              <div className="absolute inset-0 bg-gradient-to-b from-[#1a1008] via-[#0f0d0a] to-[#080808]" />
-              <div
-                className="absolute inset-0"
-                style={{
-                  background: speaking
-                    ? "radial-gradient(ellipse at 50% 30%, rgba(245,158,11,0.12) 0%, transparent 60%)"
-                    : "radial-gradient(ellipse at 50% 30%, rgba(245,158,11,0.05) 0%, transparent 60%)",
-                  transition: "background 0.3s ease",
-                }}
-              />
-              {/* HAIR */}
-              <div className="absolute" style={{ top: "6%", left: "50%", transform: "translateX(-50%)", width: 96, height: 64, background: "linear-gradient(180deg, #0f0702 0%, #1a0d04 100%)", borderRadius: "50% 50% 20% 20%" }} />
-              <div className="absolute" style={{ top: "14%", left: "18%", width: 22, height: 90, background: "linear-gradient(180deg,#1a0d04,#120a03)", borderRadius: "40% 0 20% 40%" }} />
-              <div className="absolute" style={{ top: "14%", right: "18%", width: 22, height: 90, background: "linear-gradient(180deg,#1a0d04,#120a03)", borderRadius: "0 40% 40% 20%" }} />
-              {/* FACE */}
-              <div className="absolute" style={{ top: "12%", left: "50%", transform: "translateX(-50%)", width: 82, height: 98, background: "linear-gradient(180deg, #c8845a 0%, #b87048 50%, #a05c38 100%)", borderRadius: "42% 42% 38% 38%", boxShadow: speaking ? "0 0 20px rgba(245,158,11,0.2)" : "none" }} />
-              {/* EYES */}
-              <div className="absolute" style={{ top: "30%", left: "32%", width: 13, height: 8, background: "#1a0a04", borderRadius: "50%", boxShadow: speaking ? "0 0 6px rgba(251,191,36,0.8)" : "0 0 3px rgba(251,191,36,0.3)" }} />
-              <div className="absolute" style={{ top: "30%", right: "32%", width: 13, height: 8, background: "#1a0a04", borderRadius: "50%", boxShadow: speaking ? "0 0 6px rgba(251,191,36,0.8)" : "0 0 3px rgba(251,191,36,0.3)" }} />
-              <div className="absolute" style={{ top: "29%", left: "34%", width: 4, height: 4, background: "rgba(255,255,255,0.7)", borderRadius: "50%" }} />
-              <div className="absolute" style={{ top: "29%", right: "34%", width: 4, height: 4, background: "rgba(255,255,255,0.7)", borderRadius: "50%" }} />
-              {/* NOSE */}
-              <div className="absolute" style={{ top: "41%", left: "50%", transform: "translateX(-50%)", width: 8, height: 6, background: "rgba(120,60,30,0.4)", borderRadius: "50%" }} />
-              {/* MOUTH */}
-              <div className="absolute" style={{ top: "50%", left: "50%", transform: "translateX(-50%)", width: speaking ? 22 : 18, height: speaking ? 10 : 5, background: speaking ? "rgba(180,60,60,0.9)" : "rgba(160,60,60,0.7)", borderRadius: speaking ? "50%" : "0 0 50% 50%", transition: "all 0.15s ease" }} />
-              {/* NECK + BODY */}
-              <div className="absolute" style={{ top: "55%", left: "50%", transform: "translateX(-50%)", width: 26, height: 28, background: "linear-gradient(180deg,#b87048,#9a5c38)" }} />
-              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 rounded-t-[40%]" style={{ width: 160, height: 80, background: "linear-gradient(180deg,#1a0f08,#0d0905)" }} />
-              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 rounded-t-[35%]" style={{ width: 130, height: 65, background: "linear-gradient(180deg,#3d1a2e,#2a0f1f)" }} />
+          {/* LiveKit video — always rendered, hidden until connected */}
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted={false}
+            className="w-full h-full object-cover"
+            style={{ display: laReady ? "block" : "none" }}
+          />
 
-              {/* Loading spinner while fetching LiveAvatar */}
-              {avatarLoading && (
-                <div className="absolute inset-0 flex flex-col items-center justify-end pb-8 gap-2">
-                  <div className="w-5 h-5 border-2 border-amber-400/30 border-t-amber-400 rounded-full animate-spin" />
-                  <span className="text-[10px] text-amber-400/60">cargando video...</span>
-                </div>
+          {/* Loading / fallback state */}
+          {!laReady && (
+            <div className="absolute inset-0 bg-gradient-to-b from-[#1a1008] via-[#0f0d0a] to-[#080808] flex flex-col items-center justify-center gap-3">
+              {laError ? (
+                <>
+                  {/* CSS avatar fallback */}
+                  <div className="relative w-full h-full">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      {/* face */}
+                      <div style={{ position:"relative", width:90, height:110 }}>
+                        <div style={{ position:"absolute", top:0, left:"50%", transform:"translateX(-50%)", width:80, height:50, background:"linear-gradient(180deg,#0f0702,#1a0d04)", borderRadius:"50% 50% 20% 20%" }} />
+                        <div style={{ position:"absolute", top:"8%", left:"50%", transform:"translateX(-50%)", width:72, height:86, background:"linear-gradient(180deg,#c8845a,#b87048 50%,#a05c38)", borderRadius:"42% 42% 38% 38%", boxShadow: speaking ? "0 0 20px rgba(245,158,11,0.2)" : "none" }} />
+                        <div style={{ position:"absolute", top:"33%", left:"28%", width:11, height:7, background:"#1a0a04", borderRadius:"50%" }} />
+                        <div style={{ position:"absolute", top:"33%", right:"28%", width:11, height:7, background:"#1a0a04", borderRadius:"50%" }} />
+                        <div style={{ position:"absolute", top:"53%", left:"50%", transform:"translateX(-50%)", width: speaking?20:16, height: speaking?9:5, background: speaking?"rgba(180,60,60,0.9)":"rgba(160,60,60,0.7)", borderRadius: speaking?"50%":"0 0 50% 50%", transition:"all 0.15s ease" }} />
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-zinc-500 text-xs absolute bottom-8">avatar animado</p>
+                </>
+              ) : (
+                <>
+                  <div className="w-8 h-8 border-2 border-amber-400/30 border-t-amber-400 rounded-full animate-spin" />
+                  <p className="text-amber-400/60 text-xs">conectando video...</p>
+                </>
               )}
-
-              {/* Speaking waveform */}
-              {speaking && (
-                <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex items-center gap-0.5">
-                  {waveBars.map((h, i) => (
-                    <div key={i} className="wave-bar" style={{ height: `${h * 2}px`, animationDelay: `${i * 0.08}s`, animationDuration: `${0.6 + (i % 4) * 0.1}s` }} />
-                  ))}
-                </div>
-              )}
-            </>
+            </div>
           )}
 
-          {/* Status badge — always visible */}
+          {/* Speaking waveform overlay */}
+          {speaking && laReady && (
+            <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex items-center gap-0.5 pointer-events-none">
+              {waveBars.map((h, i) => (
+                <div key={i} className="wave-bar" style={{ height: `${h * 2}px`, animationDelay: `${i * 0.08}s`, animationDuration: `${0.6 + (i % 4) * 0.1}s` }} />
+              ))}
+            </div>
+          )}
+
+          {/* Status badge */}
           <div className="absolute top-3 right-3 flex items-center gap-1.5 bg-black/60 backdrop-blur-sm px-2 py-1 rounded-full z-10">
             <span className="relative flex h-1.5 w-1.5">
-              <span className="live-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400" />
+              <span className={`live-ping absolute inline-flex h-full w-full rounded-full ${laReady ? "bg-emerald-400" : "bg-amber-400"} opacity-75`} />
+              <span className={`relative inline-flex rounded-full h-1.5 w-1.5 ${laReady ? "bg-emerald-400" : "bg-amber-400"}`} />
             </span>
-            <span className="text-[10px] text-emerald-400">{speaking ? "hablando" : "en vivo"}</span>
+            <span className={`text-[10px] ${laReady ? "text-emerald-400" : "text-amber-400"}`}>
+              {speaking ? "hablando" : laReady ? "en vivo" : "conectando"}
+            </span>
           </div>
         </div>
 
-        <div className="text-center">
-          <p className="font-semibold text-lg">{noviaName}</p>
-          <p className="text-zinc-500 text-xs">{liveAvatarUrl ? "Video en tiempo real" : "Tu compañera IA"}</p>
+        {/* Name + stats bar */}
+        <div className="w-full flex items-center justify-between px-1">
+          <div>
+            <p className="font-semibold text-sm">{noviaName}</p>
+            <p className="text-zinc-500 text-xs">{laReady ? "Video real" : "Cargando..."}</p>
+          </div>
+          <div className="text-right">
+            <p className="text-amber-400 font-bold text-base">{minutesLeft} min</p>
+            <a href="https://wa.me/51979385499" target="_blank" rel="noopener noreferrer" className="text-zinc-600 text-[10px] hover:text-amber-400 transition-colors">+ recargar</a>
+          </div>
         </div>
-
-        <div className="w-full bg-[#111] border border-[#2A2A2A] rounded-2xl px-4 py-3 text-center">
-          <p className="text-amber-400 font-bold text-xl">{minutesLeft} min</p>
-          <p className="text-zinc-500 text-xs">disponibles</p>
-        </div>
-
-        <a
-          href="https://wa.me/51979385499"
-          target="_blank" rel="noopener noreferrer"
-          className="w-full text-center py-2.5 border border-amber-500/30 text-amber-400 text-sm rounded-xl hover:bg-amber-500/10 transition-colors"
-        >
-          + Recargar minutos
-        </a>
       </div>
 
       {/* Right — Chat */}
-      <div className="flex-1 flex flex-col">
-        <div className={`border-b border-[#1A1A1A] px-6 py-4 flex items-center justify-between ${!audioEnabled ? "mt-12 md:mt-0" : ""}`}>
+      <div className="flex-1 flex flex-col min-h-0">
+        <div className="border-b border-[#1A1A1A] px-5 py-3 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400">♡</div>
+            <div className="w-8 h-8 rounded-full bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 text-sm">♡</div>
             <div>
               <p className="font-medium text-sm">{noviaName}</p>
               <p className="text-zinc-500 text-xs">{speaking ? "hablando..." : "activa ahora"}</p>
             </div>
           </div>
-          {audioEnabled && (
+          {laReady && (
             <div className="flex items-center gap-1.5 text-xs text-emerald-400 bg-emerald-400/10 px-2.5 py-1 rounded-full">
-              🔊 Voz activa
+              📹 Video en vivo
             </div>
           )}
         </div>
 
-        <div className="flex-1 overflow-y-auto px-6 py-6 flex flex-col gap-4" style={{ maxHeight: "calc(100vh - 190px)" }}>
+        <div className="flex-1 overflow-y-auto px-5 py-5 flex flex-col gap-3">
           {messages.map((msg, i) => (
             <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-              <div className={`max-w-xs md:max-w-md px-4 py-3 rounded-2xl text-sm leading-relaxed ${
+              <div className={`max-w-xs md:max-w-sm px-4 py-3 rounded-2xl text-sm leading-relaxed ${
                 msg.role === "user"
                   ? "bg-amber-500 text-black rounded-br-sm"
                   : "bg-[#1A1A1A] text-white rounded-bl-sm border border-[#2A2A2A]"
@@ -312,9 +351,7 @@ function SessionApp() {
             <div className="flex justify-start">
               <div className="bg-[#1A1A1A] border border-[#2A2A2A] px-4 py-3 rounded-2xl rounded-bl-sm">
                 <div className="flex gap-1">
-                  {[0, 1, 2].map((i) => (
-                    <div key={i} className="w-2 h-2 rounded-full bg-zinc-500 animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
-                  ))}
+                  {[0,1,2].map((i) => <div key={i} className="w-2 h-2 rounded-full bg-zinc-500 animate-bounce" style={{ animationDelay: `${i*0.15}s` }} />)}
                 </div>
               </div>
             </div>
@@ -322,49 +359,30 @@ function SessionApp() {
           <div ref={bottomRef} />
         </div>
 
-        <div className="px-6 pb-2 flex gap-2 overflow-x-auto">
+        <div className="px-5 pb-2 flex gap-2 overflow-x-auto shrink-0">
           {["Hola 😊", "¿Cómo estás?", "Cuéntame algo", "Te extrañaba"].map((q) => (
-            <button
-              key={q}
-              onClick={() => { if (!audioEnabled) enableAudio(); sendMessage(q); }}
-              className="shrink-0 px-3 py-1.5 text-xs border border-[#2A2A2A] rounded-full text-zinc-400 hover:border-amber-500/30 hover:text-amber-400 transition-colors"
-            >
+            <button key={q} onClick={() => sendMessage(q)} className="shrink-0 px-3 py-1.5 text-xs border border-[#2A2A2A] rounded-full text-zinc-400 hover:border-amber-500/30 hover:text-amber-400 transition-colors">
               {q}
             </button>
           ))}
         </div>
 
-        <div className="px-6 pb-6 pt-2">
-          <form onSubmit={(e) => { e.preventDefault(); if (!audioEnabled) enableAudio(); sendMessage(); }} className="flex gap-2">
-            <button
-              type="button"
-              onClick={toggleMic}
-              className={`px-4 py-3 rounded-2xl font-semibold transition-all text-lg ${
-                listening
-                  ? "bg-red-500 text-white animate-pulse"
-                  : "bg-[#111] border border-[#2A2A2A] text-zinc-400 hover:border-amber-500/40 hover:text-amber-400"
-              }`}
-              title={listening ? "Detener micrófono" : "Hablar con micrófono"}
-            >
+        <div className="px-5 pb-5 pt-2 shrink-0">
+          <form onSubmit={(e) => { e.preventDefault(); sendMessage(); }} className="flex gap-2">
+            <button type="button" onClick={toggleMic}
+              className={`px-4 py-3 rounded-2xl text-lg transition-all ${listening ? "bg-red-500 text-white animate-pulse" : "bg-[#111] border border-[#2A2A2A] text-zinc-400 hover:border-amber-500/40 hover:text-amber-400"}`}
+              title={listening ? "Detener micrófono" : "Hablar"}>
               {listening ? "⏹" : "🎙️"}
             </button>
-
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
+            <input type="text" value={input} onChange={(e) => setInput(e.target.value)}
               placeholder={listening ? "Escuchando..." : `Escríbele a ${noviaName}...`}
-              className="flex-1 bg-[#111] border border-[#2A2A2A] rounded-2xl px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-amber-500/50"
-            />
-            <button
-              type="submit"
-              disabled={!input.trim() || loading}
-              className="px-5 py-3 bg-amber-500 text-black font-semibold rounded-2xl hover:bg-amber-400 transition-colors disabled:opacity-40"
-            >
+              className="flex-1 bg-[#111] border border-[#2A2A2A] rounded-2xl px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-amber-500/50" />
+            <button type="submit" disabled={!input.trim() || loading}
+              className="px-5 py-3 bg-amber-500 text-black font-semibold rounded-2xl hover:bg-amber-400 transition-colors disabled:opacity-40">
               →
             </button>
           </form>
-          <p className="text-center text-zinc-600 text-xs mt-2">🎙️ Toca el micrófono para hablar · Chrome recomendado</p>
+          <p className="text-center text-zinc-600 text-[11px] mt-2">🎙️ Micrófono · {laReady ? "Avatar habla con la voz de Sofía" : "Cargando video..."}</p>
         </div>
       </div>
     </div>
