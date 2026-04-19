@@ -31,6 +31,7 @@ function SessionApp() {
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
   const roomRef = useRef<Room | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const wsReadyRef = useRef(false);
@@ -56,11 +57,9 @@ function SessionApp() {
         if (track.kind === Track.Kind.Video && videoRef.current) {
           track.attach(videoRef.current);
         }
-        if (track.kind === Track.Kind.Audio) {
-          // Create an audio element and attach — required for audio to play
-          const audioEl = track.attach();
-          audioEl.autoplay = true;
-          document.body.appendChild(audioEl);
+        if (track.kind === Track.Kind.Audio && audioRef.current) {
+          track.attach(audioRef.current);
+          audioRef.current.play().catch(() => {});
         }
       });
 
@@ -113,8 +112,6 @@ function SessionApp() {
     return () => {
       roomRef.current?.disconnect();
       wsRef.current?.close();
-      // Remove any injected audio elements
-      document.querySelectorAll("audio[data-lk]").forEach((el) => el.remove());
     };
   }, [token, connectLiveAvatar]);
 
@@ -221,6 +218,9 @@ function SessionApp() {
             className="absolute inset-0 w-full h-full object-cover"
             style={{ display: laStatus === "ready" ? "block" : "none" }}
           />
+          {/* LiveKit audio — hidden but in DOM so browser allows autoplay */}
+          {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+          <audio ref={audioRef} autoPlay style={{ display: "none" }} />
 
           {/* Loading / error state */}
           {laStatus !== "ready" && (
