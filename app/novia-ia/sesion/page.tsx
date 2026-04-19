@@ -27,6 +27,7 @@ function SessionApp() {
   const [speaking, setSpeaking] = useState(false);
   const [listening, setListening] = useState(false);
   const [laStatus, setLaStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [avatarId, setAvatarId] = useState<string>("");
   const [sessionId] = useState(() => crypto.randomUUID());
 
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -37,12 +38,12 @@ function SessionApp() {
   const wsReadyRef = useRef(false);
   const recognitionRef = useRef<{ stop: () => void } | null>(null);
 
-  const connectLiveAvatar = useCallback(async () => {
+  const connectLiveAvatar = useCallback(async (selectedAvatarId?: string) => {
     try {
       const res = await fetch("/api/novia/liveavatar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ max_duration: 300 }),
+        body: JSON.stringify({ max_duration: 300, avatar_id: selectedAvatarId || undefined }),
       });
       if (!res.ok) { setLaStatus("error"); return; }
 
@@ -100,10 +101,11 @@ function SessionApp() {
       const userRes = await fetch(`/api/novia/perfil?token=${token}`);
       const userData = await userRes.json();
       setNoviaName(userData.novia_name ?? "Sofía");
+      if (userData.avatar_id) setAvatarId(userData.avatar_id);
 
       setMessages([{ role: "assistant", content: `Hola ${userData.name ?? "amor"}... te estaba esperando 💛` }]);
 
-      connectLiveAvatar();
+      connectLiveAvatar(userData.avatar_id ?? "");
     }
     if (token) init();
     return () => {
@@ -140,7 +142,14 @@ function SessionApp() {
         const blob = await mp3Res.blob();
         const url = URL.createObjectURL(blob);
         const audio = new Audio(url);
-        audio.onended = () => { setSpeaking(false); URL.revokeObjectURL(url); };
+        audio.onended = () => {
+          setSpeaking(false);
+          URL.revokeObjectURL(url);
+          // Stop avatar lip-sync immediately when voice ends
+          if (wsRef.current?.readyState === WebSocket.OPEN) {
+            wsRef.current.send(JSON.stringify({ type: "agent.interrupt" }));
+          }
+        };
         audio.onerror = () => setSpeaking(false);
         audio.play().catch(() => setSpeaking(false));
       } else {

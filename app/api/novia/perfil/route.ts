@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
   const supabase = await createClient();
   const { data: user } = await supabase
     .from("novia_users")
-    .select("name, novia_name, personality")
+    .select("name, novia_name, personality, avatar_id")
     .eq("token", token)
     .single();
 

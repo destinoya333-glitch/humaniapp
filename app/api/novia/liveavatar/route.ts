@@ -3,19 +3,20 @@ import { NextRequest, NextResponse } from "next/server";
 const LA_BASE = "https://api.liveavatar.com";
 const API_KEY = process.env.LIVEAVATAR_API_KEY!;
 
-// Anastasia Sitting Portrait — female, warm look
-const AVATAR_ID = "b475a5c1-c6a9-45d1-9f86-79b97cf0091f";
+// Default avatar if none selected
+const DEFAULT_AVATAR_ID = "65cca4cf-b7c8-4619-871f-84e2cf8b21d4"; // Katya Sitting Portrait
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
   const maxDuration: number = Math.min(body.max_duration ?? 300, 300);
+  const avatarId: string = body.avatar_id ?? DEFAULT_AVATAR_ID;
 
   // Step 1: create LITE session token
   const tokenRes = await fetch(`${LA_BASE}/v1/sessions/token`, {
     method: "POST",
     headers: { "X-API-KEY": API_KEY, "Content-Type": "application/json" },
     body: JSON.stringify({
-      avatar_id: AVATAR_ID,
+      avatar_id: avatarId,
       mode: "LITE",
       max_session_duration: maxDuration,
     }),
