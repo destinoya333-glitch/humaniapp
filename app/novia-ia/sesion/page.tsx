@@ -2,16 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import Image from "next/image";
 import { Room, RoomEvent, Track } from "livekit-client";
 
-// Map avatar_id → preview photo shown while LiveAvatar loads
-const AVATAR_PHOTOS: Record<string, string> = {
-  "37c384cc-e572-4bf1-bc2a-02907ffc6521": "/juanita-avatar.jpg",  // Rika (Juanita)
-  "65ee9a5b-00ae-4c96-acf2-3326d9566467": "/juanita-avatar.jpg",
-  "9a4f4b1f-86f9-4acf-9a37-b81c21ae95e4": "/sofia-avatar.jpg",
-  "7299c55d-1f45-482d-915c-e5efdc9dd266": "/elenora-avatar.jpg",
-};
 
 interface Message { role: "user" | "assistant"; content: string; }
 
@@ -37,7 +29,6 @@ function SessionApp() {
   const [listening, setListening] = useState(false);
   const [laStatus, setLaStatus] = useState<"loading" | "ready" | "error">("loading");
   const [avatarId, setAvatarId] = useState<string>("");
-  const [avatarPhoto, setAvatarPhoto] = useState<string>("/juanita-avatar.jpg");
   const [sessionId] = useState(() => crypto.randomUUID());
 
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -118,7 +109,6 @@ function SessionApp() {
         || "";
       if (savedAvatarId) {
         setAvatarId(savedAvatarId);
-        setAvatarPhoto(AVATAR_PHOTOS[savedAvatarId] ?? "/juanita.jpg");
       }
 
       setMessages([{ role: "assistant", content: `Hola ${userData.name ?? "amor"}... te estaba esperando 💛` }]);
@@ -244,71 +234,41 @@ function SessionApp() {
 
         <div className="relative flex-1 overflow-hidden" style={{ minHeight: "72vh" }}>
 
-          {/* Avatar photo — always visible, subtle breathing animation */}
-          <Image
-            src={avatarPhoto}
-            alt={noviaName}
-            fill
-            className="object-cover object-top"
-            style={{
-              animation: speaking
-                ? "avatar-speak 0.6s ease-in-out infinite alternate"
-                : "avatar-breathe 4s ease-in-out infinite",
-              transformOrigin: "center top",
-            }}
-            unoptimized
-            priority
+          {/* LiveKit video — principal, se muestra cuando conecta */}
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{ opacity: laStatus === "ready" ? 1 : 0, transition: "opacity 0.6s ease" }}
           />
-
-          {/* LiveKit video + audio — hidden, background only for lip-sync signal */}
-          <video ref={videoRef} autoPlay playsInline style={{ display: "none" }} />
           {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
           <audio ref={audioRef} autoPlay style={{ display: "none" }} />
 
-          {/* Gradient overlay bottom */}
-          <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A]/60 to-transparent pointer-events-none z-10" />
-
-          {/* Speaking: golden glow + waveform */}
-          {speaking && (
-            <div className="absolute inset-0 pointer-events-none z-10">
-              <div className="absolute inset-0" style={{ boxShadow: "inset 0 0 100px rgba(245,158,11,0.18)" }} />
-              <div className="absolute bottom-14 left-1/2 -translate-x-1/2 flex gap-[3px] items-end z-20">
-                {[4,7,12,9,14,11,8,13,6,10,5].map((h, i) => (
-                  <div key={i}
-                    className="w-[3px] bg-amber-400 rounded-full"
-                    style={{
-                      height: `${h * 2}px`,
-                      animation: `waveform 0.${4 + (i % 4)}s ease-in-out infinite alternate`,
-                      animationDelay: `${i * 0.06}s`,
-                      opacity: 0.85,
-                    }}
-                  />
-                ))}
-              </div>
+          {/* Fondo oscuro + spinner mientras carga */}
+          {laStatus !== "ready" && (
+            <div className="absolute inset-0 bg-[#0A0A0A] flex flex-col items-center justify-center gap-3 z-10">
+              {laStatus === "loading" ? (
+                <>
+                  <div className="w-10 h-10 border-2 border-amber-400/20 border-t-amber-400 rounded-full animate-spin" />
+                  <p className="text-amber-400/60 text-sm">Conectando con {noviaName}...</p>
+                </>
+              ) : (
+                <p className="text-zinc-600 text-sm">Video no disponible</p>
+              )}
             </div>
           )}
 
-          {/* Idle: subtle glow around face */}
-          {!speaking && laStatus === "ready" && (
-            <div className="absolute inset-0 pointer-events-none z-10"
-              style={{ boxShadow: "inset 0 0 60px rgba(245,158,11,0.06)" }} />
+          {/* Gradient overlay bottom cuando está listo */}
+          {laStatus === "ready" && (
+            <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#0A0A0A] to-transparent pointer-events-none z-10" />
           )}
 
-          <style>{`
-            @keyframes avatar-breathe {
-              0%   { transform: scale(1.00) translateY(0px); }
-              50%  { transform: scale(1.015) translateY(-3px); }
-              100% { transform: scale(1.00) translateY(0px); }
-            }
-            @keyframes avatar-speak {
-              0%   { transform: scale(1.01) translateY(-1px); }
-              100% { transform: scale(1.025) translateY(-4px); }
-            }
-            @keyframes waveform {
-              0%   { transform: scaleY(0.4); }
-              100% { transform: scaleY(1.0); }
-            }
-          `}</style>
+          {/* Glow cuando habla */}
+          {speaking && (
+            <div className="absolute inset-0 pointer-events-none z-10"
+              style={{ boxShadow: "inset 0 0 80px rgba(245,158,11,0.2)" }} />
+          )}
 
           {/* Status badge */}
           <div className="absolute top-3 right-3 flex items-center gap-1.5 bg-black/70 backdrop-blur-sm px-2.5 py-1 rounded-full z-20">
