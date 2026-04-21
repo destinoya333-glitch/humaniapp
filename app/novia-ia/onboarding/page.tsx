@@ -10,26 +10,27 @@ const personalities = [
   { id: "juguetona",  label: "Juguetona",  emoji: "✨", desc: "Divertida, coqueta y espontánea" },
 ];
 
-// Best available avatars from LiveAvatar public library
-// For fully custom sensual avatars → create at app.liveavatar.com > Avatars > Create
 const avatars = [
   {
-    id: "7299c55d-1f45-482d-915c-e5efdc9dd266",
-    name: "Elenora",
-    tag: "Tank top · Cuerpo completo · Fitness",
-    preview: "https://files2.heygen.ai/avatar/v3/e097a0182d5e4f5a8dabc656fd39c063_45610/preview_target.webp",
+    id: "65ee9a5b-00ae-4c96-acf2-3326d9566467",
+    name: "Juanita",
+    tag: "Castaña · Elegante · Lima",
+    preview: "/juanita.jpg",
+    featured: true,
   },
   {
     id: "9a4f4b1f-86f9-4acf-9a37-b81c21ae95e4",
     name: "Sofía",
-    tag: "Ropa deportiva · Activa · Atractiva",
-    preview: "https://files2.heygen.ai/avatar/v3/4e5afdfe8bdb44f3ae18b90281ab034c_45610/preview_talk_1.webp",
+    tag: "Activa · Deportiva · Fresca",
+    preview: "/sofia-avatar.jpg",
+    featured: false,
   },
   {
-    id: "65ee9a5b-00ae-4c96-acf2-3326d9566467",
-    name: "Anastasia",
-    tag: "Cabello castaño · Casual · Sensual",
-    preview: "https://files2.heygen.ai/avatar/v3/6428cf3872094995af8f40696ddd6ef3_55790/preview_target.webp",
+    id: "7299c55d-1f45-482d-915c-e5efdc9dd266",
+    name: "Elenora",
+    tag: "Glamour · Eventos · Noche",
+    preview: "/elenora-avatar.jpg",
+    featured: false,
   },
 ];
 
@@ -42,7 +43,7 @@ function OnboardingForm() {
   const [name, setName] = useState("");
   const [noviaName, setNoviaName] = useState("");
   const [personality, setPersonality] = useState("dulce");
-  const [avatarId, setAvatarId] = useState(avatars[0].id);
+  const [avatarId, setAvatarId] = useState(avatars[0].id); // Juanita por defecto
   const [loading, setLoading] = useState(false);
 
   async function handleFinish() {
@@ -56,7 +57,7 @@ function OnboardingForm() {
     await fetch("/api/novia/configurar", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token, name, novia_name: noviaName || "Sofía", personality, avatar_id: avatarId }),
+      body: JSON.stringify({ token, name, novia_name: noviaName || "Juanita", personality, avatar_id: avatarId }),
     });
     router.push(`/novia-ia/sesion?token=${token}`);
   }
@@ -99,7 +100,7 @@ function OnboardingForm() {
             <input autoFocus type="text" value={noviaName}
               onChange={(e) => setNoviaName(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && setStep(3)}
-              placeholder="Sofía (por defecto)"
+              placeholder="Juanita (por defecto)"
               className="w-full bg-[#111] border border-[#2A2A2A] rounded-2xl px-5 py-4 text-white text-lg placeholder-zinc-600 focus:outline-none focus:border-amber-500/60 mb-4" />
             <button onClick={() => setStep(3)}
               className="w-full py-4 bg-amber-500 text-black font-bold rounded-2xl hover:bg-amber-400 transition-colors text-lg">
@@ -153,14 +154,18 @@ function OnboardingForm() {
                       : "border-[#2A2A2A] hover:border-amber-500/40"
                   }`}
                 >
+                  {/* Featured badge */}
+                  {av.featured && (
+                    <div className="absolute top-2 left-2 z-10 bg-amber-500 text-black text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow">
+                      ★ Favorita
+                    </div>
+                  )}
                   {/* Image */}
                   <div className="relative w-full" style={{ aspectRatio: "3/4" }}>
                     <Image src={av.preview} alt={av.name} fill className="object-cover object-top" unoptimized />
-                    {/* Dark overlay when not selected */}
                     {avatarId !== av.id && (
                       <div className="absolute inset-0 bg-black/30" />
                     )}
-                    {/* Selected badge */}
                     {avatarId === av.id && (
                       <div className="absolute top-2 right-2 w-6 h-6 bg-amber-500 rounded-full flex items-center justify-center text-black text-xs font-bold shadow-lg">✓</div>
                     )}

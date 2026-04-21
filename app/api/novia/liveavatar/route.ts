@@ -3,8 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 const LA_BASE = "https://api.liveavatar.com";
 const API_KEY = process.env.LIVEAVATAR_API_KEY!;
 
-// Default avatar if none selected
-const DEFAULT_AVATAR_ID = "7299c55d-1f45-482d-915c-e5efdc9dd266"; // Elenora Fitness Coach 2 — tank top, full body
+// Default avatar — Juanita (castaña, ondulada, sensual)
+const DEFAULT_AVATAR_ID = "65ee9a5b-00ae-4c96-acf2-3326d9566467";
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));

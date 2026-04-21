@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 
 const messages = [
   "Hola amor... te estaba esperando 💛",
@@ -72,7 +73,7 @@ export default function AIDemo() {
 
             <ul className="flex flex-col gap-3 mb-8">
               {[
-                { icon: "◉", text: "Video en tiempo real con HeyGen — la IA visual más realista" },
+                { icon: "◉", text: "Avatar visual con foto real — Juanita, tu compañera IA personalizada" },
                 { icon: "◎", text: "Voz emocional natural con ElevenLabs — susurros, risas, empatía" },
                 { icon: "◈", text: "Memoria persistente — recuerda cada conversación contigo" },
               ].map((item) => (
@@ -108,90 +109,31 @@ export default function AIDemo() {
                   </div>
                 </div>
 
-                {/* Video area — AI girl face */}
+                {/* Video area — Juanita */}
                 <div className="relative mx-3 rounded-2xl overflow-hidden bg-[#0A0A0A]" style={{ aspectRatio: "9/14" }}>
 
-                  {/* Gradient face glow — simulates AI avatar glow */}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-full h-full relative">
-                      {/* Skin tone gradient blob */}
-                      <div className="absolute inset-0 bg-gradient-to-b from-[#1a1008] via-[#0d0d0d] to-[#080808]" />
+                  {/* Juanita real photo */}
+                  <Image
+                    src="/juanita.jpg"
+                    alt="Juanita — Mi Novia IA"
+                    fill
+                    className="object-cover object-top"
+                    style={{ animation: "avatar-breathe 4s ease-in-out infinite" }}
+                    unoptimized
+                    priority
+                  />
 
-                      {/* Face glow */}
-                      <div
-                        className="absolute top-[8%] left-1/2 -translate-x-1/2 w-44 h-44 rounded-full"
-                        style={{
-                          background: "radial-gradient(ellipse, rgba(245,158,11,0.08) 0%, rgba(200,130,80,0.05) 40%, transparent 70%)",
-                          animation: "orb-pulse 3s ease-in-out infinite",
-                        }}
-                      />
+                  {/* Bottom gradient */}
+                  <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#0A0A0A] via-black/60 to-transparent" />
 
-                      {/* Silhouette - head shape */}
-                      <div
-                        className="absolute top-[6%] left-1/2 -translate-x-1/2"
-                        style={{ width: 110, height: 130 }}
-                      >
-                        {/* Head oval */}
-                        <div
-                          className="absolute top-0 left-1/2 -translate-x-1/2 rounded-[50%]"
-                          style={{
-                            width: 90,
-                            height: 105,
-                            background: "linear-gradient(180deg, #2a1a0e 0%, #1a0f08 60%, #120b05 100%)",
-                            boxShadow: "0 0 30px rgba(245,158,11,0.12)",
-                          }}
-                        />
-                        {/* Hair */}
-                        <div
-                          className="absolute -top-2 left-1/2 -translate-x-1/2 rounded-t-full"
-                          style={{
-                            width: 96,
-                            height: 60,
-                            background: "linear-gradient(180deg, #1a0d04 0%, #0f0802 100%)",
-                          }}
-                        />
-                        {/* Neck */}
-                        <div
-                          className="absolute bottom-0 left-1/2 -translate-x-1/2 rounded-b-lg"
-                          style={{
-                            width: 28,
-                            height: 30,
-                            background: "linear-gradient(180deg, #2a1a0e, #1a0f08)",
-                          }}
-                        />
-                        {/* Eyes glow */}
-                        <div className="absolute top-[38%] left-[22%] w-3 h-1.5 rounded-full bg-amber-300/40"
-                          style={{ boxShadow: "0 0 8px rgba(251,191,36,0.6)", animation: "orb-pulse 3s infinite" }} />
-                        <div className="absolute top-[38%] right-[22%] w-3 h-1.5 rounded-full bg-amber-300/40"
-                          style={{ boxShadow: "0 0 8px rgba(251,191,36,0.6)", animation: "orb-pulse 3s infinite 0.5s" }} />
-                        {/* Lips */}
-                        <div className="absolute bottom-[28%] left-1/2 -translate-x-1/2 w-8 h-1.5 rounded-full bg-rose-800/60" />
-                      </div>
-
-                      {/* Shoulders */}
-                      <div
-                        className="absolute bottom-0 left-1/2 -translate-x-1/2 rounded-t-[40%]"
-                        style={{
-                          width: 160,
-                          height: 80,
-                          background: "linear-gradient(180deg, #1a0f08 0%, #0d0905 100%)",
-                        }}
-                      />
-
-                      {/* Ambient light from below */}
-                      <div
-                        className="absolute bottom-0 left-0 right-0 h-1/3"
-                        style={{
-                          background: "linear-gradient(to top, rgba(245,158,11,0.04), transparent)",
-                        }}
-                      />
-                    </div>
-                  </div>
+                  {/* Ambient gold glow */}
+                  <div className="absolute inset-0 pointer-events-none"
+                    style={{ boxShadow: "inset 0 0 60px rgba(245,158,11,0.08)" }} />
 
                   {/* Top bar — name + call info */}
                   <div className="absolute top-3 left-0 right-0 px-4 flex items-center justify-between">
                     <div>
-                      <p className="text-white text-sm font-semibold">Sofía</p>
+                      <p className="text-white text-sm font-semibold">Juanita</p>
                       <p className="text-zinc-400 text-xs">Tu compañera IA</p>
                     </div>
                     <div className="flex items-center gap-1.5 bg-black/50 backdrop-blur-sm px-2.5 py-1 rounded-full">
@@ -258,7 +200,7 @@ export default function AIDemo() {
 
               {/* Floating badge — tech */}
               <div className="absolute -left-4 bottom-1/4 bg-[#111] border border-[#2A2A2A] text-zinc-300 text-xs px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5">
-                <span className="text-amber-400">◉</span> HeyGen + ElevenLabs
+                <span className="text-amber-400">◉</span> IA · Voz Natural
               </div>
             </div>
           </div>
