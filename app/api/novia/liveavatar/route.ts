@@ -3,8 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 const LA_BASE = "https://api.liveavatar.com";
 const API_KEY = process.env.LIVEAVATAR_API_KEY!;
 
-// Default avatar — Juanita (castaña, ondulada, sensual)
-const DEFAULT_AVATAR_ID = "65ee9a5b-00ae-4c96-acf2-3326d9566467";
+// Default avatar — Juanita/Rika (cabello negro ondulado, joven, habla en video)
+const DEFAULT_AVATAR_ID = "37c384cc-e572-4bf1-bc2a-02907ffc6521";
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));

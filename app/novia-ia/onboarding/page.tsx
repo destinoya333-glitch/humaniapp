@@ -12,10 +12,10 @@ const personalities = [
 
 const avatars = [
   {
-    id: "65ee9a5b-00ae-4c96-acf2-3326d9566467",
+    id: "37c384cc-e572-4bf1-bc2a-02907ffc6521",
     name: "Juanita",
-    tag: "Castaña · Elegante · Lima",
-    preview: "/juanita.jpg",
+    tag: "Cabello negro · Joven · Elegante",
+    preview: "/juanita-avatar.jpg",
     featured: true,
   },
   {

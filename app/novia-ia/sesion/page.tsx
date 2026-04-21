@@ -5,9 +5,10 @@ import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { Room, RoomEvent, Track } from "livekit-client";
 
-// Map avatar_id → local photo shown in session
+// Map avatar_id → preview photo shown while LiveAvatar loads
 const AVATAR_PHOTOS: Record<string, string> = {
-  "65ee9a5b-00ae-4c96-acf2-3326d9566467": "/juanita.jpg",
+  "37c384cc-e572-4bf1-bc2a-02907ffc6521": "/juanita-avatar.jpg",  // Rika (Juanita)
+  "65ee9a5b-00ae-4c96-acf2-3326d9566467": "/juanita-avatar.jpg",
   "9a4f4b1f-86f9-4acf-9a37-b81c21ae95e4": "/sofia-avatar.jpg",
   "7299c55d-1f45-482d-915c-e5efdc9dd266": "/elenora-avatar.jpg",
 };
@@ -36,7 +37,7 @@ function SessionApp() {
   const [listening, setListening] = useState(false);
   const [laStatus, setLaStatus] = useState<"loading" | "ready" | "error">("loading");
   const [avatarId, setAvatarId] = useState<string>("");
-  const [avatarPhoto, setAvatarPhoto] = useState<string>("/juanita.jpg");
+  const [avatarPhoto, setAvatarPhoto] = useState<string>("/juanita-avatar.jpg");
   const [sessionId] = useState(() => crypto.randomUUID());
 
   const bottomRef = useRef<HTMLDivElement>(null);

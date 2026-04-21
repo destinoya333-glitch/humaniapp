@@ -114,7 +114,7 @@ export default function AIDemo() {
 
                   {/* Juanita real photo */}
                   <Image
-                    src="/juanita.jpg"
+                    src="/juanita-avatar.jpg"
                     alt="Juanita — Mi Novia IA"
                     fill
                     className="object-cover object-top"

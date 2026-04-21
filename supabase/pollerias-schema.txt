@@ -1,0 +1,184 @@
+-- ═══════════════════════════════════════
+-- HumaniApp — Módulo Pollerías — Schema v1
+-- ═══════════════════════════════════════
+
+-- ─── TENANTS (cada pollería es un tenant) ───────────────────────────────────
+
+create table if not exists pol_tenants (
+  id                uuid primary key default gen_random_uuid(),
+  slug              text unique not null,         -- ej: "don-pepe", "el-lenador"
+  nombre            text not null,                -- nombre del negocio
+  telefono_negocio  text,                         -- número de contacto
+  whatsapp_number   text not null,                -- número Twilio asignado (+13612875933)
+  direccion         text not null,                -- dirección física de la pollería
+  lat               numeric not null,             -- latitud de la pollería (origen delivery)
+  lon               numeric not null,             -- longitud de la pollería
+  radio_max_km      numeric default 8,            -- radio máximo de delivery en km
+  yape_numero       text,                         -- número Yape para pagos
+  yape_nombre       text,                         -- nombre que aparece en Yape
+  horario_apertura  time default '12:00',
+  horario_cierre    time default '22:00',
+  activo            boolean default true,
+  plan              text default 'starter',       -- starter | pro | enterprise
+  created_at        timestamptz default now()
+);
+
+-- ─── GRUPOS TELEGRAM (por tenant) ───────────────────────────────────────────
+
+create table if not exists pol_telegram_grupos (
+  id          uuid primary key default gen_random_uuid(),
+  tenant_id   uuid references pol_tenants(id) on delete cascade,
+  tipo        text not null check (tipo in ('caja','cocina','despacho','delivery','admin')),
+  chat_id     text not null,                      -- ID del grupo Telegram (-100xxxxxxxx)
+  activo      boolean default true
+);
+
+-- ─── MENÚ ───────────────────────────────────────────────────────────────────
+
+create table if not exists pol_categorias (
+  id          uuid primary key default gen_random_uuid(),
+  tenant_id   uuid references pol_tenants(id) on delete cascade,
+  nombre      text not null,                      -- "Pollos", "Combos", "Bebidas"
+  orden       int default 0,
+  activo      boolean default true
+);
+
+create table if not exists pol_productos (
+  id            uuid primary key default gen_random_uuid(),
+  tenant_id     uuid references pol_tenants(id) on delete cascade,
+  categoria_id  uuid references pol_categorias(id) on delete set null,
+  nombre        text not null,
+  descripcion   text,
+  precio        numeric not null,
+  disponible    boolean default true,
+  orden         int default 0
+);
+
+-- ─── TARIFAS DELIVERY ───────────────────────────────────────────────────────
+
+create table if not exists pol_delivery_tarifas (
+  id          uuid primary key default gen_random_uuid(),
+  tenant_id   uuid references pol_tenants(id) on delete cascade,
+  km_desde    numeric not null,                   -- ej: 0
+  km_hasta    numeric not null,                   -- ej: 2
+  costo       numeric not null,                   -- ej: 3.00
+  activo      boolean default true
+);
+
+-- ─── CLIENTES ───────────────────────────────────────────────────────────────
+
+create table if not exists pol_clientes (
+  id          uuid primary key default gen_random_uuid(),
+  tenant_id   uuid references pol_tenants(id) on delete cascade,
+  telefono    text not null,
+  nombre      text,
+  direccion_guardada  text,                       -- última dirección usada
+  lat_guardada        numeric,
+  lon_guardada        numeric,
+  total_pedidos       int default 0,
+  created_at  timestamptz default now(),
+  unique(tenant_id, telefono)
+);
+
+-- ─── PEDIDOS ────────────────────────────────────────────────────────────────
+
+create table if not exists pol_pedidos (
+  id              uuid primary key default gen_random_uuid(),
+  tenant_id       uuid references pol_tenants(id) on delete cascade,
+  cliente_id      uuid references pol_clientes(id),
+  numero          serial,                         -- #0001, #0002...
+  tipo            text not null check (tipo in ('delivery','recojo')),
+  estado          text not null default 'nuevo'
+                    check (estado in (
+                      'nuevo',
+                      'pago_pendiente',
+                      'pago_confirmado',
+                      'en_cocina',
+                      'cocinado',
+                      'en_despacho',
+                      'armado',
+                      'en_delivery',
+                      'entregado',
+                      'cancelado'
+                    )),
+  -- Delivery
+  direccion_entrega   text,
+  lat_entrega         numeric,
+  lon_entrega         numeric,
+  distancia_km        numeric,
+  costo_delivery      numeric default 0,
+  tiempo_estimado_min int,
+  -- Recojo
+  hora_recojo     time,
+  -- Pago
+  metodo_pago     text check (metodo_pago in ('yape','transferencia','contra_entrega')),
+  estado_pago     text default 'pendiente' check (estado_pago in ('pendiente','confirmado','fallido')),
+  referencia_pago text,
+  -- Totales
+  subtotal        numeric not null default 0,
+  total           numeric not null default 0,
+  -- Notas
+  notas           text,
+  -- Timestamps
+  created_at      timestamptz default now(),
+  confirmado_at   timestamptz,
+  entregado_at    timestamptz
+);
+
+-- ─── ITEMS DEL PEDIDO ───────────────────────────────────────────────────────
+
+create table if not exists pol_pedido_items (
+  id            uuid primary key default gen_random_uuid(),
+  pedido_id     uuid references pol_pedidos(id) on delete cascade,
+  producto_id   uuid references pol_productos(id),
+  nombre        text not null,                    -- snapshot del nombre al momento del pedido
+  precio        numeric not null,                 -- snapshot del precio
+  cantidad      int not null default 1,
+  modificaciones text,                            -- "sin ensalada, extra salsa"
+  subtotal      numeric not null
+);
+
+-- ─── CONVERSACIONES WHATSAPP ────────────────────────────────────────────────
+
+create table if not exists pol_conversaciones (
+  id          uuid primary key default gen_random_uuid(),
+  tenant_id   uuid references pol_tenants(id) on delete cascade,
+  telefono    text not null,
+  pedido_id   uuid references pol_pedidos(id),    -- pedido activo en la conversación
+  carrito     jsonb default '[]',                 -- items en proceso antes de confirmar
+  estado_chat text default 'inicio',              -- estado de la conversación
+  messages    jsonb default '[]',                 -- historial para el agente IA
+  updated_at  timestamptz default now(),
+  created_at  timestamptz default now(),
+  unique(tenant_id, telefono)
+);
+
+-- ─── ROW LEVEL SECURITY ─────────────────────────────────────────────────────
+
+alter table pol_tenants           enable row level security;
+alter table pol_telegram_grupos   enable row level security;
+alter table pol_categorias        enable row level security;
+alter table pol_productos         enable row level security;
+alter table pol_delivery_tarifas  enable row level security;
+alter table pol_clientes          enable row level security;
+alter table pol_pedidos           enable row level security;
+alter table pol_pedido_items      enable row level security;
+alter table pol_conversaciones    enable row level security;
+
+-- Políticas abiertas por ahora (el backend controla acceso via service key)
+create policy "service access" on pol_tenants           for all using (true);
+create policy "service access" on pol_telegram_grupos   for all using (true);
+create policy "service access" on pol_categorias        for all using (true);
+create policy "service access" on pol_productos         for all using (true);
+create policy "service access" on pol_delivery_tarifas  for all using (true);
+create policy "service access" on pol_clientes          for all using (true);
+create policy "service access" on pol_pedidos           for all using (true);
+create policy "service access" on pol_pedido_items      for all using (true);
+create policy "service access" on pol_conversaciones    for all using (true);
+
+-- ─── DATOS DE EJEMPLO (pollería piloto) ─────────────────────────────────────
+
+-- Tenant de prueba
+insert into pol_tenants (slug, nombre, whatsapp_number, direccion, lat, lon, yape_numero, yape_nombre)
+values ('don-pepe', 'Pollería Don Pepe', '+13612875933', 'Av. Principal 123, Lima', -12.0464, -77.0428, '998102258', 'Don Pepe')
+on conflict (slug) do nothing;

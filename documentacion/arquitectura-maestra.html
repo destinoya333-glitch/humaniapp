@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HumaniApp — Arquitectura Maestra</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; line-height: 1.6; }
+  .header { background: linear-gradient(135deg, #6366f1, #8b5cf6); padding: 40px; text-align: center; }
+  .header h1 { font-size: 2.5rem; color: white; }
+  .header p { color: #e0e7ff; margin-top: 8px; font-size: 1.1rem; }
+  .badge { display: inline-block; background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; margin-top: 10px; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 40px 20px; }
+  h2 { color: #a78bfa; font-size: 1.5rem; margin: 40px 0 16px; border-left: 4px solid #6366f1; padding-left: 12px; }
+  h3 { color: #818cf8; font-size: 1.1rem; margin: 24px 0 10px; }
+  pre { background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 20px; overflow-x: auto; font-family: 'Consolas', monospace; font-size: 0.85rem; color: #94a3b8; line-height: 1.7; margin: 12px 0; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin: 16px 0; }
+  .card { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 20px; }
+  .card h4 { color: #c4b5fd; margin-bottom: 10px; font-size: 1rem; }
+  .card ul { padding-left: 18px; color: #94a3b8; font-size: 0.9rem; }
+  .card ul li { margin: 4px 0; }
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+  th { background: #312e81; color: #c4b5fd; padding: 10px 14px; text-align: left; font-size: 0.9rem; }
+  td { padding: 10px 14px; border-bottom: 1px solid #1e293b; font-size: 0.9rem; color: #94a3b8; }
+  tr:hover td { background: #1e293b; }
+  .tag { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.78rem; margin: 2px; }
+  .tag-green { background: #065f46; color: #6ee7b7; }
+  .tag-blue { background: #1e3a5f; color: #93c5fd; }
+  .tag-purple { background: #3b0764; color: #c4b5fd; }
+  .tag-yellow { background: #78350f; color: #fcd34d; }
+  .tag-red { background: #7f1d1d; color: #fca5a5; }
+  .step { display: flex; gap: 16px; margin: 12px 0; align-items: flex-start; }
+  .step-num { background: #6366f1; color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; flex-shrink: 0; margin-top: 2px; }
+  .step-text { color: #94a3b8; font-size: 0.9rem; }
+  .step-text strong { color: #e2e8f0; }
+  .divider { border: none; border-top: 1px solid #334155; margin: 40px 0; }
+  .highlight { background: #1e293b; border-left: 3px solid #6366f1; padding: 16px; border-radius: 0 8px 8px 0; margin: 16px 0; color: #94a3b8; font-size: 0.9rem; }
+  .today-box { background: linear-gradient(135deg, #1e3a5f, #312e81); border: 1px solid #6366f1; border-radius: 10px; padding: 24px; margin: 20px 0; }
+  .today-box h3 { color: #a78bfa; margin-bottom: 16px; }
+  code { background: #334155; padding: 2px 6px; border-radius: 4px; font-family: 'Consolas', monospace; font-size: 0.85rem; color: #c4b5fd; }
+  footer { text-align: center; padding: 30px; color: #475569; font-size: 0.85rem; border-top: 1px solid #1e293b; margin-top: 60px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>HumaniApp.com</h1>
+  <p>Arquitectura Maestra — Plataforma SaaS Multi-Tenant B2C + B2B</p>
+  <span class="badge">Generado: 19 Abril 2026</span>
+</div>
+
+<div class="container">
+
+  <!-- VISIÓN -->
+  <h2>Visión del Negocio</h2>
+  <div class="grid">
+    <div class="card">
+      <h4>B2C — Venta Directa</h4>
+      <ul>
+        <li>DestinoYA (activo ✅)</li>
+        <li>Miss Sofia English (landing ✅)</li>
+        <li>Mi Novia IA (en desarrollo)</li>
+        <li>Futuros servicios</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>B2B — Venta de Plataforma</h4>
+      <ul>
+        <li>Pollerías con agente IA</li>
+        <li>Consultorios médicos</li>
+        <li>Otros rubros (futuro)</li>
+        <li>White-label para emprendedores</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>Modelo SaaS</h4>
+      <ul>
+        <li>Multi-tenant desde el inicio</li>
+        <li>Un solo dominio aloja todo</li>
+        <li>Dashboard por emprendedor</li>
+        <li>Super Admin para Percy</li>
+      </ul>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- TWILIO -->
+  <h2>Estrategia WhatsApp: WATI → Twilio</h2>
+  <div class="highlight">
+    <strong>Decisión confirmada:</strong> Migrar a Twilio como proveedor único de WhatsApp para toda la plataforma. Un solo panel controla todos los números de todos los servicios y tenants.
+  </div>
+  <pre>
+HOY (WATI — solo DestinoYA)         ARQUITECTURA OBJETIVO (TWILIO)
+────────────────────────────        ─────────────────────────────────────
+1 número → DestinoYA          →     Cuenta Twilio Maestra (Percy)
+                                    ├── Número 1: DestinoYA
+                                    ├── Número 2: Miss Sofia
+                                    ├── Número 3: Mi Novia IA (captación)
+                                    ├── Número 4: Pollería Don Pepe (tenant)
+                                    ├── Número 5: Pollería El Leñador (tenant)
+                                    └── Número N: cualquier tenant futuro</pre>
+
+  <table>
+    <tr><th>Aspecto</th><th>WATI</th><th>Twilio</th></tr>
+    <tr><td>Costo fijo</td><td>$49/mes por número</td><td>$0 fijo, pago por uso</td></tr>
+    <tr><td>Multi-tenant</td><td>❌ No nativo</td><td>✅ Nativo</td></tr>
+    <tr><td>10 clientes</td><td>~$490/mes</td><td>~$30-50/mes</td></tr>
+    <tr><td>Control</td><td>Limitado</td><td>✅ Total via API</td></tr>
+    <tr><td>Para SaaS</td><td>❌ No ideal</td><td>✅ Perfecto</td></tr>
+  </table>
+
+  <hr class="divider">
+
+  <!-- ARQUITECTURA TÉCNICA -->
+  <h2>Arquitectura Técnica Completa</h2>
+  <pre>
+┌─────────────────────────────────────────────────────────────────────┐
+│                      HUMANIAPP.COM (Next.js 15)                      │
+│                                                                     │
+│  /                  → Landing corporativa                           │
+│  /miss-sofia        → Landing Miss Sofia ✅ ya existe               │
+│  /mi-novia-ia       → Landing Mi Novia IA                           │
+│  /pollerias         → Landing producto B2B                          │
+│  /dashboard         → Panel emprendedor (B2B)                       │
+│  /admin             → Super Admin Percy                             │
+│  /app/novia         → Videollamada IA (Mi Novia IA)                 │
+└────────────────────────────┬────────────────────────────────────────┘
+                             ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│                    BACKEND API (Node.js + Railway)                   │
+│                                                                     │
+│  /api/chat          → Agente IA (Claude API)                        │
+│  /api/tenants       → Gestión multi-tenant                          │
+│  /api/orders        → Pedidos pollerías                             │
+│  /api/appointments  → Citas consultorios                            │
+│  /api/payments      → Yape, Culqi, Stripe                           │
+│  /api/whatsapp      → Webhook Twilio (entrada mensajes)             │
+│  /api/kitchen       → Notificaciones cocina                         │
+└──────────┬──────────────────────┬──────────────────┬────────────────┘
+           ↓                      ↓                  ↓
+  ┌──────────────┐      ┌──────────────┐    ┌────────────────────────┐
+  │   SUPABASE   │      │    TWILIO    │    │    INTEGRACIONES       │
+  │  PostgreSQL  │      │  WhatsApp    │    │                        │
+  │              │      │  todos los   │    │  Claude API → IA       │
+  │  • users     │      │  números     │    │  ElevenLabs → voz      │
+  │  • tenants   │      │              │    │  HeyGen → video        │
+  │  • services  │      │              │    │  Telegram → cocina     │
+  │  • orders    │      │              │    │  n8n → DestinoYA       │
+  │  • sessions  │      │              │    │  Google Calendar       │
+  └──────────────┘      └──────────────┘    └────────────────────────┘</pre>
+
+  <hr class="divider">
+
+  <!-- BASE DE DATOS -->
+  <h2>Estructura de Base de Datos (Supabase)</h2>
+  <pre>
+/* NÚCLEO MULTI-TENANT */
+tenants          → cada negocio/servicio (pollería, consultorio, etc.)
+tenant_configs   → configuración específica por tenant
+plans            → Starter, Pro, Enterprise
+
+/* USUARIOS */
+users            → clientes finales
+tenant_users     → relación usuario ↔ tenant
+
+/* SERVICIOS IA */
+conversations    → historial de chat por usuario + tenant
+agent_tools      → herramientas disponibles por tipo de servicio
+
+/* NEGOCIO */
+orders           → pedidos (pollerías)
+appointments     → citas (consultorios)
+payments         → todos los pagos
+menus            → carta por tenant (pollerías)</pre>
+
+  <hr class="divider">
+
+  <!-- MÓDULOS -->
+  <h2>Módulos de la Plataforma</h2>
+  <div class="grid">
+    <div class="card">
+      <h4>Módulo 1: CORE</h4>
+      <ul>
+        <li>Autenticación usuarios</li>
+        <li>Multi-tenant engine</li>
+        <li>Twilio WhatsApp handler</li>
+        <li>Agente IA base (Claude API)</li>
+        <li>Pagos (Culqi + Stripe + Yape)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>Módulo 2: DESTINOYA</h4>
+      <ul>
+        <li>Migrar flujos n8n → agente IA</li>
+        <li>Astrología, Profesional, Exprés</li>
+        <li>Número propio en Twilio</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>Módulo 3: MISS SOFIA</h4>
+      <ul>
+        <li>Flujo onboarding WhatsApp</li>
+        <li>Test de nivel automático</li>
+        <li>Sesiones de inglés con IA</li>
+        <li>Landing ya existe ✅</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>Módulo 4: MI NOVIA IA</h4>
+      <ul>
+        <li>Captación WhatsApp → pago</li>
+        <li>Videollamada HeyGen + ElevenLabs</li>
+        <li>Memoria persistente Supabase</li>
+        <li>Pago por minuto</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>Módulo 5: POLLERÍAS (B2B)</h4>
+      <ul>
+        <li>Agente IA toma pedidos</li>
+        <li>Notificación cocina Telegram</li>
+        <li>Seguimiento hasta entrega</li>
+        <li>Dashboard emprendedor</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>Módulo 6: CONSULTORIOS (B2B)</h4>
+      <ul>
+        <li>Agente IA reserva citas</li>
+        <li>Google Calendar sync</li>
+        <li>Recordatorios automáticos</li>
+        <li>Multi-doctor por consultorio</li>
+      </ul>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- FLUJO POLLERÍA -->
+  <h2>Flujo Completo: Chatbot Pollería con Agente IA</h2>
+  <pre>
+[1] CONVERSACIÓN LIBRE
+    Cliente: "Quiero un combo familiar sin ensalada y 2 gaseosas XL"
+    → Agente IA entiende, consulta menú del tenant
+    → Agrega al carrito con modificaciones
+    → Confirma: "Combo familiar sin ensalada (S/65) + 2 gaseosas XL (S/12) = S/77"
+
+[2] PAGO
+    Bot envía datos Yape/transferencia
+    → Cliente envía captura
+    → Sistema verifica → Pedido #0042 confirmado
+
+[3] NOTIFICACIÓN COCINA (Telegram)
+    n8n/API → grupo Telegram cocina:
+    "🔔 PEDIDO #0042 — 7:45pm
+     1x Combo Familiar sin ensalada
+     2x Gaseosa XL
+     📍 Delivery: Jr. Lima 234
+     💰 Pagado S/77 ✅"
+
+[4] SEGUIMIENTO
+    Cocina escribe: "listo 0042"
+    → Webhook detecta → API actualiza estado
+    → WhatsApp cliente: "🛵 Tu pedido va en camino"
+
+[5] ENTREGA + FEEDBACK
+    Repartidor marca entregado
+    → Cliente recibe confirmación
+    → Bot pide reseña opcional ⭐</pre>
+
+  <hr class="divider">
+
+  <!-- PLANES B2B -->
+  <h2>Planes para Vender a Emprendedores</h2>
+  <table>
+    <tr><th>Plan</th><th>Precio/mes</th><th>Incluye</th></tr>
+    <tr>
+      <td><span class="tag tag-blue">STARTER</span></td>
+      <td>S/ 199</td>
+      <td>1 número WhatsApp, hasta 300 pedidos/mes, menú 30 items, Telegram cocina</td>
+    </tr>
+    <tr>
+      <td><span class="tag tag-purple">PRO</span></td>
+      <td>S/ 349</td>
+      <td>Todo Starter + pedidos ilimitados, combos, reportes de ventas, zonas delivery</td>
+    </tr>
+    <tr>
+      <td><span class="tag tag-yellow">ENTERPRISE</span></td>
+      <td>S/ 599</td>
+      <td>Todo Pro + múltiples sucursales, dashboard personalizado, soporte prioritario</td>
+    </tr>
+  </table>
+
+  <hr class="divider">
+
+  <!-- STACK -->
+  <h2>Stack Tecnológico Completo</h2>
+  <table>
+    <tr><th>Capa</th><th>Tecnología</th><th>Función</th></tr>
+    <tr><td>Frontend</td><td>Next.js 15 + TypeScript + Tailwind</td><td>Web + Dashboard + Landing pages</td></tr>
+    <tr><td>Backend</td><td>Node.js + Express</td><td>API REST + webhooks</td></tr>
+    <tr><td>Base de datos</td><td>Supabase (PostgreSQL)</td><td>Multi-tenant, auth, tiempo real</td></tr>
+    <tr><td>IA cerebro</td><td>Claude API (claude-sonnet-4-6)</td><td>Agente conversacional + tools</td></tr>
+    <tr><td>WhatsApp</td><td>Twilio</td><td>Canal único para todos los números</td></tr>
+    <tr><td>Voz</td><td>ElevenLabs</td><td>Miss Sofia + Mi Novia IA</td></tr>
+    <tr><td>Video avatar</td><td>HeyGen Streaming API</td><td>Mi Novia IA videollamada</td></tr>
+    <tr><td>Cocina</td><td>Telegram Bot API</td><td>Notificaciones pollerías (gratis)</td></tr>
+    <tr><td>Pagos PE</td><td>Culqi + Yape</td><td>Cobros en Perú</td></tr>
+    <tr><td>Pagos INT</td><td>Stripe</td><td>Cobros internacionales</td></tr>
+    <tr><td>Hosting frontend</td><td>Vercel</td><td>Next.js deploy automático</td></tr>
+    <tr><td>Hosting backend</td><td>Railway</td><td>Node.js + variables de entorno</td></tr>
+    <tr><td>Flujos legacy</td><td>n8n</td><td>DestinoYA (mientras migra)</td></tr>
+  </table>
+
+  <hr class="divider">
+
+  <!-- ROADMAP -->
+  <h2>Roadmap de Construcción</h2>
+
+  <h3>Fase 1 — Cimientos (Semana 1-2)</h3>
+  <div class="step"><div class="step-num">1</div><div class="step-text"><strong>Verificar entorno:</strong> node --version, gh --version, gh auth login</div></div>
+  <div class="step"><div class="step-num">2</div><div class="step-text"><strong>GitHub:</strong> Crear repositorio humaniapp</div></div>
+  <div class="step"><div class="step-num">3</div><div class="step-text"><strong>Proyecto:</strong> Next.js 15 + TypeScript + Tailwind</div></div>
+  <div class="step"><div class="step-num">4</div><div class="step-text"><strong>Supabase:</strong> Crear proyecto + schema base multi-tenant</div></div>
+  <div class="step"><div class="step-num">5</div><div class="step-text"><strong>Twilio:</strong> Crear cuenta + conectar primer número</div></div>
+  <div class="step"><div class="step-num">6</div><div class="step-text"><strong>Backend:</strong> API base en Railway con webhook Twilio</div></div>
+
+  <h3>Fase 2 — Primer Servicio Completo (Semana 3-4)</h3>
+  <div class="step"><div class="step-num">1</div><div class="step-text"><strong>Miss Sofia en Twilio:</strong> flujo onboarding + test de nivel</div></div>
+  <div class="step"><div class="step-num">2</div><div class="step-text"><strong>Claude API:</strong> agente Miss Sofia con herramientas</div></div>
+  <div class="step"><div class="step-num">3</div><div class="step-text"><strong>Pagos:</strong> Culqi integrado para cobro cursos</div></div>
+  <div class="step"><div class="step-num">4</div><div class="step-text"><strong>Piloto:</strong> primer alumno real</div></div>
+
+  <h3>Fase 3 — Plataforma Pollerías MVP (Semana 5-6)</h3>
+  <div class="step"><div class="step-num">1</div><div class="step-text"><strong>Agente IA pollerías:</strong> tools para menú, carrito, pedido</div></div>
+  <div class="step"><div class="step-num">2</div><div class="step-text"><strong>Telegram cocina:</strong> notificaciones + seguimiento</div></div>
+  <div class="step"><div class="step-num">3</div><div class="step-text"><strong>Dashboard emprendedor:</strong> gestión de menú y pedidos</div></div>
+  <div class="step"><div class="step-num">4</div><div class="step-text"><strong>Pollería piloto:</strong> primer cliente B2B real</div></div>
+
+  <h3>Fase 4 — Mi Novia IA (Semana 7-8)</h3>
+  <div class="step"><div class="step-num">1</div><div class="step-text"><strong>HeyGen Streaming API:</strong> avatar en videollamada</div></div>
+  <div class="step"><div class="step-num">2</div><div class="step-text"><strong>ElevenLabs:</strong> voz femenina en tiempo real</div></div>
+  <div class="step"><div class="step-num">3</div><div class="step-text"><strong>Pago por minuto:</strong> Yape + Culqi integrado</div></div>
+  <div class="step"><div class="step-num">4</div><div class="step-text"><strong>Memoria:</strong> Supabase historial por usuario</div></div>
+
+  <hr class="divider">
+
+  <!-- HOY -->
+  <div class="today-box">
+    <h3>🚀 Pasos para HOY</h3>
+    <div class="step"><div class="step-num">1</div><div class="step-text">Verificar Node.js: <code>! node --version</code></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-text">Verificar GitHub CLI: <code>! gh --version</code></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-text">Conectar GitHub: <code>! gh auth login</code></div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-text">Crear cuenta Twilio en twilio.com (gratis para empezar)</div></div>
+    <div class="step"><div class="step-num">5</div><div class="step-text">Crear repositorio: <code>! gh repo create humaniapp --public</code></div></div>
+    <div class="step"><div class="step-num">6</div><div class="step-text">Iniciar proyecto Next.js 15</div></div>
+  </div>
+
+</div>
+
+<footer>
+  HumaniApp.com — Arquitectura generada el 19 de Abril 2026 con Claude Code<br>
+  Percy · destinoya333@gmail.com
+</footer>
+
+</body>
+</html>
