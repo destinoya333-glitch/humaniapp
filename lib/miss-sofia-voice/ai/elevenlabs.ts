@@ -25,9 +25,9 @@ export async function elevenLabsTTS(text: string): Promise<TTSResult> {
       text,
       model_id: "eleven_multilingual_v2",
       voice_settings: {
-        stability: 0.5,
-        similarity_boost: 0.75,
-        style: 0.4,
+        stability: 0.7,        // Calm, less variation
+        similarity_boost: 0.85, // Maintain voice character
+        style: 0.15,            // Low theatricality, more neutral
         use_speaker_boost: true,
       },
     }),
