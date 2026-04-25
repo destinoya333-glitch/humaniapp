@@ -26,10 +26,8 @@ export async function POST(req: NextRequest) {
   try {
     reply = await processWhatsAppMessage(phone, body);
   } catch (e) {
-    const errMsg = e instanceof Error ? e.message : String(e);
-    console.error("Miss Sofia WhatsApp error:", errMsg, e);
-    // Temporary verbose error for debugging:
-    reply = `[DEBUG] error: ${errMsg.slice(0, 200)}`;
+    console.error("Miss Sofia WhatsApp error:", e);
+    reply = "Tuve un problemita técnico, mi amor. ¿Me escribes en un minutito? 💕";
   }
 
   const twiml = new twilio.twiml.MessagingResponse();

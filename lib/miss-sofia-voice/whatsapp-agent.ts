@@ -15,7 +15,7 @@ import {
   updateLead,
 } from "./whatsapp-leads";
 
-const CLAUDE_MODEL = process.env.CLAUDE_MODEL ?? "claude-sonnet-4-6";
+const CLAUDE_MODEL = (process.env.CLAUDE_MODEL ?? "claude-sonnet-4-6").trim();
 let _client: Anthropic | null = null;
 function anthropic() {
   if (_client) return _client;
