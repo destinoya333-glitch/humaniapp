@@ -2,8 +2,7 @@
  * POST /api/whatsapp/miss-sofia
  * Twilio WhatsApp webhook for Miss Sofia.
  *
- * Uses the new mse_* schema (whatsapp_leads → bridges to mse_users on signup).
- * Replaces the old sofia_* (legacy) flow which is now deprecated.
+ * Returns TwiML with optional audio Media (for level test questions).
  */
 import { NextRequest, NextResponse } from "next/server";
 import twilio from "twilio";
@@ -15,23 +14,28 @@ export async function POST(req: NextRequest) {
   const body = (formData.get("Body") as string) || "";
 
   const phone = from.replace(/^whatsapp:/, "");
+  const twiml = new twilio.twiml.MessagingResponse();
+
   if (!phone) {
-    const twiml = new twilio.twiml.MessagingResponse();
     return new NextResponse(twiml.toString(), {
       headers: { "Content-Type": "text/xml" },
     });
   }
 
-  let reply = "";
+  let text = "";
+  let mediaUrl: string | undefined;
   try {
-    reply = await processWhatsAppMessage(phone, body);
+    const reply = await processWhatsAppMessage(phone, body);
+    text = reply.text;
+    mediaUrl = reply.mediaUrl;
   } catch (e) {
     console.error("Miss Sofia WhatsApp error:", e);
-    reply = "Tuve un problemita técnico, mi amor. ¿Me escribes en un minutito? 💕";
+    text = "Tuve un problemita técnico, mi amor. ¿Me escribes en un minutito? 💕";
   }
 
-  const twiml = new twilio.twiml.MessagingResponse();
-  twiml.message(reply);
+  const msg = twiml.message(text);
+  if (mediaUrl) msg.media(mediaUrl);
+
   return new NextResponse(twiml.toString(), {
     headers: { "Content-Type": "text/xml" },
   });
