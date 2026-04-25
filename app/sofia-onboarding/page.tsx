@@ -26,6 +26,13 @@ export default function OnboardingPage() {
         return;
       }
       setAuthedEmail(user.email ?? null);
+      // Pull prefilled WhatsApp from signup (sessionStorage) or auth metadata
+      const fromMeta = (user.user_metadata as { whatsapp_phone?: string })?.whatsapp_phone;
+      const fromSession = typeof window !== "undefined"
+        ? sessionStorage.getItem("sofia_signup_phone")
+        : null;
+      if (fromMeta) setWhatsapp(fromMeta);
+      else if (fromSession) setWhatsapp(fromSession);
     })();
   }, []);
 

@@ -1,9 +1,11 @@
 /**
  * POST /api/sofia-auth/onboard
  * Persists onboarding data into mse_users + ensures mse_student_profiles row.
+ * Also bridges any pre-existing WhatsApp lead to this user.
  */
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthedUser, getServiceClient } from "@/lib/miss-sofia-voice/auth";
+import { convertLeadToUser } from "@/lib/miss-sofia-voice/whatsapp-leads";
 
 export async function POST(req: NextRequest) {
   const authed = await getAuthedUser();
@@ -17,6 +19,7 @@ export async function POST(req: NextRequest) {
   }
 
   const supabase = getServiceClient();
+  const cleanedPhone = whatsapp_phone ? String(whatsapp_phone).trim() : null;
 
   // Upsert mse_users keyed by id (auth user id)
   const { error: userErr } = await supabase
@@ -31,7 +34,7 @@ export async function POST(req: NextRequest) {
         country: country || null,
         profession: profession || null,
         motivation: motivation || null,
-        whatsapp_phone: whatsapp_phone || null,
+        whatsapp_phone: cleanedPhone,
         plan: "free",
       },
       { onConflict: "id" }
@@ -45,5 +48,19 @@ export async function POST(req: NextRequest) {
     .from("mse_student_profiles")
     .upsert({ user_id: authed.id }, { onConflict: "user_id", ignoreDuplicates: true });
 
-  return NextResponse.json({ ok: true });
+  // Bridge any prior WhatsApp lead with this phone number
+  let bridged: { migrated: boolean; level: string | null } = { migrated: false, level: null };
+  if (cleanedPhone) {
+    try {
+      bridged = await convertLeadToUser({
+        phone: cleanedPhone,
+        user_id: authed.id,
+        name: name.trim(),
+      });
+    } catch (e) {
+      console.error("WhatsApp lead bridge failed:", e);
+    }
+  }
+
+  return NextResponse.json({ ok: true, bridged });
 }

@@ -1,14 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-export default function SignupPage() {
+function SignupForm() {
+  const params = useSearchParams();
+  const phoneFromQuery = params.get("phone") ?? "";
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [phone, setPhone] = useState(phoneFromQuery);
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (phoneFromQuery) {
+      // Persist for the onboarding step
+      sessionStorage.setItem("sofia_signup_phone", phoneFromQuery);
+    }
+  }, [phoneFromQuery]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -19,7 +31,10 @@ export default function SignupPage() {
       const { error } = await supabase.auth.signUp({
         email,
         password,
-        options: { emailRedirectTo: `${window.location.origin}/sofia-auth/callback` },
+        options: {
+          emailRedirectTo: `${window.location.origin}/sofia-auth/callback`,
+          data: phone ? { whatsapp_phone: phone } : undefined,
+        },
       });
       if (error) throw error;
       setMsg(
@@ -43,6 +58,11 @@ export default function SignupPage() {
             Empieza con Miss Sofia
           </h1>
           <p className="text-sm text-gray-500">3 minutos gratis al día. Sin tarjeta.</p>
+          {phoneFromQuery && (
+            <div className="mt-3 bg-green-50 border border-green-200 text-green-700 text-xs p-2 rounded-lg">
+              ✨ Llegaste desde WhatsApp. Tu nivel detectado se conecta automáticamente.
+            </div>
+          )}
         </div>
 
         <form onSubmit={submit} className="space-y-3">
@@ -91,5 +111,19 @@ export default function SignupPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-screen flex items-center justify-center">
+          <p className="text-gray-500">Loading...</p>
+        </main>
+      }
+    >
+      <SignupForm />
+    </Suspense>
   );
 }
