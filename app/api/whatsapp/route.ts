@@ -28,17 +28,19 @@ export async function POST(req: NextRequest) {
     return await handleMissSofia(req, formData, from, sofiaTenant);
   }
 
-  // 3. DestinoYA (n8n legacy) — reenviar al webhook de n8n
-  const DESTINOYA_NUMBERS = [
-    "+13612875933",
-    // agrega aquí más números de DestinoYA si tienes
-  ];
-
+  // 3. DestinoYA — agente Claude propio (Twilio +51961347233)
+  const DESTINOYA_NUMBERS = ["+51961347233"];
   if (DESTINOYA_NUMBERS.includes(toNumber)) {
+    return await handleDestinoYA(req, formData, from);
+  }
+
+  // 4. DestinoYA legacy (n8n) — números viejos
+  const DESTINOYA_LEGACY = ["+13612875933"];
+  if (DESTINOYA_LEGACY.includes(toNumber)) {
     return await forwardToN8n(req, formData);
   }
 
-  // 4. Número no reconocido
+  // 5. Número no reconocido
   const twiml = new twilio.twiml.MessagingResponse();
   twiml.message("Lo sentimos, este servicio no está disponible.");
   return new NextResponse(twiml.toString(), {
@@ -102,6 +104,31 @@ async function handleMissSofia(
   const historial = (conversacion?.messages as Array<{ role: string; content: unknown }>) || [];
 
   const respuesta = await procesarMensaje({ tenant, telefono, mensaje: body, historial });
+
+  const twiml = new twilio.twiml.MessagingResponse();
+  twiml.message(respuesta);
+  return new NextResponse(twiml.toString(), {
+    headers: { "Content-Type": "text/xml" }
+  });
+}
+
+// ─── HANDLER DESTINOYA (Claude agent propio) ────────────────────────────────
+
+async function handleDestinoYA(
+  _req: NextRequest,
+  formData: FormData,
+  from: string
+) {
+  const { getConversacion } = await import("@/lib/destinoya/db");
+  const { procesarMensaje } = await import("@/lib/destinoya/agent");
+
+  const telefono = from.replace("whatsapp:", "");
+  const body = (formData.get("Body") as string) || "";
+
+  const conversacion = await getConversacion(telefono);
+  const historial = (conversacion?.messages as Array<{ role: string; content: unknown }>) || [];
+
+  const respuesta = await procesarMensaje({ telefono, mensaje: body, historial });
 
   const twiml = new twilio.twiml.MessagingResponse();
   twiml.message(respuesta);
