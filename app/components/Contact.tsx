@@ -32,8 +32,26 @@ export default function Contact() {
     setForm({ ...form, [e.target.name]: e.target.value });
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    // Persist to ay_b2b_leads in background; never blocks the user
+    fetch("/api/onboarding/lead", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: form.name,
+        email: form.email,
+        whatsapp: form.phone,
+        asset_interest: form.asset,
+        budget_range: form.budget,
+        timing: form.timing,
+        notes: form.message,
+      }),
+    }).catch(() => {
+      /* lead persistence is best-effort — WhatsApp opening is the canonical path */
+    });
+
     const summary = [
       `Hola ActivosYA — solicito acceso al data room.`,
       ``,
