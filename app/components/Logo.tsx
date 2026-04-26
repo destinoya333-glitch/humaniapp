@@ -9,7 +9,7 @@ export default function Logo({ size = 96 }: { size?: number }) {
       viewBox="0 0 100 100"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      aria-label="HumaniApp logo"
+      aria-label="ActivosYA logo"
       style={{ overflow: "visible" }}
     >
       <defs>

@@ -257,7 +257,7 @@ export default function MissSofiaPage() {
       <nav className="fixed top-0 inset-x-0 z-50 border-b border-[#2A2A2A] bg-[#0A0A0A]/90 backdrop-blur-md">
         <div className="mx-auto max-w-6xl px-6 h-16 flex items-center justify-between">
           <a href="/" className="flex items-center gap-2 text-sm font-semibold text-zinc-300 hover:text-white transition-colors">
-            <span className="text-amber-400">✦</span> HumaniApp
+            <span className="text-amber-400">✦</span> ActivosYA
           </a>
           <div className="hidden md:flex items-center gap-6 text-sm text-zinc-400">
             <a href="#metodo" className="hover:text-white transition-colors">Método</a>
@@ -755,7 +755,7 @@ export default function MissSofiaPage() {
         <div className="mx-auto max-w-5xl flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-sm text-zinc-500">
             <span className="text-amber-400">✦</span>
-            <span>Miss Sofia · HumaniApp · Hecho en Perú</span>
+            <span>Miss Sofia · ActivosYA · Hecho en Perú</span>
           </div>
           <div className="flex items-center gap-6 text-sm text-zinc-600">
             <a href="/" className="hover:text-zinc-400 transition-colors">Inicio</a>

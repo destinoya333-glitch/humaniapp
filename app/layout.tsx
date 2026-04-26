@@ -8,9 +8,39 @@ const geist = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "HumaniApp — La plataforma IA más humana",
+  metadataBase: new URL("https://activosya.com"),
+  title: {
+    default: "ActivosYA — Compra negocios digitales que ya facturan",
+    template: "%s · ActivosYA",
+  },
   description:
-    "Servicios IA de experiencia real para usuarios finales y plataformas white-label para emprendedores.",
+    "Marketplace de activos digitales en LATAM. Plataformas SaaS llave-en-mano con flujo de caja verificado. Adquiere o renta — empieza a cobrar suscripciones desde el día 1.",
+  applicationName: "ActivosYA",
+  keywords: [
+    "activos digitales",
+    "negocios digitales en venta",
+    "plataformas SaaS Perú",
+    "white-label IA",
+    "comprar negocio digital",
+    "rentar plataforma SaaS",
+  ],
+  authors: [{ name: "ActivosYA" }],
+  openGraph: {
+    type: "website",
+    locale: "es_PE",
+    url: "https://activosya.com",
+    siteName: "ActivosYA",
+    title: "ActivosYA — Marketplace de activos digitales",
+    description:
+      "Compra o renta plataformas SaaS con flujo de caja verificado. Hecho en Perú.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ActivosYA — Marketplace de activos digitales",
+    description:
+      "Compra o renta plataformas SaaS con flujo de caja verificado.",
+  },
+  robots: { index: true, follow: true },
 };
 
 export default function RootLayout({

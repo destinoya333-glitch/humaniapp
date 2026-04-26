@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "@/app/globals.css";
 
 export const metadata: Metadata = {
-  title: "Mi Novia IA — HumaniApp",
+  title: "Mi Novia IA · ActivosYA",
   description: "Tu compañera IA personalizada. Video real, voz natural, memoria persistente.",
 };
 

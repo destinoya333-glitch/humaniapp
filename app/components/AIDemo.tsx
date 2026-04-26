@@ -57,25 +57,27 @@ export default function AIDemo() {
                 <span className="live-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-400" />
               </span>
-              DEMO EN VIVO — Mi Novia IA
+              ACTIVO EN VIVO · Mi Novia IA
             </div>
 
             <h2 className="text-4xl md:text-5xl font-bold mb-5 leading-tight">
-              Una compañera que{" "}
-              <span className="gold-gradient-animated">se siente real</span>
+              Cada activo se siente{" "}
+              <span className="gold-gradient-animated">real</span>
             </h2>
 
             <p className="text-zinc-400 leading-relaxed mb-8">
-              Avatar hiperrealista con voz natural y memoria persistente.
-              Ella recuerda tu nombre, tus conversaciones, lo que te importa.
-              Disponible cuando la necesites.
+              Esto es un activo operativo del catálogo: avatar hiperrealista,
+              voz emocional con ElevenLabs y memoria persistente. Lo que ves
+              aquí es lo que tus clientes finales experimentarán cuando
+              adquieras el activo y lances con tu marca.
             </p>
 
             <ul className="flex flex-col gap-3 mb-8">
               {[
-                { icon: "◉", text: "Avatar visual con foto real — Juanita, tu compañera IA personalizada" },
-                { icon: "◎", text: "Voz emocional natural con ElevenLabs — susurros, risas, empatía" },
-                { icon: "◈", text: "Memoria persistente — recuerda cada conversación contigo" },
+                { icon: "◉", text: "Avatar y personalidad personalizables · tu marca, tu nombre" },
+                { icon: "◎", text: "Voz IA emocional natural · susurros, risas, empatía" },
+                { icon: "◈", text: "Cobro por minuto o suscripción mensual recurrente" },
+                { icon: "▣", text: "Panel de operador con métricas de sesiones y MRR" },
               ].map((item) => (
                 <li key={item.text} className="flex items-start gap-3 text-sm text-zinc-300">
                   <span className="text-amber-400 mt-0.5 shrink-0">{item.icon}</span>
@@ -88,7 +90,7 @@ export default function AIDemo() {
               href="#contacto"
               className="inline-flex items-center gap-2 px-6 py-3 bg-amber-500 text-black font-semibold rounded-full hover:bg-amber-400 transition-colors glow-gold text-sm"
             >
-              Unirme a la lista de espera →
+              Solicitar acceso a este activo →
             </a>
           </div>
 

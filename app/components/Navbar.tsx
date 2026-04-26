@@ -13,30 +13,30 @@ export default function Navbar() {
         <Link href="/" className="flex items-center gap-3">
           <Logo size={56} />
           <span className="text-2xl font-bold tracking-tight">
-            <span className="gold-gradient">Humani</span>
-            <span className="text-white">App</span>
+            <span className="gold-gradient">Activos</span>
+            <span className="text-white">YA</span>
           </span>
         </Link>
 
         <div className="hidden md:flex items-center gap-8 text-sm text-zinc-400">
-          <a href="#servicios" className="hover:text-white transition-colors">Servicios</a>
-          <a href="#plataformas" className="hover:text-white transition-colors">Emprendedores</a>
-          <a href="#por-que" className="hover:text-white transition-colors">Por qué HumaniApp</a>
+          <a href="#catalogo" className="hover:text-white transition-colors">Catálogo</a>
+          <a href="#como-funciona" className="hover:text-white transition-colors">Cómo funciona</a>
+          <a href="#por-que" className="hover:text-white transition-colors">Por qué ActivosYA</a>
           <a href="#contacto" className="hover:text-white transition-colors">Contacto</a>
         </div>
 
         <div className="hidden md:flex items-center gap-3">
           <a
-            href="#servicios"
+            href="#catalogo"
             className="px-4 py-2 text-sm text-zinc-300 hover:text-white border border-[#2A2A2A] rounded-full transition-colors hover:border-amber-500/40"
           >
-            Ver servicios
+            Ver catálogo
           </a>
           <a
-            href="#plataformas"
+            href="#contacto"
             className="px-4 py-2 text-sm font-medium bg-amber-500 text-black rounded-full hover:bg-amber-400 transition-colors"
           >
-            Quiero mi plataforma
+            Solicitar acceso
           </a>
         </div>
 
@@ -57,16 +57,16 @@ export default function Navbar() {
 
       {open && (
         <div className="md:hidden border-t border-[#2A2A2A] bg-[#0A0A0A] px-6 py-4 flex flex-col gap-4 text-sm">
-          <a href="#servicios" onClick={() => setOpen(false)} className="text-zinc-400 hover:text-white">Servicios</a>
-          <a href="#plataformas" onClick={() => setOpen(false)} className="text-zinc-400 hover:text-white">Emprendedores</a>
-          <a href="#por-que" onClick={() => setOpen(false)} className="text-zinc-400 hover:text-white">Por qué HumaniApp</a>
+          <a href="#catalogo" onClick={() => setOpen(false)} className="text-zinc-400 hover:text-white">Catálogo</a>
+          <a href="#como-funciona" onClick={() => setOpen(false)} className="text-zinc-400 hover:text-white">Cómo funciona</a>
+          <a href="#por-que" onClick={() => setOpen(false)} className="text-zinc-400 hover:text-white">Por qué ActivosYA</a>
           <a href="#contacto" onClick={() => setOpen(false)} className="text-zinc-400 hover:text-white">Contacto</a>
           <a
-            href="#plataformas"
+            href="#contacto"
             onClick={() => setOpen(false)}
             className="mt-2 px-4 py-2 text-center font-medium bg-amber-500 text-black rounded-full hover:bg-amber-400"
           >
-            Quiero mi plataforma
+            Solicitar acceso
           </a>
         </div>
       )}

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "@/app/globals.css";
 
 export const metadata: Metadata = {
-  title: "Miss Sofia — Aprende inglés con IA | HumaniApp",
+  title: "Miss Sofia — Aprende inglés con IA · ActivosYA",
   description:
     "Tu profesora de inglés IA personal por WhatsApp. Método NAS: de A1 a C2 en 15 meses. Lección diaria, voz real, certificado internacional. Prueba gratis 7 días.",
 };

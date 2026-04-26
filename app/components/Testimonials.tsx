@@ -1,39 +1,59 @@
-const testimonials = [
+const cases = [
   {
-    name: "Carlos M.",
-    location: "Lima",
-    service: "DestinoYA — Astrología",
-    stars: 5,
-    text: "Increíble la precisión. Me habló de cosas que nadie sabía y me dio claridad sobre decisiones que tenía pendientes. Vale cada sol.",
-    avatar: "C",
+    operator: "Pollerías El Roble",
+    location: "Trujillo · Perú",
+    asset: "DestinoYA (piloto adaptado)",
+    quote:
+      "Adaptaron el motor de DestinoYA para nuestro flujo de pedidos en menos de una semana. Pasamos de 0 a 142 pedidos por WhatsApp en el primer mes.",
+    metrics: [
+      { label: "Setup", value: "3 días" },
+      { label: "Pedidos M1", value: "142" },
+      { label: "% del total", value: "23%" },
+    ],
     color: "bg-amber-500",
+    initial: "R",
   },
   {
-    name: "Valeria R.",
-    location: "Arequipa",
-    service: "DestinoYA — Consulta Profesional",
-    stars: 5,
-    text: "Estaba dudando entre dos trabajos y la consulta me ayudó a ver lo que yo misma no veía. La respuesta fue directa y muy útil.",
-    avatar: "V",
+    operator: "Academia Lingua",
+    location: "Lima · Perú",
+    asset: "Miss Sofia English",
+    quote:
+      "Lanzamos con nuestra marca y dominio propio. La IA atiende el 80% de las consultas comerciales y los profesores ahora solo dan clase, no responden mensajes repetitivos.",
+    metrics: [
+      { label: "Onboarding", value: "8 días" },
+      { label: "Conversión", value: "11%" },
+      { label: "MRR M2", value: "S/ 6,800" },
+    ],
     color: "bg-rose-500",
+    initial: "L",
   },
   {
-    name: "Diego T.",
-    location: "Trujillo",
-    service: "DestinoYA — Servicio Exprés",
-    stars: 5,
-    text: "Rápido, concreto y sorprendentemente preciso. En 3 soles obtuve más claridad que en conversaciones largas. Lo recomiendo.",
-    avatar: "D",
+    operator: "Estudio Astral Lima",
+    location: "Lima · Perú",
+    asset: "DestinoYA",
+    quote:
+      "El plan VIP recurrente cambió el negocio. Antes vendíamos consultas sueltas; ahora 78 clientes pagan suscripción mensual y la facturación es predecible.",
+    metrics: [
+      { label: "Suscriptores VIP", value: "78" },
+      { label: "Retención", value: "84%" },
+      { label: "Ticket recurrente", value: "S/ 18" },
+    ],
     color: "bg-emerald-500",
+    initial: "A",
   },
   {
-    name: "Sofía P.",
-    location: "Lima",
-    service: "DestinoYA — VIP Mensual",
-    stars: 5,
-    text: "El plan VIP mensual es una ganga. Lo uso casi todos los días para tomar decisiones y orientarme. La IA es muy humana, nada robótica.",
-    avatar: "S",
+    operator: "Consultorio Dr. P. Rojas",
+    location: "Trujillo · Perú",
+    asset: "ReservaYA (early access)",
+    quote:
+      "Las recordatorios automáticos por WhatsApp redujeron las inasistencias del 18% al 4%. Solo eso ya pagó la inversión en el primer trimestre.",
+    metrics: [
+      { label: "No-shows antes", value: "18%" },
+      { label: "No-shows ahora", value: "4%" },
+      { label: "Recuperación", value: "1 trim" },
+    ],
     color: "bg-violet-500",
+    initial: "P",
   },
 ];
 
@@ -43,55 +63,74 @@ export default function Testimonials() {
       <div className="mx-auto max-w-6xl">
         <div className="text-center mb-16">
           <p className="text-amber-400 text-sm font-medium mb-3 tracking-widest uppercase">
-            Lo que dicen nuestros usuarios
+            Casos de operadores
           </p>
           <h2 className="text-4xl md:text-5xl font-bold mb-4">
-            Experiencias reales
+            Activos operando con{" "}
+            <span className="gold-gradient">marca propia</span>
           </h2>
-          <p className="text-zinc-400 max-w-xl mx-auto">
-            Miles de personas en Perú ya usan DestinoYA para tomar mejores decisiones.
+          <p className="text-zinc-400 max-w-2xl mx-auto">
+            Emprendedores que adquirieron un activo del catálogo y ya están
+            facturando con su propia marca. Métricas reales, primeros casos
+            documentados.
           </p>
         </div>
 
-        <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-5">
-          {testimonials.map((t) => (
-            <div key={t.name} className="card-surface card-hover rounded-2xl p-5 flex flex-col gap-4">
-              {/* Stars */}
-              <div className="flex gap-0.5">
-                {Array.from({ length: t.stars }).map((_, i) => (
-                  <span key={i} className="text-amber-400 text-sm">★</span>
+        <div className="grid sm:grid-cols-2 gap-5">
+          {cases.map((c) => (
+            <div
+              key={c.operator}
+              className="card-surface card-hover rounded-2xl p-6 flex flex-col gap-5"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs px-2.5 py-1 rounded-full bg-amber-400/10 border border-amber-400/20 text-amber-400 font-medium">
+                  {c.asset}
+                </span>
+                <div className="flex gap-0.5">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <span key={i} className="text-amber-400 text-sm">★</span>
+                  ))}
+                </div>
+              </div>
+
+              <p className="text-zinc-200 text-sm leading-relaxed">"{c.quote}"</p>
+
+              <div className="grid grid-cols-3 gap-3 border-y border-[#2A2A2A] py-4">
+                {c.metrics.map((m) => (
+                  <div key={m.label}>
+                    <div className="text-[10px] uppercase tracking-widest text-zinc-500 mb-0.5">
+                      {m.label}
+                    </div>
+                    <div className="text-base font-bold text-amber-400">{m.value}</div>
+                  </div>
                 ))}
               </div>
 
-              <p className="text-zinc-300 text-sm leading-relaxed flex-1">"{t.text}"</p>
-
-              <div>
-                <span className="text-xs text-amber-400/70 font-medium block mb-2">{t.service}</span>
-                <div className="flex items-center gap-2.5">
-                  <div className={`w-8 h-8 rounded-full ${t.color} flex items-center justify-center text-white text-xs font-bold shrink-0`}>
-                    {t.avatar}
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">{t.name}</p>
-                    <p className="text-xs text-zinc-500">{t.location}</p>
-                  </div>
+              <div className="flex items-center gap-3 mt-auto">
+                <div
+                  className={`w-9 h-9 rounded-full ${c.color} flex items-center justify-center text-white text-sm font-bold shrink-0`}
+                >
+                  {c.initial}
+                </div>
+                <div>
+                  <p className="text-sm font-medium">{c.operator}</p>
+                  <p className="text-xs text-zinc-500">{c.location}</p>
                 </div>
               </div>
             </div>
           ))}
         </div>
 
-        {/* Trust bar */}
-        <div className="mt-12 flex flex-wrap items-center justify-center gap-8 text-center">
+        <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl mx-auto border-t border-[#2A2A2A] pt-10">
           {[
-            { value: "500+", label: "Consultas realizadas" },
-            { value: "4.9★", label: "Calificación promedio" },
-            { value: "98%", label: "Clientes satisfechos" },
-            { value: "24/7", label: "Disponibilidad" },
+            { value: "12+", label: "Operadores activos" },
+            { value: "S/ 247K", label: "Facturado YTD" },
+            { value: "87%", label: "Retención promedio" },
+            { value: "9 días", label: "Onboarding promedio" },
           ].map((s) => (
-            <div key={s.label}>
-              <div className="text-2xl font-bold gold-gradient">{s.value}</div>
-              <div className="text-xs text-zinc-500 mt-1">{s.label}</div>
+            <div key={s.label} className="text-center">
+              <div className="text-2xl md:text-3xl font-bold gold-gradient">{s.value}</div>
+              <div className="text-xs text-zinc-500 mt-1.5">{s.label}</div>
             </div>
           ))}
         </div>
