@@ -37,7 +37,7 @@ const assets: Asset[] = [
   {
     status: "Activo",
     icon: "✦",
-    name: "DestinoYA",
+    name: "TuDestinoYa",
     tagline: "Tarot y orientación IA · WhatsApp",
     description:
       "Plataforma de consultas IA: astrología, lectura de palma, orientación profesional y servicio exprés. Cobros Yape + planes VIP recurrentes.",
@@ -56,7 +56,7 @@ const assets: Asset[] = [
   {
     status: "Beta",
     icon: "♡",
-    name: "Mi Novia IA",
+    name: "TuNoviaIA",
     tagline: "Compañía IA femenina · App + WhatsApp",
     description:
       "Compañera IA con foto, voz emocional ElevenLabs y memoria persistente. Cobro por minuto o suscripción mensual. Avatar y personalidad personalizables.",
@@ -73,42 +73,42 @@ const assets: Asset[] = [
     b2cLabel: "Hablar con Juanita",
   },
   {
-    status: "Próximamente",
-    icon: "◐",
-    name: "ReservaYA",
-    tagline: "Reservas para consultorios · WhatsApp + Web",
-    description:
-      "Sistema de citas médicas multi-doctor con confirmación automática, recordatorios y dashboard. Para clínicas, consultorios y centros de salud.",
-    metrics: [
-      { label: "Lanzamiento", value: "Q2 2026" },
-      { label: "Mercado objetivo", value: "Consultorios LATAM" },
-      { label: "Modelo", value: "B2B mensual" },
-      { label: "Pre-venta", value: "Abierta" },
-    ],
-    stack: ["Next.js", "Twilio", "Supabase", "Calendar API"],
-    rent: "Desde S/ 2,000/mes",
-    buy: "Compra a consultar",
-    b2cHref: "#contacto",
-    b2cLabel: "Pre-reservar acceso",
-  },
-  {
-    status: "Próximamente",
+    status: "Beta",
     icon: "◑",
-    name: "TuPedidoYA",
+    name: "TuPedidoYa",
     tagline: "Pedidos para restaurantes · WhatsApp",
     description:
-      "Bot de pedidos para pollerías, pizzerías y restaurantes. Menú interactivo, integración delivery, reportes diarios. Cobro por restaurante operativo.",
+      "Bot de pedidos para pollerías, pizzerías y restaurantes. Menú interactivo, integración con cocina por Telegram, reportes diarios. Multi-tenant: cada restaurante con su número y branding.",
     metrics: [
-      { label: "Lanzamiento", value: "Q2 2026" },
+      { label: "Estado", value: "Probado en piloto" },
       { label: "Mercado objetivo", value: "Restaurantes Perú" },
       { label: "Modelo", value: "B2B mensual" },
-      { label: "Pre-venta", value: "Abierta" },
+      { label: "Disponibilidad", value: "Abierta" },
     ],
     stack: ["Twilio", "Claude", "Supabase", "Telegram"],
     rent: "Desde S/ 1,800/mes",
     buy: "Compra a consultar",
     b2cHref: "#contacto",
-    b2cLabel: "Pre-reservar acceso",
+    b2cLabel: "Solicitar demo",
+  },
+  {
+    status: "Beta",
+    icon: "◐",
+    name: "TuReservaYa",
+    tagline: "Reservas para consultorios · WhatsApp + Web",
+    description:
+      "Sistema de citas médicas multi-doctor con confirmación automática, recordatorios anti-no-show y dashboard. Para clínicas, consultorios y centros de salud.",
+    metrics: [
+      { label: "Estado", value: "Piloto activo" },
+      { label: "Mercado objetivo", value: "Consultorios LATAM" },
+      { label: "Modelo", value: "B2B mensual" },
+      { label: "Disponibilidad", value: "Abierta" },
+    ],
+    stack: ["Next.js", "Twilio", "Supabase", "n8n"],
+    rent: "Desde S/ 2,000/mes",
+    buy: "Compra a consultar",
+    b2cHref: "#contacto",
+    b2cLabel: "Solicitar demo",
   },
 ];
 

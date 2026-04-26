@@ -25,7 +25,7 @@ const faqs = [
   },
   {
     q: "¿Cada cuánto agregan nuevos activos al catálogo?",
-    a: "Apuntamos a 1-2 activos nuevos por trimestre. La pipeline pública incluye Mi Novia IA Plus (Q2 2026), ReservaYA y TuPedidoYA (Q2-Q3 2026). Suscríbete para que te avisemos cuando lance algo que te interese.",
+    a: "Apuntamos a 1-2 activos nuevos por trimestre. La pipeline pública incluye TuNoviaIA Plus, evoluciones de TuPedidoYa y TuReservaYa, y nuevos verticales en evaluación. Suscríbete para que te avisemos cuando lance algo que te interese.",
   },
   {
     q: "¿Necesito ser desarrollador para operar un activo?",

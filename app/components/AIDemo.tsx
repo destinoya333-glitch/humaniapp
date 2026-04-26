@@ -57,7 +57,7 @@ export default function AIDemo() {
                 <span className="live-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-400" />
               </span>
-              ACTIVO EN VIVO · Mi Novia IA
+              ACTIVO EN VIVO · TuNoviaIA
             </div>
 
             <h2 className="text-4xl md:text-5xl font-bold mb-5 leading-tight">
@@ -117,7 +117,7 @@ export default function AIDemo() {
                   {/* Juanita real photo */}
                   <Image
                     src="/juanita-avatar.jpg"
-                    alt="Juanita — Mi Novia IA"
+                    alt="Juanita — TuNoviaIA"
                     fill
                     className="object-cover object-top"
                     style={{ animation: "avatar-breathe 4s ease-in-out infinite" }}

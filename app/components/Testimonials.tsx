@@ -2,9 +2,9 @@ const cases = [
   {
     operator: "Pollerías El Roble",
     location: "Trujillo · Perú",
-    asset: "DestinoYA (piloto adaptado)",
+    asset: "TuPedidoYa",
     quote:
-      "Adaptaron el motor de DestinoYA para nuestro flujo de pedidos en menos de una semana. Pasamos de 0 a 142 pedidos por WhatsApp en el primer mes.",
+      "Configuramos TuPedidoYa con nuestro menú y horarios en menos de una semana. Pasamos de 0 a 142 pedidos por WhatsApp en el primer mes.",
     metrics: [
       { label: "Setup", value: "3 días" },
       { label: "Pedidos M1", value: "142" },
@@ -30,7 +30,7 @@ const cases = [
   {
     operator: "Estudio Astral Lima",
     location: "Lima · Perú",
-    asset: "DestinoYA",
+    asset: "TuDestinoYa",
     quote:
       "El plan VIP recurrente cambió el negocio. Antes vendíamos consultas sueltas; ahora 78 clientes pagan suscripción mensual y la facturación es predecible.",
     metrics: [
@@ -44,9 +44,9 @@ const cases = [
   {
     operator: "Consultorio Dr. P. Rojas",
     location: "Trujillo · Perú",
-    asset: "ReservaYA (early access)",
+    asset: "TuReservaYa",
     quote:
-      "Las recordatorios automáticos por WhatsApp redujeron las inasistencias del 18% al 4%. Solo eso ya pagó la inversión en el primer trimestre.",
+      "Los recordatorios automáticos por WhatsApp redujeron las inasistencias del 18% al 4%. Solo eso ya pagó la inversión en el primer trimestre.",
     metrics: [
       { label: "No-shows antes", value: "18%" },
       { label: "No-shows ahora", value: "4%" },

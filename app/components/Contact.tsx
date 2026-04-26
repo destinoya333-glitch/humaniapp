@@ -129,10 +129,10 @@ export default function Contact() {
                 className="w-full bg-[#0A0A0A] border border-[#2A2A2A] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-500/50"
               >
                 <option value="miss-sofia">Miss Sofia English (inglés con IA)</option>
-                <option value="destinoya">DestinoYA (tarot y orientación)</option>
-                <option value="mi-novia">Mi Novia IA (compañía IA)</option>
-                <option value="reservaya">ReservaYA (reservas para consultorios)</option>
-                <option value="tupedidoya">TuPedidoYA (pedidos para restaurantes)</option>
+                <option value="tudestinoya">TuDestinoYa (tarot y orientación)</option>
+                <option value="tunoviaia">TuNoviaIA (compañía IA)</option>
+                <option value="tupedidoya">TuPedidoYa (pedidos para restaurantes)</option>
+                <option value="tureservaya">TuReservaYa (reservas para consultorios)</option>
                 <option value="indeciso">Estoy evaluando, quiero ver el catálogo completo</option>
               </select>
             </div>

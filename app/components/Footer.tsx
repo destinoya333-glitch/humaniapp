@@ -31,10 +31,10 @@ export default function Footer() {
             <h4 className="text-sm font-semibold mb-4 text-zinc-300">Catálogo</h4>
             <ul className="flex flex-col gap-2 text-sm text-zinc-500">
               <li><a href="#catalogo" className="hover:text-amber-400 transition-colors">Miss Sofia English</a></li>
-              <li><a href="#catalogo" className="hover:text-amber-400 transition-colors">DestinoYA</a></li>
-              <li><a href="#catalogo" className="hover:text-amber-400 transition-colors">Mi Novia IA</a></li>
-              <li><a href="#catalogo" className="hover:text-amber-400 transition-colors">ReservaYA</a></li>
-              <li><a href="#catalogo" className="hover:text-amber-400 transition-colors">TuPedidoYA</a></li>
+              <li><a href="#catalogo" className="hover:text-amber-400 transition-colors">TuDestinoYa</a></li>
+              <li><a href="#catalogo" className="hover:text-amber-400 transition-colors">TuNoviaIA</a></li>
+              <li><a href="#catalogo" className="hover:text-amber-400 transition-colors">TuPedidoYa</a></li>
+              <li><a href="#catalogo" className="hover:text-amber-400 transition-colors">TuReservaYa</a></li>
             </ul>
           </div>
 
