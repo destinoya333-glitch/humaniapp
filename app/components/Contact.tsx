@@ -133,6 +133,7 @@ export default function Contact() {
                 <option value="tunoviaia">TuNoviaIA (compañía IA)</option>
                 <option value="tupedidoya">TuPedidoYa (pedidos para restaurantes)</option>
                 <option value="tureservaya">TuReservaYa (reservas para consultorios)</option>
+                <option value="ecodriveplus">EcoDrive+ (rideshare por WhatsApp)</option>
                 <option value="indeciso">Estoy evaluando, quiero ver el catálogo completo</option>
               </select>
             </div>

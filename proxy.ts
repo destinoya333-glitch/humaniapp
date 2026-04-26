@@ -10,6 +10,7 @@ const SUBDOMAIN_REWRITES: Record<string, string> = {
   "pedido.activosya.com": "/pedido",
   "reserva.activosya.com": "/reserva",
   "destino.activosya.com": "/destino",
+  "ecodrive.activosya.com": "/ecodrive",
 };
 
 export function proxy(request: NextRequest) {

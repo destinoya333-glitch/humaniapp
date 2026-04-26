@@ -72,7 +72,7 @@ export default function Hero() {
 
         <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl mx-auto border-t border-[#2A2A2A] pt-10 fade-up">
           {[
-            { value: "5", label: "Activos disponibles" },
+            { value: "6", label: "Activos disponibles" },
             { value: "S/ 247K", label: "Facturado YTD" },
             { value: "87%", label: "Retención promedio" },
             { value: "24h", label: "Onboarding" },

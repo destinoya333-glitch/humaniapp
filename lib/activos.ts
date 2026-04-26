@@ -225,6 +225,56 @@ export const ACTIVOS: Activo[] = [
     subdomain: "pedido.activosya.com",
   },
   {
+    slug: "ecodriveplus",
+    status: "Beta",
+    icon: "◈",
+    name: "EcoDrive+",
+    tagline: "Intermediación rideshare por WhatsApp · sin app",
+    shortDescription:
+      "Plataforma de viajes tipo Indrive operada 100% por WhatsApp. Cliente nombra su precio, conductores aceptan. Sin descargar app, sin comisión escandalosa.",
+    overview:
+      "EcoDrive+ es una plataforma de intermediación rideshare local (estilo Indrive) que opera completamente por WhatsApp. El pasajero solicita viaje con origen, destino y precio sugerido. El sistema notifica a conductores cercanos por WhatsApp. El conductor que acepta se conecta con el pasajero. Cero descargas de app, cero comisiones del 25-30% de Uber/Didi.",
+    problem:
+      "Apps tipo Uber/Didi/Cabify cobran 25-30% de comisión al conductor. El pasajero paga más, el conductor gana menos. Las apps requieren descarga, registro, GPS activo, batería. En ciudades intermedias (Trujillo, Arequipa, Chiclayo) el modelo no escala porque la masa crítica es menor.",
+    solution:
+      "Modelo Indrive sobre WhatsApp: sin app que descargar, sin comisión por viaje (modelo de membresía mensual al conductor). El pasajero negocia precio. El conductor acepta o contraoferta. La plataforma cobra fee fijo al conductor por mes — operador cobra recurrente sin depender del volumen.",
+    metrics: [
+      { label: "Base actual", value: "88 conductores" },
+      { label: "Clientes activos", value: "231" },
+      { label: "Ciudad piloto", value: "Trujillo" },
+      { label: "Margen bruto", value: "78%" },
+      { label: "Estado", value: "Relanzamiento" },
+      { label: "Modelo", value: "Membresía conductor" },
+    ],
+    businessModel:
+      "Suscripción mensual al conductor (S/30-60/mes según ciudad), cero comisión por viaje. Modelo predecible y atractivo vs Uber/Didi. Para el operador del activo, el ticket promedio por conductor activo es S/40/mes. Con 100 conductores activos, MRR estable de S/4,000.",
+    stack: ["Twilio Business API", "Claude (matching)", "Supabase (geolocation)", "Maps API", "n8n"],
+    competitors: [
+      { name: "Uber / Didi / Cabify", weakness: "Comisión 25-30%, requieren app, no escalan en ciudades intermedias" },
+      { name: "Indrive", weakness: "Solo en algunas ciudades LATAM, requiere app, soporte limitado" },
+      { name: "Taxis informales", weakness: "Sin trazabilidad, sin recordatorios, sin reportes para el operador" },
+    ],
+    pnlProjection: [
+      { month: "M1", revenue: "S/ 1,500", cost: "S/ 400", profit: "S/ 1,100" },
+      { month: "M3", revenue: "S/ 4,200", cost: "S/ 900", profit: "S/ 3,300" },
+      { month: "M6", revenue: "S/ 8,500", cost: "S/ 1,800", profit: "S/ 6,700" },
+      { month: "M12", revenue: "S/ 16,800", cost: "S/ 3,400", profit: "S/ 13,400" },
+    ],
+    includes: [
+      "Bot WhatsApp con matching pasajero ↔ conductor cercano",
+      "Sistema de membresía recurrente para conductores",
+      "Dashboard del operador (viajes, conductores, MRR)",
+      "Modo demo precargado (Trujillo: 88 conductores + 231 clientes)",
+      "Documentación 109 ítems del relanzamiento",
+      "Onboarding 7-14 días + Slack privado 90 días",
+    ],
+    rent: "Desde S/ 2,200/mes",
+    buy: "Compra a consultar",
+    b2cHref: "https://ecodrive.activosya.com",
+    b2cLabel: "Ver landing B2C",
+    subdomain: "ecodrive.activosya.com",
+  },
+  {
     slug: "tureservaya",
     status: "Beta",
     icon: "◐",
