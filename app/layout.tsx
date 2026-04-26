@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
+import PostHogProvider from "./components/PostHogProvider";
 
 const geist = Geist({
   variable: "--font-geist",
@@ -50,7 +53,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" className={`${geist.variable} scroll-smooth`}>
-      <body className="bg-[#0A0A0A] text-white antialiased">{children}</body>
+      <body className="bg-[#0A0A0A] text-white antialiased">
+        <PostHogProvider>{children}</PostHogProvider>
+        <Analytics />
+        <SpeedInsights />
+      </body>
     </html>
   );
 }

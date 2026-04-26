@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Logo from "./Logo";
 
 export default function Footer() {
@@ -49,9 +50,16 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-[#2A2A2A] pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-zinc-600">
-          <span>© 2026 ActivosYA. Todos los derechos reservados.</span>
-          <span>Hecho con ✦ en Perú · Activos operativos en producción</span>
+        <div className="border-t border-[#2A2A2A] pt-6 flex flex-col gap-4">
+          <div className="flex flex-wrap justify-center gap-6 text-xs text-zinc-500">
+            <Link href="/terminos" className="hover:text-amber-400 transition-colors">Términos y Condiciones</Link>
+            <Link href="/privacidad" className="hover:text-amber-400 transition-colors">Política de Privacidad</Link>
+            <Link href="/devoluciones" className="hover:text-amber-400 transition-colors">Política de Devoluciones</Link>
+          </div>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-zinc-600">
+            <span>© 2026 ActivosYA. Todos los derechos reservados.</span>
+            <span>Hecho con ✦ en Perú · Activos operativos en producción</span>
+          </div>
         </div>
       </div>
     </footer>
