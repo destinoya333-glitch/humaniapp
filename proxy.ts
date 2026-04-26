@@ -3,15 +3,32 @@ import type { NextRequest } from "next/server";
 
 const LEGACY_HOSTS = new Set(["humaniapp.com", "www.humaniapp.com"]);
 
+// Subdominio → ruta interna que sirve la app B2C
+const SUBDOMAIN_REWRITES: Record<string, string> = {
+  "sofia.activosya.com": "/miss-sofia",
+  "novia.activosya.com": "/novia-ia",
+};
+
 export function proxy(request: NextRequest) {
   const host = (request.headers.get("host") || "").toLowerCase();
+  const url = request.nextUrl;
 
+  // 1. Legacy domain → 308 redirect a activosya.com
   if (LEGACY_HOSTS.has(host)) {
-    const target = new URL(
-      request.nextUrl.pathname + request.nextUrl.search,
-      "https://activosya.com",
-    );
+    const target = new URL(url.pathname + url.search, "https://activosya.com");
     return NextResponse.redirect(target, 308);
+  }
+
+  // 2. Subdominio de producto → rewrite a la ruta interna
+  const rewriteBase = SUBDOMAIN_REWRITES[host];
+  if (rewriteBase) {
+    // Si ya viene con la ruta base, no la duplicamos
+    const path = url.pathname.startsWith(rewriteBase)
+      ? url.pathname
+      : rewriteBase + (url.pathname === "/" ? "" : url.pathname);
+    const target = url.clone();
+    target.pathname = path;
+    return NextResponse.rewrite(target);
   }
 
   return NextResponse.next();
