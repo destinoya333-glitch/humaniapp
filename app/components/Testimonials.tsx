@@ -16,7 +16,7 @@ const cases = [
   {
     operator: "Academia Lingua",
     location: "Lima · Perú",
-    asset: "Miss Sofia English",
+    asset: "Miss Sofia",
     quote:
       "Lanzamos con nuestra marca y dominio propio. La IA atiende el 80% de las consultas comerciales y los profesores ahora solo dan clase, no responden mensajes repetitivos.",
     metrics: [

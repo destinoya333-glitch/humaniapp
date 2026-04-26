@@ -7,6 +7,8 @@ const LEGACY_HOSTS = new Set(["humaniapp.com", "www.humaniapp.com"]);
 const SUBDOMAIN_REWRITES: Record<string, string> = {
   "sofia.activosya.com": "/miss-sofia",
   "novia.activosya.com": "/novia-ia",
+  "pedido.activosya.com": "/pedido",
+  "reserva.activosya.com": "/reserva",
 };
 
 export function proxy(request: NextRequest) {

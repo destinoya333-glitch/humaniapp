@@ -18,10 +18,10 @@ const assets: Asset[] = [
   {
     status: "Activo",
     icon: "◎",
-    name: "Miss Sofia English",
-    tagline: "Inglés con IA · WhatsApp + Web App",
+    name: "Miss Sofia",
+    tagline: "Idiomas con IA · WhatsApp + Web App",
     description:
-      "Curso de inglés conversacional A1→C2 con voz IA, audio turn-by-turn y certificación. Modelo freemium con suscripciones recurrentes.",
+      "Curso de idiomas conversacional A1→C2 con voz IA, audio turn-by-turn y certificación. Empieza en inglés; escalable a portugués, italiano, francés. Modelo freemium con suscripciones recurrentes.",
     metrics: [
       { label: "MRR potencial", value: "S/ 12,400" },
       { label: "Retención 90d", value: "78%" },
