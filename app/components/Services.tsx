@@ -1,116 +1,5 @@
-type Status = "Activo" | "Beta" | "Próximamente";
-
-type Asset = {
-  status: Status;
-  icon: string;
-  name: string;
-  tagline: string;
-  description: string;
-  metrics: { label: string; value: string }[];
-  stack: string[];
-  rent: string;
-  buy: string;
-  b2cHref: string;
-  b2cLabel: string;
-};
-
-const assets: Asset[] = [
-  {
-    status: "Activo",
-    icon: "◎",
-    name: "Miss Sofia",
-    tagline: "Idiomas con IA · WhatsApp + Web App",
-    description:
-      "Curso de idiomas conversacional A1→C2 con voz IA, audio turn-by-turn y certificación. Empieza en inglés; escalable a portugués, italiano, francés. Modelo freemium con suscripciones recurrentes.",
-    metrics: [
-      { label: "MRR potencial", value: "S/ 12,400" },
-      { label: "Retención 90d", value: "78%" },
-      { label: "Margen bruto", value: "71%" },
-      { label: "Edad", value: "4 meses" },
-    ],
-    stack: ["Next.js", "Twilio", "Claude", "ElevenLabs", "Groq Whisper"],
-    rent: "Desde S/ 1,800/mes",
-    buy: "Compra a consultar",
-    b2cHref: "/miss-sofia",
-    b2cLabel: "Ver app B2C",
-  },
-  {
-    status: "Activo",
-    icon: "✦",
-    name: "TuDestinoYa",
-    tagline: "Tarot y orientación IA · WhatsApp",
-    description:
-      "Plataforma de consultas IA: astrología, lectura de palma, orientación profesional y servicio exprés. Cobros Yape + planes VIP recurrentes.",
-    metrics: [
-      { label: "MRR potencial", value: "S/ 8,500" },
-      { label: "Retención 30d", value: "62%" },
-      { label: "Margen bruto", value: "68%" },
-      { label: "Edad", value: "6 meses" },
-    ],
-    stack: ["Twilio", "Claude Vision", "Supabase", "Yape", "n8n"],
-    rent: "Desde S/ 2,500/mes",
-    buy: "Compra a consultar",
-    b2cHref: "https://wa.me/51961347233",
-    b2cLabel: "Probar por WhatsApp",
-  },
-  {
-    status: "Beta",
-    icon: "♡",
-    name: "TuNoviaIA",
-    tagline: "Compañía IA femenina · App + WhatsApp",
-    description:
-      "Compañera IA con foto, voz emocional ElevenLabs y memoria persistente. Cobro por minuto o suscripción mensual. Avatar y personalidad personalizables.",
-    metrics: [
-      { label: "Plan Mensual", value: "S/ 480" },
-      { label: "Sesión 1 min", value: "S/ 3.90" },
-      { label: "Margen bruto", value: "65%" },
-      { label: "Edad", value: "Beta" },
-    ],
-    stack: ["ElevenLabs", "Claude", "HeyGen", "Supabase", "Stripe"],
-    rent: "Desde S/ 3,000/mes",
-    buy: "Compra a consultar",
-    b2cHref: "https://wa.me/51979385499",
-    b2cLabel: "Hablar con Juanita",
-  },
-  {
-    status: "Beta",
-    icon: "◑",
-    name: "TuPedidoYa",
-    tagline: "Pedidos para restaurantes · WhatsApp",
-    description:
-      "Bot de pedidos para pollerías, pizzerías y restaurantes. Menú interactivo, integración con cocina por Telegram, reportes diarios. Multi-tenant: cada restaurante con su número y branding.",
-    metrics: [
-      { label: "Estado", value: "Probado en piloto" },
-      { label: "Mercado objetivo", value: "Restaurantes Perú" },
-      { label: "Modelo", value: "B2B mensual" },
-      { label: "Disponibilidad", value: "Abierta" },
-    ],
-    stack: ["Twilio", "Claude", "Supabase", "Telegram"],
-    rent: "Desde S/ 1,800/mes",
-    buy: "Compra a consultar",
-    b2cHref: "#contacto",
-    b2cLabel: "Solicitar demo",
-  },
-  {
-    status: "Beta",
-    icon: "◐",
-    name: "TuReservaYa",
-    tagline: "Reservas para consultorios · WhatsApp + Web",
-    description:
-      "Sistema de citas médicas multi-doctor con confirmación automática, recordatorios anti-no-show y dashboard. Para clínicas, consultorios y centros de salud.",
-    metrics: [
-      { label: "Estado", value: "Piloto activo" },
-      { label: "Mercado objetivo", value: "Consultorios LATAM" },
-      { label: "Modelo", value: "B2B mensual" },
-      { label: "Disponibilidad", value: "Abierta" },
-    ],
-    stack: ["Next.js", "Twilio", "Supabase", "n8n"],
-    rent: "Desde S/ 2,000/mes",
-    buy: "Compra a consultar",
-    b2cHref: "#contacto",
-    b2cLabel: "Solicitar demo",
-  },
-];
+import Link from "next/link";
+import { ACTIVOS, type Status } from "@/lib/activos";
 
 const statusStyles: Record<Status, string> = {
   Activo: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20",
@@ -138,9 +27,9 @@ export default function Services() {
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
-          {assets.map((a) => (
+          {ACTIVOS.map((a) => (
             <article
-              key={a.name}
+              key={a.slug}
               className="card-surface card-hover rounded-2xl p-7 flex flex-col gap-5"
             >
               <div className="flex items-center justify-between">
@@ -158,12 +47,12 @@ export default function Services() {
                   {a.tagline}
                 </p>
                 <p className="text-zinc-400 text-sm leading-relaxed">
-                  {a.description}
+                  {a.shortDescription}
                 </p>
               </div>
 
               <div className="grid grid-cols-2 gap-3 border-y border-[#2A2A2A] py-4">
-                {a.metrics.map((m) => (
+                {a.metrics.slice(0, 4).map((m) => (
                   <div key={m.label}>
                     <div className="text-[10px] uppercase tracking-widest text-zinc-500 mb-1">
                       {m.label}
@@ -209,12 +98,12 @@ export default function Services() {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-2.5 mt-auto">
-                <a
-                  href="#contacto"
+                <Link
+                  href={`/activos/${a.slug}`}
                   className="flex-1 text-center py-2.5 px-4 rounded-xl bg-amber-500 text-black text-sm font-semibold hover:bg-amber-400 transition-colors"
                 >
-                  Solicitar data room →
-                </a>
+                  Ver data room →
+                </Link>
                 <a
                   href={a.b2cHref}
                   target={a.b2cHref.startsWith("http") ? "_blank" : undefined}
