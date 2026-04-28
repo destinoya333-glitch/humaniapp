@@ -4,6 +4,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import PostHogProvider from "./components/PostHogProvider";
+import { OrganizationSchema } from "./components/SchemaOrg";
 
 const geist = Geist({
   variable: "--font-geist",
@@ -54,6 +55,7 @@ export default function RootLayout({
   return (
     <html lang="es" className={`${geist.variable} scroll-smooth`}>
       <body className="bg-[#0A0A0A] text-white antialiased">
+        <OrganizationSchema />
         <PostHogProvider>{children}</PostHogProvider>
         <Analytics />
         <SpeedInsights />
