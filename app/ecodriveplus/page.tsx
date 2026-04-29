@@ -5,11 +5,11 @@ export const metadata: Metadata = {
   title: "EcoDrive+ — Pides tu carro como pides delivery",
   description:
     "EcoDrive+ es el primer servicio de viajes 100% por WhatsApp en Trujillo. Sin app, sin descargas. Pides taxi, eliges chofer, pagas con wallet. Más barato que Indrive y Didi.",
-  alternates: { canonical: "https://activosya.com/ecodriveplus" },
+  alternates: { canonical: "https://ecodriveplus.com" },
 };
 
-const PASAJERO_WA = "https://wa.me/51XXXXXXXXX?text=Hola,%20quiero%20pedir%20un%20taxi";
-const CHOFER_WA = "https://wa.me/51XXXXXXXXX?text=Hola,%20quiero%20ser%20chofer%20EcoDrive";
+const PASAJERO_WA = "https://wa.me/51994810242?text=Hola,%20quiero%20pedir%20un%20taxi";
+const CHOFER_WA = "https://wa.me/51994810242?text=Hola,%20quiero%20ser%20chofer%20EcoDrive";
 
 export default function EcoDrivePlusPage() {
   return (
