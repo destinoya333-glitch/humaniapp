@@ -3,7 +3,12 @@ import type { NextRequest } from "next/server";
 
 const LEGACY_HOSTS = new Set(["humaniapp.com", "www.humaniapp.com"]);
 
-// Subdominio → ruta interna que sirve la app B2C
+// www → apex (308) para dominios propios con presencia canónica en el apex
+const WWW_REDIRECTS: Record<string, string> = {
+  "www.ecodriveplus.com": "https://ecodriveplus.com",
+};
+
+// Host → ruta interna que sirve la app B2C
 const SUBDOMAIN_REWRITES: Record<string, string> = {
   "sofia.activosya.com": "/miss-sofia",
   "novia.activosya.com": "/novia-ia",
@@ -11,6 +16,7 @@ const SUBDOMAIN_REWRITES: Record<string, string> = {
   "reserva.activosya.com": "/reserva",
   "destino.activosya.com": "/destino",
   "ecodrive.activosya.com": "/ecodrive",
+  "ecodriveplus.com": "/ecodriveplus",
 };
 
 export function proxy(request: NextRequest) {
@@ -23,7 +29,14 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(target, 308);
   }
 
-  // 2. Subdominio de producto → rewrite a la ruta interna
+  // 2. www.* → apex (308)
+  const wwwTarget = WWW_REDIRECTS[host];
+  if (wwwTarget) {
+    const target = new URL(url.pathname + url.search, wwwTarget);
+    return NextResponse.redirect(target, 308);
+  }
+
+  // 3. Host de producto → rewrite a la ruta interna
   const rewriteBase = SUBDOMAIN_REWRITES[host];
   if (rewriteBase) {
     // Si ya viene con la ruta base, no la duplicamos
