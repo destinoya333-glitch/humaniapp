@@ -21,12 +21,13 @@ export default function OpengraphImage() {
           fontFamily: "system-ui, sans-serif",
         }}
       >
+        {/* Badge superior */}
         <div
           style={{
             display: "flex",
             alignItems: "center",
             gap: 16,
-            padding: "10px 20px",
+            padding: "10px 24px",
             border: "1px solid rgba(245, 158, 11, 0.3)",
             background: "rgba(245, 158, 11, 0.05)",
             borderRadius: 999,
@@ -37,34 +38,37 @@ export default function OpengraphImage() {
         >
           <div
             style={{
+              display: "flex",
               width: 12,
               height: 12,
               borderRadius: 999,
               background: "#f59e0b",
             }}
           />
-          Activo en Trujillo · 88 conductores · 231 clientes
+          <div style={{ display: "flex" }}>Activo en Trujillo · 88 conductores · 231 clientes</div>
         </div>
 
+        {/* Título línea 1 */}
         <div
           style={{
+            display: "flex",
             fontSize: 96,
             fontWeight: 800,
-            textAlign: "center",
-            lineHeight: 1.05,
+            lineHeight: 1,
             letterSpacing: -2,
-            marginBottom: 24,
+            marginBottom: 8,
           }}
         >
           Pides tu carro como
         </div>
 
+        {/* Título línea 2 */}
         <div
           style={{
+            display: "flex",
             fontSize: 96,
             fontWeight: 800,
-            textAlign: "center",
-            lineHeight: 1.05,
+            lineHeight: 1,
             letterSpacing: -2,
             color: "#f59e0b",
             marginBottom: 40,
@@ -73,26 +77,37 @@ export default function OpengraphImage() {
           pides delivery
         </div>
 
+        {/* Subtítulo línea 1 */}
         <div
           style={{
+            display: "flex",
             fontSize: 32,
             color: "#a1a1aa",
             textAlign: "center",
-            maxWidth: 900,
           }}
         >
           El primer servicio de viajes 100% por WhatsApp en Perú.
-          <br />
+        </div>
+
+        {/* Subtítulo línea 2 */}
+        <div
+          style={{
+            display: "flex",
+            fontSize: 32,
+            color: "#a1a1aa",
+            textAlign: "center",
+            marginTop: 8,
+          }}
+        >
           Sin app, sin descargas. Solo dile Hola al bot.
         </div>
 
+        {/* Footer */}
         <div
           style={{
+            display: "flex",
             position: "absolute",
             bottom: 40,
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
             color: "#71717a",
             fontSize: 22,
           }}
