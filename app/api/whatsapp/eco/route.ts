@@ -62,6 +62,13 @@ async function handleEvent(payload: unknown) {
     const celular = `+${msg.from.replace(/^\+/, "")}`;
     const body = msg.text.body.trim();
 
+    // Comando admin: si el celular es del admin y manda "STATS", responder con métricas y skip al agent.
+    const adminCommand = await maybeHandleAdminCommand(celular, body);
+    if (adminCommand) {
+      if (isMetaConfigured()) await sendText(celular, adminCommand);
+      continue;
+    }
+
     await getOrCreateUser(celular);
     const conv = await getConversation(celular);
     const history = conv?.messages || [];
@@ -78,6 +85,28 @@ async function handleEvent(payload: unknown) {
     }
     await sendText(celular, reply);
   }
+}
+
+async function maybeHandleAdminCommand(celular: string, body: string): Promise<string | null> {
+  const adminPhone = process.env.ECODRIVE_ADMIN_PHONE;
+  if (!adminPhone || celular !== adminPhone) return null;
+
+  const cmd = body.toUpperCase().trim();
+
+  if (cmd === "STATS" || cmd === "ADMIN STATS" || cmd === "/STATS") {
+    const { getStats } = await import("@/lib/ecodrive/db");
+    const s = await getStats();
+    return [
+      "*EcoDrive+ — Stats*",
+      `Users total: ${s.users_total}`,
+      `Drivers: ${s.drivers_total}`,
+      `Passengers: ${s.passengers_total}`,
+      `Waitlist total: ${s.waitlist_total} (hoy: ${s.waitlist_today})`,
+      `Conversaciones hoy: ${s.conversations_today}`,
+    ].join("\n");
+  }
+
+  return null;
 }
 
 function extractMessages(payload: unknown): MetaIncomingMessage[] {
