@@ -7,12 +7,15 @@ export const supabase: any = createClient(
 );
 
 const startOfTodayLima = (): string => {
-  // Lima es UTC-5 (sin DST). Para "hoy en Lima", offset -5h al UTC start.
+  // Lima = UTC-5 (sin DST). "Hoy en Lima 00:00" = "ayer 05:00 UTC" si UTC < 05:00,
+  // o "hoy 05:00 UTC" si UTC >= 05:00.
   const now = new Date();
-  const limaMidnight = new Date(now.getTime() - now.getTimezoneOffset() * 60 * 1000);
-  limaMidnight.setUTCHours(5, 0, 0, 0);
-  if (limaMidnight.getTime() > now.getTime()) limaMidnight.setUTCDate(limaMidnight.getUTCDate() - 1);
-  return limaMidnight.toISOString();
+  const utcYear = now.getUTCFullYear();
+  const utcMonth = now.getUTCMonth();
+  const utcDate = now.getUTCDate();
+  const utcHour = now.getUTCHours();
+  const dateForLima = utcHour < 5 ? utcDate - 1 : utcDate;
+  return new Date(Date.UTC(utcYear, utcMonth, dateForLima, 5, 0, 0)).toISOString();
 };
 
 export type AdminStats = {
@@ -32,20 +35,13 @@ export type AdminStats = {
   waitlist_today: number;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const safeCount = (r: any): number => (r && typeof r.count === "number" ? r.count : 0);
+
 export async function getStats(): Promise<AdminStats> {
   const todayIso = startOfTodayLima();
-  const [
-    users,
-    drivers,
-    passengers,
-    activos,
-    pre,
-    preToday,
-    convosToday,
-    tripsToday,
-    tripsCompletedToday,
-    onShift,
-  ] = await Promise.all([
+  // Promise.allSettled: si una query falla no rompe el dashboard.
+  const results = await Promise.allSettled([
     supabase.from("usuarios").select("*", { count: "exact", head: true }),
     supabase.from("usuarios").select("*", { count: "exact", head: true }).eq("rol", "chofer"),
     supabase.from("usuarios").select("*", { count: "exact", head: true }).eq("rol", "pasajero"),
@@ -58,7 +54,7 @@ export async function getStats(): Promise<AdminStats> {
       .gte("created_at", todayIso),
     supabase
       .from("eco_messages")
-      .select("user_phone", { count: "exact", head: true })
+      .select("*", { count: "exact", head: true })
       .gte("created_at", todayIso),
     supabase
       .from("viajes")
@@ -74,35 +70,42 @@ export async function getStats(): Promise<AdminStats> {
       .select("*", { count: "exact", head: true })
       .eq("en_turno", true),
   ]);
-
-  // Revenue hoy: sumar precio_estimado de viajes completados
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: revenueRows }: { data: Array<{ precio_estimado: number | null }> | null } =
-    await supabase
+  const value = (i: number): any => (results[i].status === "fulfilled" ? (results[i] as PromiseFulfilledResult<any>).value : null);
+  const [users, drivers, passengers, activos, pre, preToday, convosToday, tripsToday, tripsCompletedToday, onShift] =
+    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(value);
+
+  // Revenue hoy: sumar precio_estimado de viajes completados (resiliente a fallos)
+  let revenue_today = 0;
+  try {
+    const { data: revenueRows } = await supabase
       .from("viajes")
       .select("precio_estimado")
       .gte("created_at", todayIso)
       .eq("estado", "completado");
-  const revenue_today = (revenueRows || []).reduce(
-    (acc: number, r: { precio_estimado: number | null }) => acc + (Number(r.precio_estimado) || 0),
-    0
-  );
+    revenue_today = ((revenueRows || []) as Array<{ precio_estimado: number | null }>).reduce(
+      (acc: number, r: { precio_estimado: number | null }) => acc + (Number(r.precio_estimado) || 0),
+      0
+    );
+  } catch {
+    revenue_today = 0;
+  }
 
   return {
-    users_total: users.count || 0,
-    drivers_total: drivers.count || 0,
-    passengers_total: passengers.count || 0,
-    active_total: activos.count || 0,
-    preregistered_total: pre.count || 0,
-    preregistered_today: preToday.count || 0,
-    conversations_today: convosToday.count || 0,
-    trips_today: tripsToday.count || 0,
-    trips_completed_today: tripsCompletedToday.count || 0,
+    users_total: safeCount(users),
+    drivers_total: safeCount(drivers),
+    passengers_total: safeCount(passengers),
+    active_total: safeCount(activos),
+    preregistered_total: safeCount(pre),
+    preregistered_today: safeCount(preToday),
+    conversations_today: safeCount(convosToday),
+    trips_today: safeCount(tripsToday),
+    trips_completed_today: safeCount(tripsCompletedToday),
     revenue_today,
-    drivers_on_shift: onShift.count || 0,
+    drivers_on_shift: safeCount(onShift),
     // Compat aliases para endpoints legacy
-    waitlist_total: pre.count || 0,
-    waitlist_today: preToday.count || 0,
+    waitlist_total: safeCount(pre),
+    waitlist_today: safeCount(preToday),
   };
 }
 
