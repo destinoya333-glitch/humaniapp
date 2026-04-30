@@ -18,6 +18,9 @@ const startOfTodayLima = (): string => {
   return new Date(Date.UTC(utcYear, utcMonth, dateForLima, 5, 0, 0)).toISOString();
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const safeCount = (r: any): number => (r && typeof r.count === "number" ? r.count : 0);
+
 export type AdminStats = {
   users_total: number;
   drivers_total: number;
@@ -28,19 +31,18 @@ export type AdminStats = {
   conversations_today: number;
   trips_today: number;
   trips_completed_today: number;
+  trips_active: number;
   revenue_today: number;
   drivers_on_shift: number;
-  // Aliases para compat con endpoints legacy
+  total_wallet_balance: number;
+  pending_commissions_amount: number;
+  // Compat aliases
   waitlist_total: number;
   waitlist_today: number;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const safeCount = (r: any): number => (r && typeof r.count === "number" ? r.count : 0);
-
 export async function getStats(): Promise<AdminStats> {
   const todayIso = startOfTodayLima();
-  // Promise.allSettled: si una query falla no rompe el dashboard.
   const results = await Promise.allSettled([
     supabase.from("usuarios").select("*", { count: "exact", head: true }),
     supabase.from("usuarios").select("*", { count: "exact", head: true }).eq("rol", "chofer"),
@@ -66,30 +68,66 @@ export async function getStats(): Promise<AdminStats> {
       .gte("created_at", todayIso)
       .eq("estado", "completado"),
     supabase
+      .from("viajes")
+      .select("*", { count: "exact", head: true })
+      .in("estado", ["buscando", "con_ofertas", "asignado", "en_curso"]),
+    supabase
       .from("chofer_estado")
       .select("*", { count: "exact", head: true })
       .eq("en_turno", true),
   ]);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const value = (i: number): any => (results[i].status === "fulfilled" ? (results[i] as PromiseFulfilledResult<any>).value : null);
-  const [users, drivers, passengers, activos, pre, preToday, convosToday, tripsToday, tripsCompletedToday, onShift] =
-    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(value);
+  const value = (i: number): any =>
+    results[i].status === "fulfilled" ? (results[i] as PromiseFulfilledResult<any>).value : null;
+  const [
+    users,
+    drivers,
+    passengers,
+    activos,
+    pre,
+    preToday,
+    convosToday,
+    tripsToday,
+    tripsCompletedToday,
+    tripsActive,
+    onShift,
+  ] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(value);
 
-  // Revenue hoy: sumar precio_estimado de viajes completados (resiliente a fallos)
+  // Sumas agregadas
   let revenue_today = 0;
+  let total_wallet_balance = 0;
+  let pending_commissions_amount = 0;
   try {
-    const { data: revenueRows } = await supabase
+    const { data } = await supabase
       .from("viajes")
       .select("precio_estimado")
       .gte("created_at", todayIso)
       .eq("estado", "completado");
-    revenue_today = ((revenueRows || []) as Array<{ precio_estimado: number | null }>).reduce(
-      (acc: number, r: { precio_estimado: number | null }) => acc + (Number(r.precio_estimado) || 0),
+    revenue_today = ((data || []) as Array<{ precio_estimado: number | null }>).reduce(
+      (a: number, r: { precio_estimado: number | null }) => a + (Number(r.precio_estimado) || 0),
       0
     );
-  } catch {
-    revenue_today = 0;
-  }
+  } catch {}
+  try {
+    const { data } = await supabase.from("wallets").select("saldo_disponible");
+    total_wallet_balance = ((data || []) as Array<{ saldo_disponible: number | null }>).reduce(
+      (a: number, r: { saldo_disponible: number | null }) => a + (Number(r.saldo_disponible) || 0),
+      0
+    );
+  } catch {}
+  try {
+    const { data } = await supabase
+      .from("comisiones_pendientes")
+      .select("monto_comision, service_fee")
+      .eq("estado", "pendiente");
+    pending_commissions_amount = (
+      (data || []) as Array<{ monto_comision: number | null; service_fee: number | null }>
+    ).reduce(
+      (a: number, r: { monto_comision: number | null; service_fee: number | null }) =>
+        a + (Number(r.monto_comision) || 0) + (Number(r.service_fee) || 0),
+      0
+    );
+  } catch {}
 
   return {
     users_total: safeCount(users),
@@ -101,17 +139,237 @@ export async function getStats(): Promise<AdminStats> {
     conversations_today: safeCount(convosToday),
     trips_today: safeCount(tripsToday),
     trips_completed_today: safeCount(tripsCompletedToday),
+    trips_active: safeCount(tripsActive),
     revenue_today,
     drivers_on_shift: safeCount(onShift),
-    // Compat aliases para endpoints legacy
+    total_wallet_balance,
+    pending_commissions_amount,
     waitlist_total: safeCount(pre),
     waitlist_today: safeCount(preToday),
   };
 }
 
+// ─── Listas para el dashboard ───────────────────────────────────────────────
+
+export type DriverOnShift = {
+  chofer_id: number;
+  telefono: string;
+  zona: string | null;
+  ultimo_ping: string | null;
+  nombre: string | null;
+  calificacion: number | null;
+  vehiculo: { modelo?: string; placas?: string } | null;
+};
+
+export async function listDriversOnShift(): Promise<DriverOnShift[]> {
+  // 1. choferes en turno
+  const { data: estados } = await supabase
+    .from("chofer_estado")
+    .select("chofer_id, telefono, zona, ultimo_ping")
+    .eq("en_turno", true);
+  if (!estados || estados.length === 0) return [];
+  const ids = (estados as Array<{ chofer_id: number }>).map((e) => e.chofer_id);
+  const { data: usuarios } = await supabase
+    .from("usuarios")
+    .select("id, nombre, calificacion, vehiculo")
+    .in("id", ids);
+  const map = new Map<number, { nombre: string | null; calificacion: number | null; vehiculo: DriverOnShift["vehiculo"] }>();
+  for (const u of (usuarios || []) as Array<{ id: number; nombre: string | null; calificacion: number | null; vehiculo: DriverOnShift["vehiculo"] }>) {
+    map.set(u.id, { nombre: u.nombre, calificacion: u.calificacion, vehiculo: u.vehiculo });
+  }
+  return (estados as Array<{ chofer_id: number; telefono: string; zona: string | null; ultimo_ping: string | null }>).map((e) => ({
+    chofer_id: e.chofer_id,
+    telefono: e.telefono,
+    zona: e.zona,
+    ultimo_ping: e.ultimo_ping,
+    ...(map.get(e.chofer_id) || { nombre: null, calificacion: null, vehiculo: null }),
+  }));
+}
+
+export type ActiveTrip = {
+  id: number;
+  pasajero_telefono: string | null;
+  origen_texto: string | null;
+  destino_texto: string | null;
+  precio_estimado: number | null;
+  modo: string | null;
+  estado: string | null;
+  created_at: string;
+};
+
+export async function listActiveTrips(): Promise<ActiveTrip[]> {
+  const { data } = await supabase
+    .from("viajes")
+    .select("id, pasajero_telefono, origen_texto, destino_texto, precio_estimado, modo, estado, created_at")
+    .in("estado", ["buscando", "con_ofertas", "asignado", "en_curso"])
+    .order("created_at", { ascending: false })
+    .limit(20);
+  return (data as ActiveTrip[]) || [];
+}
+
+export type RecentTrip = ActiveTrip;
+
+export async function listRecentTrips(limit = 30): Promise<RecentTrip[]> {
+  const { data } = await supabase
+    .from("viajes")
+    .select(
+      "id, pasajero_telefono, origen_texto, destino_texto, precio_estimado, modo, estado, created_at"
+    )
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  return (data as RecentTrip[]) || [];
+}
+
+export type TopWallet = {
+  telefono: string;
+  saldo_disponible: number;
+  total_ganado_lifetime: number;
+  total_retirado_lifetime: number;
+};
+
+export async function listTopWallets(limit = 10): Promise<TopWallet[]> {
+  const { data } = await supabase
+    .from("wallets")
+    .select("telefono, saldo_disponible, total_ganado_lifetime, total_retirado_lifetime")
+    .order("saldo_disponible", { ascending: false })
+    .limit(limit);
+  return (data as TopWallet[]) || [];
+}
+
+export type PendingCommission = {
+  id: number;
+  viaje_id: number | null;
+  chofer_telefono: string | null;
+  monto_comision: number | null;
+  service_fee: number | null;
+  created_at: string;
+};
+
+export async function listPendingCommissions(limit = 15): Promise<PendingCommission[]> {
+  const { data } = await supabase
+    .from("comisiones_pendientes")
+    .select("id, viaje_id, chofer_telefono, monto_comision, service_fee, created_at")
+    .eq("estado", "pendiente")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  return (data as PendingCommission[]) || [];
+}
+
+export type WalletTx = {
+  id: number;
+  telefono: string;
+  tipo: string | null;
+  monto: number | null;
+  saldo_despues: number | null;
+  descripcion: string | null;
+  created_at: string;
+};
+
+export async function listRecentTransactions(limit = 20): Promise<WalletTx[]> {
+  const { data } = await supabase
+    .from("wallet_transactions")
+    .select("id, telefono, tipo, monto, saldo_despues, descripcion, created_at")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  return (data as WalletTx[]) || [];
+}
+
+export type TopUser = {
+  telefono: string;
+  nombre: string | null;
+  amount: number;
+  trips: number;
+};
+
+export async function listTopDrivers(limit = 10): Promise<TopUser[]> {
+  const { data } = await supabase
+    .from("usuarios")
+    .select("telefono, nombre, ganado_lifetime, viajes_lifetime")
+    .eq("rol", "chofer")
+    .order("ganado_lifetime", { ascending: false })
+    .limit(limit);
+  return ((data || []) as Array<{ telefono: string; nombre: string | null; ganado_lifetime: number | null; viajes_lifetime: number | null }>).map((u) => ({
+    telefono: u.telefono,
+    nombre: u.nombre,
+    amount: Number(u.ganado_lifetime) || 0,
+    trips: Number(u.viajes_lifetime) || 0,
+  }));
+}
+
+export async function listTopPassengers(limit = 10): Promise<TopUser[]> {
+  const { data } = await supabase
+    .from("usuarios")
+    .select("telefono, nombre, gastado_lifetime, viajes_lifetime")
+    .eq("rol", "pasajero")
+    .order("gastado_lifetime", { ascending: false })
+    .limit(limit);
+  return ((data || []) as Array<{ telefono: string; nombre: string | null; gastado_lifetime: number | null; viajes_lifetime: number | null }>).map((u) => ({
+    telefono: u.telefono,
+    nombre: u.nombre,
+    amount: Number(u.gastado_lifetime) || 0,
+    trips: Number(u.viajes_lifetime) || 0,
+  }));
+}
+
+export type RecentConvo = { user_phone: string; last_at: string; preview: string };
+
+export async function listRecentConversations(limit = 15): Promise<RecentConvo[]> {
+  const { data } = await supabase
+    .from("eco_messages")
+    .select("user_phone, content, role, created_at")
+    .order("created_at", { ascending: false })
+    .limit(200);
+  if (!data) return [];
+  const seen: Record<string, RecentConvo> = {};
+  for (const m of data as Array<{
+    user_phone: string;
+    content: string;
+    role: string;
+    created_at: string;
+  }>) {
+    if (!seen[m.user_phone]) {
+      seen[m.user_phone] = {
+        user_phone: m.user_phone,
+        last_at: m.created_at,
+        preview: (m.content || "").slice(0, 120),
+      };
+    }
+    if (Object.keys(seen).length >= limit) break;
+  }
+  return Object.values(seen);
+}
+
+export type WaitlistRow = {
+  id: number;
+  telefono: string;
+  nombre: string | null;
+  rol: string | null;
+  estado: string | null;
+  created_at: string;
+  metadata: Record<string, unknown> | null;
+};
+
+export async function listWaitlist(limit = 50): Promise<WaitlistRow[]> {
+  const { data } = await supabase
+    .from("usuarios")
+    .select("id, telefono, nombre, rol, estado, created_at, metadata")
+    .eq("estado", "pre_registro")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  return (data as WaitlistRow[]) || [];
+}
+
+// ─── Acción admin: cancelar viaje ──────────────────────────────────────────
+
+export async function cancelTripById(id: number): Promise<boolean> {
+  const { error } = await supabase
+    .from("viajes")
+    .update({ estado: "cancelado" })
+    .eq("id", id);
+  return !error;
+}
+
 // ─── Backward-compat con bot Eco legacy /api/whatsapp/eco ───────────────────
-// El bot real corre en n8n; estos helpers solo son para que el endpoint
-// secundario de /api/whatsapp/eco no rompa el build.
 import type { ConversationMessage } from "./types";
 
 export async function getOrCreateUser(celular: string, nombre?: string) {
@@ -173,7 +431,11 @@ export async function addToWaitlist(args: {
   notas?: string;
   source?: string;
 }) {
-  const rolMap: Record<string, string> = { passenger: "pasajero", driver: "chofer", both: "pasajero" };
+  const rolMap: Record<string, string> = {
+    passenger: "pasajero",
+    driver: "chofer",
+    both: "pasajero",
+  };
   const rol = rolMap[args.interes] || "pasajero";
   const { data } = await supabase
     .from("usuarios")
@@ -183,7 +445,11 @@ export async function addToWaitlist(args: {
         nombre: args.nombre || null,
         rol,
         estado: "pre_registro",
-        metadata: { interes: args.interes, notas: args.notas || null, source: args.source || "whatsapp_bot" },
+        metadata: {
+          interes: args.interes,
+          notas: args.notas || null,
+          source: args.source || "whatsapp_bot",
+        },
       },
       { onConflict: "telefono" }
     )
@@ -193,73 +459,5 @@ export async function addToWaitlist(args: {
 }
 
 export async function setConversationState(_celular: string, _state: unknown) {
-  // El estado de conversacion vive en metadata del usuario en el bot real.
   // Stub para compat con endpoint legacy.
-}
-
-export type RecentTrip = {
-  id: number;
-  pasajero_telefono: string | null;
-  origen_texto: string | null;
-  destino_texto: string | null;
-  precio_estimado: number | null;
-  modo: string | null;
-  estado: string | null;
-  created_at: string;
-};
-
-export async function listRecentTrips(limit = 30): Promise<RecentTrip[]> {
-  const { data } = await supabase
-    .from("viajes")
-    .select(
-      "id, pasajero_telefono, origen_texto, destino_texto, precio_estimado, modo, estado, created_at"
-    )
-    .order("created_at", { ascending: false })
-    .limit(limit);
-  return (data as RecentTrip[]) || [];
-}
-
-export type RecentConvo = { user_phone: string; last_at: string; preview: string };
-
-export async function listRecentConversations(limit = 15): Promise<RecentConvo[]> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data } = await supabase
-    .from("eco_messages")
-    .select("user_phone, content, role, created_at")
-    .order("created_at", { ascending: false })
-    .limit(200);
-  if (!data) return [];
-  // dedup por user_phone, conservar el más reciente
-  const seen: Record<string, RecentConvo> = {};
-  for (const m of data as Array<{ user_phone: string; content: string; role: string; created_at: string }>) {
-    if (!seen[m.user_phone]) {
-      seen[m.user_phone] = {
-        user_phone: m.user_phone,
-        last_at: m.created_at,
-        preview: (m.content || "").slice(0, 120),
-      };
-    }
-    if (Object.keys(seen).length >= limit) break;
-  }
-  return Object.values(seen);
-}
-
-export type WaitlistRow = {
-  id: number;
-  telefono: string;
-  nombre: string | null;
-  rol: string | null;
-  estado: string | null;
-  created_at: string;
-  metadata: Record<string, unknown> | null;
-};
-
-export async function listWaitlist(limit = 50): Promise<WaitlistRow[]> {
-  const { data } = await supabase
-    .from("usuarios")
-    .select("id, telefono, nombre, rol, estado, created_at, metadata")
-    .eq("estado", "pre_registro")
-    .order("created_at", { ascending: false })
-    .limit(limit);
-  return (data as WaitlistRow[]) || [];
 }
