@@ -359,6 +359,40 @@ export async function listWaitlist(limit = 50): Promise<WaitlistRow[]> {
   return (data as WaitlistRow[]) || [];
 }
 
+// ─── Buckets viajes/hora últimas 24h ──────────────────────────────────────
+
+export type HourBucket = { hour: string; count: number; revenue: number };
+
+export async function listTripsLast24hByHour(): Promise<HourBucket[]> {
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const { data } = await supabase
+    .from("viajes")
+    .select("created_at, precio_estimado, estado")
+    .gte("created_at", since)
+    .order("created_at", { ascending: true });
+  const rows = (data || []) as Array<{ created_at: string; precio_estimado: number | null; estado: string | null }>;
+  // 24 buckets, key = hora local Lima (UTC-5)
+  const buckets: HourBucket[] = [];
+  const now = new Date();
+  for (let h = 23; h >= 0; h--) {
+    const start = new Date(now.getTime() - h * 60 * 60 * 1000);
+    const startMs = start.getTime();
+    const endMs = startMs + 60 * 60 * 1000;
+    let count = 0;
+    let revenue = 0;
+    for (const r of rows) {
+      const t = new Date(r.created_at).getTime();
+      if (t >= startMs && t < endMs) {
+        count++;
+        if (r.estado === "completado") revenue += Number(r.precio_estimado) || 0;
+      }
+    }
+    const limaHour = new Date(start.getTime() - 5 * 60 * 60 * 1000).getUTCHours();
+    buckets.push({ hour: `${String(limaHour).padStart(2, "0")}h`, count, revenue });
+  }
+  return buckets;
+}
+
 // ─── Acción admin: cancelar viaje ──────────────────────────────────────────
 
 export async function cancelTripById(id: number): Promise<boolean> {

@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
+import Link from "next/link";
 import {
   getStats,
   listRecentTrips,
@@ -13,6 +14,7 @@ import {
   listRecentTransactions,
   listTopDrivers,
   listTopPassengers,
+  listTripsLast24hByHour,
   cancelTripById,
 } from "@/lib/ecodrive/db";
 
@@ -100,6 +102,7 @@ export default async function EcodriveAdminPage() {
   let topPassengers: Awaited<ReturnType<typeof listTopPassengers>> = [];
   let convos: Awaited<ReturnType<typeof listRecentConversations>> = [];
   let waitlist: Awaited<ReturnType<typeof listWaitlist>> = [];
+  let hourlyTrips: Awaited<ReturnType<typeof listTripsLast24hByHour>> = [];
   const errors: string[] = [];
 
   await Promise.all([
@@ -114,6 +117,7 @@ export default async function EcodriveAdminPage() {
     listTopPassengers(10).then((r) => (topPassengers = r)).catch((e: Error) => errors.push(`listTopPassengers: ${e?.message || e}`)),
     listRecentConversations(15).then((r) => (convos = r)).catch((e: Error) => errors.push(`listRecentConversations: ${e?.message || e}`)),
     listWaitlist(50).then((r) => (waitlist = r)).catch((e: Error) => errors.push(`listWaitlist: ${e?.message || e}`)),
+    listTripsLast24hByHour().then((r) => (hourlyTrips = r)).catch((e: Error) => errors.push(`listTripsLast24hByHour: ${e?.message || e}`)),
   ]);
 
   if (!stats) {
@@ -136,14 +140,22 @@ export default async function EcodriveAdminPage() {
               Datos en vivo · {new Date().toLocaleString("es-PE", { timeZone: "America/Lima" })}
             </p>
           </div>
-          <form action={logoutAction}>
-            <button
-              type="submit"
-              className="text-xs text-zinc-500 hover:text-amber-400 border border-zinc-800 rounded px-3 py-1"
+          <div className="flex gap-2">
+            <Link
+              href="/admin/ecodrive/mapa"
+              className="text-xs text-amber-400 hover:text-amber-300 border border-amber-500/30 rounded px-3 py-1 hover:bg-amber-500/10"
             >
-              Cerrar sesión
-            </button>
-          </form>
+              🗺️ Mapa Perú
+            </Link>
+            <form action={logoutAction}>
+              <button
+                type="submit"
+                className="text-xs text-zinc-500 hover:text-amber-400 border border-zinc-800 rounded px-3 py-1"
+              >
+                Cerrar sesión
+              </button>
+            </form>
+          </div>
         </header>
 
         {errors.length > 0 && (
@@ -176,6 +188,15 @@ export default async function EcodriveAdminPage() {
           <Stat label="Saldo wallets" value={`S/.${stats.total_wallet_balance.toFixed(2)}`} subtle />
           <Stat label="Comisiones x cobrar" value={`S/.${stats.pending_commissions_amount.toFixed(2)}`} subtle />
         </section>
+
+        {/* GRÁFICO VIAJES/HORA 24H */}
+        <Panel title="📈 Viajes últimas 24h (por hora · Lima)" className="mb-8">
+          {hourlyTrips.length === 0 ? (
+            <Empty>—</Empty>
+          ) : (
+            <HourlyChart buckets={hourlyTrips} />
+          )}
+        </Panel>
 
         {/* CHOFERES EN TURNO + VIAJES ACTIVOS */}
         <section className="grid md:grid-cols-2 gap-4 mb-8">
@@ -463,6 +484,36 @@ function Table({ headers, children }: { headers: string[]; children: React.React
 
 function Empty({ children }: { children: React.ReactNode }) {
   return <div className="text-center text-zinc-500 py-6 text-sm">{children}</div>;
+}
+
+function HourlyChart({ buckets }: { buckets: Array<{ hour: string; count: number; revenue: number }> }) {
+  const maxCount = Math.max(...buckets.map((b) => b.count), 1);
+  const totalCount = buckets.reduce((a, b) => a + b.count, 0);
+  const totalRevenue = buckets.reduce((a, b) => a + b.revenue, 0);
+  return (
+    <div className="p-4">
+      <div className="flex justify-between text-xs text-zinc-500 mb-2">
+        <span>Total: <span className="text-zinc-300 font-semibold">{totalCount} viajes</span></span>
+        <span>Ingreso: <span className="text-amber-400 font-semibold">S/.{totalRevenue.toFixed(2)}</span></span>
+      </div>
+      <div className="flex items-end gap-1 h-32">
+        {buckets.map((b) => {
+          const h = (b.count / maxCount) * 100;
+          return (
+            <div key={b.hour} className="flex-1 flex flex-col items-center gap-1 group" title={`${b.hour}: ${b.count} viajes · S/.${b.revenue.toFixed(2)}`}>
+              <div className="w-full flex items-end h-full">
+                <div
+                  className={`w-full rounded-t ${b.count > 0 ? "bg-amber-500/60 group-hover:bg-amber-500" : "bg-zinc-800"}`}
+                  style={{ height: `${Math.max(h, 2)}%` }}
+                />
+              </div>
+              <div className="text-[9px] text-zinc-600">{b.hour}</div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 function Badge({ value }: { value: string }) {
