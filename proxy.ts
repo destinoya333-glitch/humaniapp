@@ -39,6 +39,9 @@ export function proxy(request: NextRequest) {
   // 3. Host de producto → rewrite a la ruta interna
   const rewriteBase = SUBDOMAIN_REWRITES[host];
   if (rewriteBase) {
+    // Rutas globales (/admin, /api) no llevan el prefijo del producto.
+    const isGlobal = url.pathname.startsWith("/admin") || url.pathname.startsWith("/api");
+    if (isGlobal) return NextResponse.next();
     // Si ya viene con la ruta base, no la duplicamos
     const path = url.pathname.startsWith(rewriteBase)
       ? url.pathname

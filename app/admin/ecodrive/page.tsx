@@ -1,6 +1,11 @@
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import { listWaitlist, getStats, supabase } from "@/lib/ecodrive/db";
+import {
+  getStats,
+  listRecentTrips,
+  listRecentConversations,
+  listWaitlist,
+} from "@/lib/ecodrive/db";
 
 const COOKIE = "ecodrive_admin";
 
@@ -51,34 +56,93 @@ export default async function EcodriveAdminPage({
     );
   }
 
-  const [stats, waitlist, recentConvos] = await Promise.all([
+  const [stats, trips, convos, waitlist] = await Promise.all([
     getStats(),
+    listRecentTrips(30),
+    listRecentConversations(15),
     listWaitlist(50),
-    supabase
-      .from("ecodrive_conversations")
-      .select("celular, updated_at, messages")
-      .order("updated_at", { ascending: false })
-      .limit(15)
-      .then((r: { data: Array<{ celular: string; updated_at: string; messages: Array<{ role: string; content: string }> }> | null }) => r.data || []),
   ]);
 
   return (
     <main className="min-h-screen bg-zinc-950 text-zinc-200 px-6 py-10">
       <div className="mx-auto max-w-6xl">
-        <h1 className="text-3xl font-bold mb-2">EcoDrive+ Admin</h1>
-        <p className="text-sm text-zinc-500 mb-8">Última actualización: {new Date().toLocaleString("es-PE")}</p>
+        <h1 className="text-3xl font-bold mb-2">🚗 EcoDrive+ Admin</h1>
+        <p className="text-sm text-zinc-500 mb-8">
+          Datos en vivo · {new Date().toLocaleString("es-PE", { timeZone: "America/Lima" })}
+        </p>
 
-        <section className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-10">
-          <Stat label="Users" value={stats.users_total} />
-          <Stat label="Drivers" value={stats.drivers_total} />
-          <Stat label="Passengers" value={stats.passengers_total} />
-          <Stat label="Waitlist" value={stats.waitlist_total} />
-          <Stat label="Hoy" value={stats.waitlist_today} subtle />
-          <Stat label="Convos hoy" value={stats.conversations_today} subtle />
+        <h2 className="text-lg font-semibold mb-3 text-zinc-300">Hoy</h2>
+        <section className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-8">
+          <Stat label="Viajes hoy" value={stats.trips_today} highlight />
+          <Stat label="Completados" value={stats.trips_completed_today} highlight />
+          <Stat label="Ingreso S/." value={stats.revenue_today.toFixed(2)} highlight />
+          <Stat label="Choferes en turno" value={stats.drivers_on_shift} />
+          <Stat label="Convos hoy" value={stats.conversations_today} />
+        </section>
+
+        <h2 className="text-lg font-semibold mb-3 text-zinc-300">Base de usuarios</h2>
+        <section className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-10">
+          <Stat label="Total" value={stats.users_total} />
+          <Stat label="Choferes" value={stats.drivers_total} />
+          <Stat label="Pasajeros" value={stats.passengers_total} />
+          <Stat label="Activos" value={stats.active_total} />
+          <Stat label="Pre-registro" value={stats.preregistered_total} subtle />
         </section>
 
         <section className="mb-10">
-          <h2 className="text-xl font-semibold mb-4">Waitlist (últimos 50)</h2>
+          <h2 className="text-xl font-semibold mb-4">Últimos viajes</h2>
+          <div className="rounded-xl border border-zinc-800 overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="bg-zinc-900 text-zinc-500 uppercase text-xs">
+                <tr>
+                  <th className="text-left px-4 py-2">Cuándo</th>
+                  <th className="text-left px-4 py-2">Pasajero</th>
+                  <th className="text-left px-4 py-2">Origen → Destino</th>
+                  <th className="text-left px-4 py-2">Modo</th>
+                  <th className="text-right px-4 py-2">S/.</th>
+                  <th className="text-left px-4 py-2">Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                {trips.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="text-center py-6 text-zinc-500">
+                      Sin viajes todavía.
+                    </td>
+                  </tr>
+                ) : (
+                  trips.map((t) => (
+                    <tr key={t.id} className="border-t border-zinc-800">
+                      <td className="px-4 py-2 text-zinc-400">
+                        {new Date(t.created_at).toLocaleString("es-PE", {
+                          dateStyle: "short",
+                          timeStyle: "short",
+                          timeZone: "America/Lima",
+                        })}
+                      </td>
+                      <td className="px-4 py-2 font-mono">{t.pasajero_telefono || "—"}</td>
+                      <td className="px-4 py-2 text-zinc-300">
+                        {(t.origen_texto || "?").split(",")[0]} → {(t.destino_texto || "?").split(",")[0]}
+                      </td>
+                      <td className="px-4 py-2">
+                        <Badge value={t.modo || "regular"} />
+                      </td>
+                      <td className="px-4 py-2 text-right font-semibold">
+                        {t.precio_estimado ? Number(t.precio_estimado).toFixed(2) : "—"}
+                      </td>
+                      <td className="px-4 py-2">
+                        <EstadoTag value={t.estado || "?"} />
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section className="mb-10">
+          <h2 className="text-xl font-semibold mb-4">Pre-registro / waitlist (últimos 50)</h2>
           <div className="rounded-xl border border-zinc-800 overflow-hidden">
             <table className="w-full text-sm">
               <thead className="bg-zinc-900 text-zinc-500 uppercase text-xs">
@@ -86,22 +150,34 @@ export default async function EcodriveAdminPage({
                   <th className="text-left px-4 py-2">Cuándo</th>
                   <th className="text-left px-4 py-2">Celular</th>
                   <th className="text-left px-4 py-2">Nombre</th>
-                  <th className="text-left px-4 py-2">Interés</th>
-                  <th className="text-left px-4 py-2">Notas</th>
+                  <th className="text-left px-4 py-2">Rol</th>
                 </tr>
               </thead>
               <tbody>
                 {waitlist.length === 0 ? (
-                  <tr><td colSpan={5} className="text-center py-6 text-zinc-500">Sin entradas todavía.</td></tr>
-                ) : waitlist.map((w: { id: string; celular: string; nombre: string | null; interes: string; notas: string | null; created_at: string }) => (
-                  <tr key={w.id} className="border-t border-zinc-800">
-                    <td className="px-4 py-2 text-zinc-400">{new Date(w.created_at).toLocaleString("es-PE", { dateStyle: "short", timeStyle: "short" })}</td>
-                    <td className="px-4 py-2 font-mono">{w.celular}</td>
-                    <td className="px-4 py-2">{w.nombre || "—"}</td>
-                    <td className="px-4 py-2"><Badge value={w.interes} /></td>
-                    <td className="px-4 py-2 text-zinc-400">{w.notas || "—"}</td>
+                  <tr>
+                    <td colSpan={4} className="text-center py-6 text-zinc-500">
+                      Sin pre-registros.
+                    </td>
                   </tr>
-                ))}
+                ) : (
+                  waitlist.map((w) => (
+                    <tr key={w.id} className="border-t border-zinc-800">
+                      <td className="px-4 py-2 text-zinc-400">
+                        {new Date(w.created_at).toLocaleString("es-PE", {
+                          dateStyle: "short",
+                          timeStyle: "short",
+                          timeZone: "America/Lima",
+                        })}
+                      </td>
+                      <td className="px-4 py-2 font-mono">{w.telefono}</td>
+                      <td className="px-4 py-2">{w.nombre || "—"}</td>
+                      <td className="px-4 py-2">
+                        <Badge value={w.rol || "?"} />
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -109,25 +185,29 @@ export default async function EcodriveAdminPage({
 
         <section>
           <h2 className="text-xl font-semibold mb-4">Conversaciones recientes</h2>
-          <div className="space-y-3">
-            {recentConvos.length === 0 ? (
+          <div className="space-y-2">
+            {convos.length === 0 ? (
               <p className="text-zinc-500">Sin conversaciones todavía.</p>
-            ) : recentConvos.map((c: { celular: string; updated_at: string; messages: Array<{ role: string; content: string }> }) => (
-              <details key={c.celular} className="rounded-lg border border-zinc-800 bg-zinc-900/40">
-                <summary className="cursor-pointer px-4 py-3 flex justify-between text-sm">
-                  <span className="font-mono">{c.celular}</span>
-                  <span className="text-zinc-500">{new Date(c.updated_at).toLocaleString("es-PE", { dateStyle: "short", timeStyle: "short" })}</span>
-                </summary>
-                <div className="border-t border-zinc-800 p-4 space-y-2 text-sm">
-                  {(c.messages || []).slice(-6).map((m: { role: string; content: string }, i: number) => (
-                    <div key={i} className={m.role === "user" ? "text-zinc-300" : "text-amber-400"}>
-                      <span className="opacity-50 mr-2">{m.role === "user" ? "→" : "←"}</span>
-                      {m.content}
-                    </div>
-                  ))}
+            ) : (
+              convos.map((c) => (
+                <div
+                  key={c.user_phone}
+                  className="rounded-lg border border-zinc-800 bg-zinc-900/40 px-4 py-3 flex justify-between text-sm"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="font-mono">{c.user_phone}</div>
+                    <div className="text-zinc-400 truncate">{c.preview}</div>
+                  </div>
+                  <span className="text-zinc-500 text-xs ml-4 whitespace-nowrap">
+                    {new Date(c.last_at).toLocaleString("es-PE", {
+                      dateStyle: "short",
+                      timeStyle: "short",
+                      timeZone: "America/Lima",
+                    })}
+                  </span>
                 </div>
-              </details>
-            ))}
+              ))
+            )}
           </div>
         </section>
       </div>
@@ -135,9 +215,22 @@ export default async function EcodriveAdminPage({
   );
 }
 
-function Stat({ label, value, subtle = false }: { label: string; value: number; subtle?: boolean }) {
+function Stat({
+  label,
+  value,
+  subtle = false,
+  highlight = false,
+}: {
+  label: string;
+  value: number | string;
+  subtle?: boolean;
+  highlight?: boolean;
+}) {
+  let cls = "border-zinc-800 bg-zinc-900/30";
+  if (highlight) cls = "border-amber-500/30 bg-amber-500/10";
+  else if (subtle) cls = "border-zinc-800 bg-zinc-900/30";
   return (
-    <div className={`rounded-xl border p-4 ${subtle ? "border-zinc-800 bg-zinc-900/30" : "border-amber-500/20 bg-amber-500/5"}`}>
+    <div className={`rounded-xl border p-4 ${cls}`}>
       <div className="text-3xl font-bold">{value}</div>
       <div className="text-xs text-zinc-500 uppercase mt-1 tracking-wider">{label}</div>
     </div>
@@ -146,12 +239,33 @@ function Stat({ label, value, subtle = false }: { label: string; value: number; 
 
 function Badge({ value }: { value: string }) {
   const colors: Record<string, string> = {
-    passenger: "bg-blue-500/20 text-blue-300",
-    driver: "bg-emerald-500/20 text-emerald-300",
-    both: "bg-amber-500/20 text-amber-300",
+    pasajero: "bg-blue-500/20 text-blue-300",
+    chofer: "bg-emerald-500/20 text-emerald-300",
+    regular: "bg-zinc-700/50 text-zinc-300",
+    eco: "bg-emerald-500/20 text-emerald-300",
+    express: "bg-amber-500/20 text-amber-300",
+    mujer: "bg-pink-500/20 text-pink-300",
+    familia: "bg-blue-500/20 text-blue-300",
+    mascotas: "bg-orange-500/20 text-orange-300",
+    abuelo: "bg-purple-500/20 text-purple-300",
   };
   return (
-    <span className={`px-2 py-1 rounded text-xs ${colors[value] || "bg-zinc-700 text-zinc-300"}`}>
+    <span className={`px-2 py-1 rounded text-xs ${colors[value] || "bg-zinc-700/50 text-zinc-300"}`}>
+      {value}
+    </span>
+  );
+}
+
+function EstadoTag({ value }: { value: string }) {
+  const colors: Record<string, string> = {
+    completado: "bg-emerald-500/20 text-emerald-300",
+    buscando: "bg-amber-500/20 text-amber-300",
+    aceptado: "bg-blue-500/20 text-blue-300",
+    cancelado: "bg-red-500/20 text-red-300",
+    en_curso: "bg-blue-500/20 text-blue-300",
+  };
+  return (
+    <span className={`px-2 py-1 rounded text-xs ${colors[value] || "bg-zinc-700/50 text-zinc-300"}`}>
       {value}
     </span>
   );
