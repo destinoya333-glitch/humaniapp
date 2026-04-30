@@ -27,7 +27,8 @@ async function loginAction(formData: FormData): Promise<void> {
   const submitted = String(formData.get("p") || "");
   if (expected && submitted === expected) {
     const c = await cookies();
-    c.set(COOKIE, expected, { httpOnly: true, sameSite: "lax", path: PATH, secure: true });
+    // path "/" para que la cookie también la reciba /api/admin/ecodrive/*
+    c.set(COOKIE, expected, { httpOnly: true, sameSite: "lax", path: "/", secure: true });
   }
   redirect(PATH);
 }
@@ -35,7 +36,7 @@ async function loginAction(formData: FormData): Promise<void> {
 async function logoutAction(): Promise<void> {
   "use server";
   const c = await cookies();
-  c.delete(COOKIE);
+  c.delete({ name: COOKIE, path: "/" });
   redirect(PATH);
 }
 
