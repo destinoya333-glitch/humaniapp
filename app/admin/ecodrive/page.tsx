@@ -9,6 +9,23 @@ import {
 
 const COOKIE = "ecodrive_admin";
 
+// Server Action: en Next 16 solo aquí (o en route handler) podemos mutar cookies.
+async function loginAction(formData: FormData): Promise<void> {
+  "use server";
+  const expected = process.env.ECODRIVE_ADMIN_PASSCODE;
+  const submitted = String(formData.get("p") || "");
+  if (expected && submitted === expected) {
+    const c = await cookies();
+    c.set(COOKIE, expected, {
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/admin/ecodrive",
+      secure: true,
+    });
+  }
+  redirect("/admin/ecodrive");
+}
+
 async function isAuthorized(): Promise<boolean> {
   const expected = process.env.ECODRIVE_ADMIN_PASSCODE;
   if (!expected) return false;
@@ -16,27 +33,11 @@ async function isAuthorized(): Promise<boolean> {
   return c.get(COOKIE)?.value === expected;
 }
 
-export default async function EcodriveAdminPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ p?: string }>;
-}) {
-  const sp = await searchParams;
-
-  // Login flow: ?p=passcode setea cookie y redirige sin query.
-  if (sp.p) {
-    const expected = process.env.ECODRIVE_ADMIN_PASSCODE;
-    if (expected && sp.p === expected) {
-      const c = await cookies();
-      c.set(COOKIE, sp.p, { httpOnly: true, sameSite: "lax", path: "/admin/ecodrive" });
-      redirect("/admin/ecodrive");
-    }
-  }
-
+export default async function EcodriveAdminPage() {
   if (!(await isAuthorized())) {
     return (
       <main className="min-h-screen bg-zinc-950 text-zinc-200 flex items-center justify-center p-6">
-        <form className="max-w-sm w-full space-y-4">
+        <form action={loginAction} className="max-w-sm w-full space-y-4">
           <h1 className="text-2xl font-bold">EcoDrive+ Admin</h1>
           <p className="text-sm text-zinc-400">Ingresa el passcode.</p>
           <input
@@ -44,6 +45,7 @@ export default async function EcodriveAdminPage({
             type="password"
             className="w-full rounded-md bg-zinc-900 border border-zinc-800 px-4 py-3 outline-none focus:border-amber-500"
             placeholder="passcode"
+            autoComplete="current-password"
           />
           <button
             type="submit"
