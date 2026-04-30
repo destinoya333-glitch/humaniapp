@@ -12,6 +12,15 @@ type Vehiculo = {
   [k: string]: any;
 };
 
+type TrackingHistoryPoint = {
+  lat: number;
+  lng: number;
+  source: string | null;
+  heading_deg: number | null;
+  speed_kmh: number | null;
+  t: string;
+};
+
 type ApiResponse = {
   viaje: {
     id: number | string;
@@ -27,6 +36,7 @@ type ApiResponse = {
     distancia_km: number | null;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     metadata: any;
+    tracking_token?: string | null;
   };
   chofer: {
     nombre: string | null;
@@ -40,6 +50,7 @@ type ApiResponse = {
     lng: number | null;
     ultimo_ping: string | null;
   } | null;
+  tracking_history?: TrackingHistoryPoint[];
   error?: string;
 };
 
@@ -211,6 +222,7 @@ export default function TrackClient({ viajeId }: { viajeId: string }) {
   const [loading, setLoading] = useState(true);
   const [history, setHistory] = useState<Array<{ lat: number; lng: number; t: number }>>([]);
   const [shareMsg, setShareMsg] = useState<string | null>(null);
+  const [sosState, setSosState] = useState<"idle" | "sending" | "sent" | "error">("idle");
 
   // Fetch periódico
   const fetchData = useCallback(async () => {
@@ -230,8 +242,16 @@ export default function TrackClient({ viajeId }: { viajeId: string }) {
       setData(json);
       setError(null);
       setLoading(false);
-      // Append a history (solo si nueva pos distinta)
-      if (json.chofer_pos?.lat && json.chofer_pos?.lng) {
+      // Histórico viene del API (persistido en viaje_tracking_pings)
+      if (Array.isArray(json.tracking_history) && json.tracking_history.length > 0) {
+        const mapped = json.tracking_history.map((p) => ({
+          lat: Number(p.lat),
+          lng: Number(p.lng),
+          t: p.t ? new Date(p.t).getTime() : Date.now(),
+        }));
+        setHistory(mapped);
+      } else if (json.chofer_pos?.lat && json.chofer_pos?.lng) {
+        // Fallback: construir history en memoria si el API aún no tiene pings
         setHistory((prev) => {
           const last = prev[prev.length - 1];
           const lat = json.chofer_pos!.lat as number;
@@ -240,7 +260,6 @@ export default function TrackClient({ viajeId }: { viajeId: string }) {
             return prev;
           }
           const next = [...prev, { lat, lng, t: Date.now() }];
-          // mantén máximo 60 puntos
           return next.slice(-60);
         });
       }
@@ -439,6 +458,59 @@ export default function TrackClient({ viajeId }: { viajeId: string }) {
     }
     return { distRemainingKm, speedKmh, etaMin };
   }, [data, history]);
+
+  // SOS — pasajero en peligro
+  const handleSos = useCallback(async () => {
+    if (sosState === "sending") return;
+    if (typeof window === "undefined") return;
+    const confirmed = window.confirm(
+      "Estas en peligro? Vamos a alertar a Percy admin con tu ubicacion."
+    );
+    if (!confirmed) return;
+    setSosState("sending");
+
+    // Intenta capturar geolocalizacion del pasajero
+    const tryGeo = (): Promise<{ lat: number | null; lng: number | null }> =>
+      new Promise((resolve) => {
+        if (!("geolocation" in navigator)) {
+          return resolve({ lat: null, lng: null });
+        }
+        const timer = setTimeout(() => resolve({ lat: null, lng: null }), 4000);
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            clearTimeout(timer);
+            resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+          },
+          () => {
+            clearTimeout(timer);
+            resolve({ lat: null, lng: null });
+          },
+          { enableHighAccuracy: true, timeout: 4000, maximumAge: 0 }
+        );
+      });
+
+    const { lat, lng } = await tryGeo();
+    try {
+      const r = await fetch(
+        `/api/track/${encodeURIComponent(viajeId)}/sos`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            lat,
+            lng,
+            message: "SOS desde tracking web",
+          }),
+        }
+      );
+      if (!r.ok) throw new Error(`SOS ${r.status}`);
+      setSosState("sent");
+      setTimeout(() => setSosState("idle"), 6000);
+    } catch {
+      setSosState("error");
+      setTimeout(() => setSosState("idle"), 5000);
+    }
+  }, [sosState, viajeId]);
 
   // Share / copy
   const handleShare = useCallback(async () => {
@@ -716,10 +788,36 @@ export default function TrackClient({ viajeId }: { viajeId: string }) {
           )}
 
           <div className="text-[10px] text-zinc-600 text-center pt-2">
-            Actualizando cada 5s · ID #{String(viajeId)}
+            Actualizando cada 5s
           </div>
         </aside>
       </div>
+
+      {/* SOS FAB — fijo abajo derecha */}
+      {!isCompletado && !isCancelado && (
+        <button
+          type="button"
+          onClick={handleSos}
+          disabled={sosState === "sending"}
+          aria-label="SOS - emergencia"
+          className={`fixed bottom-5 right-5 z-[2000] rounded-full shadow-lg shadow-red-900/40 font-bold text-white text-sm px-5 py-4 transition active:scale-95 ${
+            sosState === "sent"
+              ? "bg-emerald-600"
+              : sosState === "error"
+              ? "bg-amber-600"
+              : "bg-red-600 hover:bg-red-500"
+          }`}
+          style={{ minWidth: 92 }}
+        >
+          {sosState === "sending"
+            ? "Enviando…"
+            : sosState === "sent"
+            ? "✅ Enviado"
+            : sosState === "error"
+            ? "⚠️ Error"
+            : "🚨 SOS"}
+        </button>
+      )}
     </main>
   );
 }

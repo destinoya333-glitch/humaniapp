@@ -16,6 +16,7 @@ type ViajeRow = {
   precio_estimado: number | null;
   distancia_km: number | null;
   pasajero_telefono: string | null;
+  tracking_token: string | null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadata: any;
   created_at: string;
@@ -39,7 +40,23 @@ type ChoferEstadoRow = {
   ultimo_ping: string | null;
 };
 
+type TrackingPingRow = {
+  lat: number;
+  lng: number;
+  source: string | null;
+  heading_deg: number | null;
+  speed_kmh: number | null;
+  created_at: string;
+};
+
 const noStore = { "Cache-Control": "no-store" };
+
+// UUID v4 / generic UUID matcher (case-insensitive)
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+const VIAJE_SELECT =
+  "id, estado, origen_lat, origen_lng, destino_lat, destino_lng, origen_texto, destino_texto, modo, precio_estimado, distancia_km, pasajero_telefono, metadata, created_at, tracking_token";
 
 export async function GET(_req: Request, { params }: { params: Params }) {
   const { viajeId } = await params;
@@ -48,25 +65,33 @@ export async function GET(_req: Request, { params }: { params: Params }) {
     return NextResponse.json({ error: "viaje_not_found" }, { status: 404, headers: noStore });
   }
 
-  // viajes.id es numérico — intentamos parsear; si no, devolver 404
-  const idNum = Number(idStr);
-  if (!Number.isFinite(idNum) || idNum <= 0) {
+  // Acepta tanto UUID (tracking_token) como ID numerico legacy
+  let viaje: ViajeRow | null = null;
+  if (UUID_RE.test(idStr)) {
+    const { data } = await supabase
+      .from("viajes")
+      .select(VIAJE_SELECT)
+      .eq("tracking_token", idStr)
+      .maybeSingle();
+    viaje = (data as ViajeRow) || null;
+  } else {
+    const idNum = Number(idStr);
+    if (!Number.isFinite(idNum) || idNum <= 0) {
+      return NextResponse.json({ error: "viaje_not_found" }, { status: 404, headers: noStore });
+    }
+    const { data } = await supabase
+      .from("viajes")
+      .select(VIAJE_SELECT)
+      .eq("id", idNum)
+      .maybeSingle();
+    viaje = (data as ViajeRow) || null;
+  }
+
+  if (!viaje) {
     return NextResponse.json({ error: "viaje_not_found" }, { status: 404, headers: noStore });
   }
 
-  const { data: viaje, error: viajeErr } = await supabase
-    .from("viajes")
-    .select(
-      "id, estado, origen_lat, origen_lng, destino_lat, destino_lng, origen_texto, destino_texto, modo, precio_estimado, distancia_km, pasajero_telefono, metadata, created_at"
-    )
-    .eq("id", idNum)
-    .maybeSingle();
-
-  if (viajeErr || !viaje) {
-    return NextResponse.json({ error: "viaje_not_found" }, { status: 404, headers: noStore });
-  }
-
-  const v = viaje as ViajeRow;
+  const v = viaje;
   const meta = (v.metadata && typeof v.metadata === "object" ? v.metadata : {}) as Record<
     string,
     unknown
@@ -158,6 +183,78 @@ export async function GET(_req: Request, { params }: { params: Params }) {
     }
   }
 
+  // ── Tracking history persistido ─────────────────────────────────────
+  // viajes.id puede ser bigint en BD; lo usamos numerico para FK.
+  const viajeIdNum =
+    typeof v.id === "number"
+      ? v.id
+      : Number.isFinite(Number(v.id))
+      ? Number(v.id)
+      : null;
+
+  // Insertar nuevo ping si la posicion cambio (vs ultimo registrado)
+  if (viajeIdNum != null && chofer_pos?.lat != null && chofer_pos?.lng != null) {
+    try {
+      const { data: lastPings } = await supabase
+        .from("viaje_tracking_pings")
+        .select("lat, lng")
+        .eq("viaje_id", viajeIdNum)
+        .order("created_at", { ascending: false })
+        .limit(1);
+      const last = Array.isArray(lastPings) && lastPings[0] ? lastPings[0] : null;
+      const lat = chofer_pos.lat;
+      const lng = chofer_pos.lng;
+      const changed =
+        !last ||
+        Math.abs(Number(last.lat) - lat) > 1e-6 ||
+        Math.abs(Number(last.lng) - lng) > 1e-6;
+      if (changed) {
+        await supabase.from("viaje_tracking_pings").insert({
+          viaje_id: viajeIdNum,
+          lat,
+          lng,
+          source: "chofer",
+        });
+      }
+    } catch {
+      /* noop — ping log es best-effort */
+    }
+  }
+
+  // Recuperar ultimos 60 pings (orden ASC para que el cliente dibuje la ruta)
+  let tracking_history: Array<{
+    lat: number;
+    lng: number;
+    source: string | null;
+    heading_deg: number | null;
+    speed_kmh: number | null;
+    t: string;
+  }> = [];
+  if (viajeIdNum != null) {
+    try {
+      const { data: pings } = await supabase
+        .from("viaje_tracking_pings")
+        .select("lat, lng, source, heading_deg, speed_kmh, created_at")
+        .eq("viaje_id", viajeIdNum)
+        .order("created_at", { ascending: false })
+        .limit(60);
+      const arr = (pings as TrackingPingRow[] | null) || [];
+      tracking_history = arr
+        .slice()
+        .reverse()
+        .map((p) => ({
+          lat: Number(p.lat),
+          lng: Number(p.lng),
+          source: p.source ?? null,
+          heading_deg: p.heading_deg ?? null,
+          speed_kmh: p.speed_kmh ?? null,
+          t: p.created_at,
+        }));
+    } catch {
+      tracking_history = [];
+    }
+  }
+
   return NextResponse.json(
     {
       viaje: {
@@ -173,9 +270,11 @@ export async function GET(_req: Request, { params }: { params: Params }) {
         precio_estimado: v.precio_estimado,
         distancia_km: v.distancia_km,
         metadata: v.metadata,
+        tracking_token: v.tracking_token,
       },
       chofer,
       chofer_pos,
+      tracking_history,
     },
     { headers: noStore }
   );
