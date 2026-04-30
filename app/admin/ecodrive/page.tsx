@@ -56,12 +56,26 @@ export default async function EcodriveAdminPage({
     );
   }
 
-  const [stats, trips, convos, waitlist] = await Promise.all([
-    getStats(),
-    listRecentTrips(30),
-    listRecentConversations(15),
-    listWaitlist(50),
+  // Cargar datos resilientemente: si algo falla mostramos error en panel sin 500.
+  let stats: Awaited<ReturnType<typeof getStats>> | null = null;
+  let trips: Awaited<ReturnType<typeof listRecentTrips>> = [];
+  let convos: Awaited<ReturnType<typeof listRecentConversations>> = [];
+  let waitlist: Awaited<ReturnType<typeof listWaitlist>> = [];
+  const errors: string[] = [];
+  await Promise.all([
+    getStats().then((r) => { stats = r; }).catch((e: Error) => { errors.push(`getStats: ${e?.message || e}`); }),
+    listRecentTrips(30).then((r) => { trips = r; }).catch((e: Error) => { errors.push(`listRecentTrips: ${e?.message || e}`); }),
+    listRecentConversations(15).then((r) => { convos = r; }).catch((e: Error) => { errors.push(`listRecentConversations: ${e?.message || e}`); }),
+    listWaitlist(50).then((r) => { waitlist = r; }).catch((e: Error) => { errors.push(`listWaitlist: ${e?.message || e}`); }),
   ]);
+  if (!stats) {
+    stats = {
+      users_total: 0, drivers_total: 0, passengers_total: 0, active_total: 0,
+      preregistered_total: 0, preregistered_today: 0, conversations_today: 0,
+      trips_today: 0, trips_completed_today: 0, revenue_today: 0,
+      drivers_on_shift: 0, waitlist_total: 0, waitlist_today: 0,
+    };
+  }
 
   return (
     <main className="min-h-screen bg-zinc-950 text-zinc-200 px-6 py-10">
@@ -70,6 +84,14 @@ export default async function EcodriveAdminPage({
         <p className="text-sm text-zinc-500 mb-8">
           Datos en vivo · {new Date().toLocaleString("es-PE", { timeZone: "America/Lima" })}
         </p>
+        {errors.length > 0 && (
+          <div className="mb-8 rounded-lg border border-red-500/40 bg-red-500/10 p-4 text-sm text-red-300">
+            <div className="font-semibold mb-2">⚠️ Errores cargando datos:</div>
+            <ul className="list-disc list-inside space-y-1 text-xs font-mono">
+              {errors.map((e, i) => <li key={i}>{e}</li>)}
+            </ul>
+          </div>
+        )}
 
         <h2 className="text-lg font-semibold mb-3 text-zinc-300">Hoy</h2>
         <section className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-8">
