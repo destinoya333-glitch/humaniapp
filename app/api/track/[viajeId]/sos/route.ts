@@ -188,13 +188,15 @@ export async function POST(req: Request, { params }: { params: Params }) {
 
   // Persistir en notifications (best-effort)
   try {
+    const nowIso = new Date().toISOString();
     await supabase.from("notifications").insert({
       user_phone: ADMIN_PHONE,
       tipo: "sos_pasajero",
       titulo: `SOS viaje #${viaje.id}`,
       cuerpo: adminMsg,
+      programada_para: nowIso,
       estado: sentToAdmin ? "enviada" : "pendiente",
-      enviada_at: sentToAdmin ? new Date().toISOString() : null,
+      enviada_at: sentToAdmin ? nowIso : null,
       metadata: {
         viaje_id: viaje.id,
         tracking_token: viaje.tracking_token,
