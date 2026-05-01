@@ -271,7 +271,9 @@ export default function MapaClient() {
 
   useEffect(() => {
     let alive = true;
-    (async () => {
+    let pollTimer: ReturnType<typeof setInterval> | null = null;
+
+    const fetchAndRender = async () => {
       try {
         const L = await loadLeaflet();
         if (!alive || !mapRef.current || !L) return;
@@ -283,12 +285,11 @@ export default function MapaClient() {
             maxZoom: 19,
           }).addTo(mapInstance.current);
         }
-        const r = await fetch("/api/admin/ecodrive/mapa-data");
+        const r = await fetch("/api/admin/ecodrive/mapa-data", { cache: "no-store" });
         if (!r.ok) throw new Error(`API ${r.status}`);
         const data: { viajes: Viaje[]; choferes: Chofer[]; summary: Summary } = await r.json();
         if (!alive) return;
         setSummary(data.summary);
-        // Top deps
         const counts = new Map<string, number>();
         for (const v of data.viajes) {
           if (v.origen_lat && v.origen_lng) {
@@ -308,9 +309,15 @@ export default function MapaClient() {
         setError(msg);
         setLoading(false);
       }
-    })();
+    };
+
+    fetchAndRender();
+    // Auto-refresh cada 10s para tracking en vivo
+    pollTimer = setInterval(fetchAndRender, 10000);
+
     return () => {
       alive = false;
+      if (pollTimer) clearInterval(pollTimer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode]);
