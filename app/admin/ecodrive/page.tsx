@@ -146,7 +146,7 @@ export default async function EcodriveAdminPage() {
               href="/admin/ecodrive/mapa"
               className="text-xs text-amber-400 hover:text-amber-300 border border-amber-500/30 rounded px-3 py-1 hover:bg-amber-500/10"
             >
-              🗺️ Mapa Perú
+              🗺️ Mapa Trujillo
             </Link>
             <form action={logoutAction}>
               <button
