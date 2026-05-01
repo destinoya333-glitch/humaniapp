@@ -83,21 +83,38 @@ function personSvg(estado: string | null): string {
 }
 
 // SVG auto visto desde arriba. headingDeg rota el cuerpo.
+// Frente arriba (con faros amarillos brillantes y parabrisas grande inclinado).
+// Trasera abajo (con luces rojas y ventana corta).
 function carSvg(color: string, stroke: string, heading: number = 0): string {
-  const accent = "#111827";
+  const accent = "#0f172a";
   return `
-<div style="transform: rotate(${heading}deg); transform-origin: 50% 50%; width:34px; height:34px; display:flex; align-items:center; justify-content:center; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.6));">
-  <svg viewBox="0 0 64 64" width="34" height="34" xmlns="http://www.w3.org/2000/svg">
-    <rect x="16" y="6" width="32" height="52" rx="8" ry="10" fill="${color}" stroke="${stroke}" stroke-width="2"/>
-    <path d="M19 14 L45 14 L41 24 L23 24 Z" fill="${accent}" opacity="0.85"/>
-    <path d="M23 44 L41 44 L45 54 L19 54 Z" fill="${accent}" opacity="0.85"/>
-    <rect x="22" y="26" width="20" height="16" rx="2" fill="${color}" stroke="${stroke}" stroke-width="1" opacity="0.85"/>
-    <rect x="13" y="18" width="4" height="8" rx="1.5" fill="#0b0b0b"/>
-    <rect x="47" y="18" width="4" height="8" rx="1.5" fill="#0b0b0b"/>
-    <rect x="13" y="40" width="4" height="8" rx="1.5" fill="#0b0b0b"/>
-    <rect x="47" y="40" width="4" height="8" rx="1.5" fill="#0b0b0b"/>
-    <circle cx="24" cy="9" r="1.5" fill="#fef3c7"/>
-    <circle cx="40" cy="9" r="1.5" fill="#fef3c7"/>
+<div style="transform: rotate(${heading}deg); transform-origin: 50% 50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.6));">
+  <svg viewBox="0 0 64 64" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
+    <!-- Cuerpo del auto (frontal arriba, trasera abajo) -->
+    <rect x="14" y="4" width="36" height="56" rx="9" ry="11" fill="${color}" stroke="${stroke}" stroke-width="2"/>
+
+    <!-- FRONTAL (arriba): parabrisas grande inclinado en V -->
+    <path d="M17 11 L47 11 L42 23 L22 23 Z" fill="${accent}" opacity="0.92"/>
+    <!-- Faros frontales amarillos brillantes (grandes) -->
+    <ellipse cx="22" cy="6.5" rx="2.5" ry="1.5" fill="#fde047" stroke="#a16207" stroke-width="0.5"/>
+    <ellipse cx="42" cy="6.5" rx="2.5" ry="1.5" fill="#fde047" stroke="#a16207" stroke-width="0.5"/>
+    <!-- Parrilla frontal (linea horizontal abajo del parabrisas) -->
+    <line x1="20" y1="9" x2="44" y2="9" stroke="${accent}" stroke-width="1.2" opacity="0.6"/>
+
+    <!-- Techo / cabina (mas cerca del frontal) -->
+    <rect x="20" y="25" width="24" height="14" rx="2" fill="${color}" stroke="${stroke}" stroke-width="0.8" opacity="0.7"/>
+
+    <!-- TRASERA (abajo): ventana corta -->
+    <path d="M22 41 L42 41 L45 50 L19 50 Z" fill="${accent}" opacity="0.85"/>
+    <!-- Luces traseras ROJAS (mas pequenas que faros, en barra horizontal) -->
+    <rect x="17" y="55" width="8" height="2.5" rx="0.8" fill="#dc2626" stroke="#7f1d1d" stroke-width="0.4"/>
+    <rect x="39" y="55" width="8" height="2.5" rx="0.8" fill="#dc2626" stroke="#7f1d1d" stroke-width="0.4"/>
+
+    <!-- Ruedas (4 esquinas) -->
+    <rect x="11" y="16" width="4" height="9" rx="1.5" fill="#0b0b0b"/>
+    <rect x="49" y="16" width="4" height="9" rx="1.5" fill="#0b0b0b"/>
+    <rect x="11" y="38" width="4" height="9" rx="1.5" fill="#0b0b0b"/>
+    <rect x="49" y="38" width="4" height="9" rx="1.5" fill="#0b0b0b"/>
   </svg>
 </div>`;
 }
@@ -244,8 +261,8 @@ export default function MapaClient() {
             icon: L.divIcon({
               html: carSvg(fill, stroke, 0),
               className: "",
-              iconSize: [34, 34],
-              iconAnchor: [17, 17],
+              iconSize: [24, 24],
+              iconAnchor: [12, 12],
             }),
           })
             .bindPopup(
