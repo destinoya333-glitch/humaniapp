@@ -23,7 +23,49 @@ type Chofer = {
   lng: number | null;
   zona: string | null;
   ultimo_ping: string | null;
+  nombre?: string | null;
+  vehiculo?: {
+    marca?: string;
+    modelo?: string;
+    color?: string;
+    placas?: string;
+    ano?: string;
+  } | null;
 };
+
+// Mapa color en español → CSS hex + si necesita borde oscuro (para colores claros)
+const VEHICLE_COLORS: Record<string, { fill: string; stroke: string; glow: string }> = {
+  blanco: { fill: "#f3f4f6", stroke: "#1f2937", glow: "#9ca3af" },
+  negro: { fill: "#1f2937", stroke: "#f3f4f6", glow: "#6b7280" },
+  rojo: { fill: "#dc2626", stroke: "#fff", glow: "#dc2626" },
+  azul: { fill: "#2563eb", stroke: "#fff", glow: "#2563eb" },
+  celeste: { fill: "#0ea5e9", stroke: "#fff", glow: "#0ea5e9" },
+  plateado: { fill: "#9ca3af", stroke: "#fff", glow: "#9ca3af" },
+  plata: { fill: "#9ca3af", stroke: "#fff", glow: "#9ca3af" },
+  gris: { fill: "#6b7280", stroke: "#fff", glow: "#6b7280" },
+  verde: { fill: "#16a34a", stroke: "#fff", glow: "#16a34a" },
+  amarillo: { fill: "#eab308", stroke: "#1f2937", glow: "#eab308" },
+  dorado: { fill: "#ca8a04", stroke: "#fff", glow: "#ca8a04" },
+  naranja: { fill: "#ea580c", stroke: "#fff", glow: "#ea580c" },
+  marron: { fill: "#92400e", stroke: "#fff", glow: "#92400e" },
+  beige: { fill: "#d4a574", stroke: "#1f2937", glow: "#d4a574" },
+  vino: { fill: "#7f1d1d", stroke: "#fff", glow: "#7f1d1d" },
+  morado: { fill: "#7c3aed", stroke: "#fff", glow: "#7c3aed" },
+  violeta: { fill: "#7c3aed", stroke: "#fff", glow: "#7c3aed" },
+  rosado: { fill: "#ec4899", stroke: "#fff", glow: "#ec4899" },
+  rosa: { fill: "#ec4899", stroke: "#fff", glow: "#ec4899" },
+};
+
+function colorFromVehiculo(v: Chofer["vehiculo"]): { fill: string; stroke: string; glow: string } {
+  const raw = (v?.color || "").toLowerCase().trim();
+  if (!raw) return { fill: "#f59e0b", stroke: "#fff", glow: "#f59e0b" }; // default ámbar
+  // match exacto o parcial
+  if (VEHICLE_COLORS[raw]) return VEHICLE_COLORS[raw];
+  for (const k of Object.keys(VEHICLE_COLORS)) {
+    if (raw.includes(k) || k.includes(raw)) return VEHICLE_COLORS[k];
+  }
+  return { fill: "#f59e0b", stroke: "#fff", glow: "#f59e0b" };
+}
 type Summary = { total: number; completados: number; cancelados: number; activos: number; choferes_online: number };
 
 type Mode = "origen" | "destino" | "ambos";
@@ -155,14 +197,23 @@ export default function MapaClient() {
       }
       for (const c of choferes) {
         if (c.lat && c.lng) {
+          const { fill, stroke, glow } = colorFromVehiculo(c.vehiculo);
+          const veh = c.vehiculo;
+          const vehStr = veh
+            ? `${veh.marca || ""} ${veh.modelo || ""}${veh.placas ? " — " + veh.placas : ""}`.trim()
+            : "?";
+          const colorTxt = veh?.color ? `<br/>Color: ${veh.color}` : "";
+          const nombreTxt = c.nombre ? `<br/>Chofer: ${c.nombre}` : "";
           L.marker([c.lat, c.lng], {
             icon: L.divIcon({
-              html: `<div style="background:#f59e0b;width:14px;height:14px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 6px #f59e0b;"></div>`,
+              html: `<div style="background:${fill};width:16px;height:16px;border-radius:50%;border:2px solid ${stroke};box-shadow:0 0 8px ${glow}, 0 0 2px #000;"></div>`,
               className: "",
+              iconSize: [20, 20],
+              iconAnchor: [10, 10],
             }),
           })
             .bindPopup(
-              `<b>🚗 Chofer en turno</b><br/>Tel: ${c.telefono}<br/>Zona: ${c.zona || "?"}<br/>Último ping: ${c.ultimo_ping ? new Date(c.ultimo_ping).toLocaleTimeString("es-PE") : "?"}`
+              `<b>🚗 ${vehStr}</b>${nombreTxt}${colorTxt}<br/>Tel: ${c.telefono}<br/>Zona: ${c.zona || "?"}<br/>Último ping: ${c.ultimo_ping ? new Date(c.ultimo_ping).toLocaleTimeString("es-PE") : "?"}`
             )
             .addTo(choferesL);
         }
