@@ -67,6 +67,21 @@ function colorFromVehiculo(v: Chofer["vehiculo"]): { fill: string; stroke: strin
   return { fill: "#f59e0b", stroke: "#fff", glow: "#f59e0b" };
 }
 
+// SVG persona (pasajero) - figura simple
+function personSvg(estado: string | null): string {
+  // Color segun estado del viaje
+  const isActive = estado && ["buscando", "con_ofertas", "asignado", "en_curso"].includes(estado);
+  const fill = isActive ? "#10b981" : "#6b7280"; // verde si activo, gris si terminado
+  const stroke = "#fff";
+  return `
+<div style="width:30px; height:30px; display:flex; align-items:center; justify-content:center; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.5));">
+  <svg viewBox="0 0 32 32" width="30" height="30" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="16" cy="9" r="5" fill="${fill}" stroke="${stroke}" stroke-width="1.5"/>
+    <path d="M6 28 Q6 16 16 16 Q26 16 26 28 Z" fill="${fill}" stroke="${stroke}" stroke-width="1.5"/>
+  </svg>
+</div>`;
+}
+
 // SVG auto visto desde arriba. headingDeg rota el cuerpo.
 function carSvg(color: string, stroke: string, heading: number = 0): string {
   const accent = "#111827";
@@ -187,15 +202,16 @@ export default function MapaClient() {
         const showOrigen = mode === "origen" || mode === "ambos";
         const showDestino = mode === "destino" || mode === "ambos";
         if (showOrigen && v.origen_lat && v.origen_lng) {
-          L.circleMarker([v.origen_lat, v.origen_lng], {
-            radius: 5,
-            fillColor: "#10b981",
-            color: "#10b981",
-            weight: 1,
-            fillOpacity: 0.7,
+          L.marker([v.origen_lat, v.origen_lng], {
+            icon: L.divIcon({
+              html: personSvg(v.estado),
+              className: "",
+              iconSize: [30, 30],
+              iconAnchor: [15, 28],
+            }),
           })
             .bindPopup(
-              `<b>Viaje #${v.id}</b><br/>📍 ${v.origen_texto?.split(",")[0] || "?"}<br/>🎯 ${v.destino_texto?.split(",")[0] || "?"}<br/>${v.modo || "?"} · S/.${v.precio_estimado?.toFixed(2) || "?"} · ${v.estado}`
+              `<b>👤 Pasajero — Viaje #${v.id}</b><br/>📍 ${v.origen_texto?.split(",")[0] || "?"}<br/>🎯 ${v.destino_texto?.split(",")[0] || "?"}<br/>${v.modo || "?"} · S/.${v.precio_estimado?.toFixed(2) || "?"} · ${v.estado}`
             )
             .addTo(origenes);
           heatPoints.push([v.origen_lat, v.origen_lng, 0.5]);
