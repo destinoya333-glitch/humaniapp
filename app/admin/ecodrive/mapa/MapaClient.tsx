@@ -66,6 +66,26 @@ function colorFromVehiculo(v: Chofer["vehiculo"]): { fill: string; stroke: strin
   }
   return { fill: "#f59e0b", stroke: "#fff", glow: "#f59e0b" };
 }
+
+// SVG auto visto desde arriba. headingDeg rota el cuerpo.
+function carSvg(color: string, stroke: string, heading: number = 0): string {
+  const accent = "#111827";
+  return `
+<div style="transform: rotate(${heading}deg); transform-origin: 50% 50%; width:34px; height:34px; display:flex; align-items:center; justify-content:center; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.6));">
+  <svg viewBox="0 0 64 64" width="34" height="34" xmlns="http://www.w3.org/2000/svg">
+    <rect x="16" y="6" width="32" height="52" rx="8" ry="10" fill="${color}" stroke="${stroke}" stroke-width="2"/>
+    <path d="M19 14 L45 14 L41 24 L23 24 Z" fill="${accent}" opacity="0.85"/>
+    <path d="M23 44 L41 44 L45 54 L19 54 Z" fill="${accent}" opacity="0.85"/>
+    <rect x="22" y="26" width="20" height="16" rx="2" fill="${color}" stroke="${stroke}" stroke-width="1" opacity="0.85"/>
+    <rect x="13" y="18" width="4" height="8" rx="1.5" fill="#0b0b0b"/>
+    <rect x="47" y="18" width="4" height="8" rx="1.5" fill="#0b0b0b"/>
+    <rect x="13" y="40" width="4" height="8" rx="1.5" fill="#0b0b0b"/>
+    <rect x="47" y="40" width="4" height="8" rx="1.5" fill="#0b0b0b"/>
+    <circle cx="24" cy="9" r="1.5" fill="#fef3c7"/>
+    <circle cx="40" cy="9" r="1.5" fill="#fef3c7"/>
+  </svg>
+</div>`;
+}
 type Summary = { total: number; completados: number; cancelados: number; activos: number; choferes_online: number };
 
 type Mode = "origen" | "destino" | "ambos";
@@ -197,7 +217,7 @@ export default function MapaClient() {
       }
       for (const c of choferes) {
         if (c.lat && c.lng) {
-          const { fill, stroke, glow } = colorFromVehiculo(c.vehiculo);
+          const { fill, stroke } = colorFromVehiculo(c.vehiculo);
           const veh = c.vehiculo;
           const vehStr = veh
             ? `${veh.marca || ""} ${veh.modelo || ""}${veh.placas ? " — " + veh.placas : ""}`.trim()
@@ -206,10 +226,10 @@ export default function MapaClient() {
           const nombreTxt = c.nombre ? `<br/>Chofer: ${c.nombre}` : "";
           L.marker([c.lat, c.lng], {
             icon: L.divIcon({
-              html: `<div style="background:${fill};width:16px;height:16px;border-radius:50%;border:2px solid ${stroke};box-shadow:0 0 8px ${glow}, 0 0 2px #000;"></div>`,
+              html: carSvg(fill, stroke, 0),
               className: "",
-              iconSize: [20, 20],
-              iconAnchor: [10, 10],
+              iconSize: [34, 34],
+              iconAnchor: [17, 17],
             }),
           })
             .bindPopup(
