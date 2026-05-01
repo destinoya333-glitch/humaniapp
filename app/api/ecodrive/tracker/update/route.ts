@@ -22,8 +22,8 @@ function distanceMeters(
 const PROXIMIDAD_M = 800; // dispara link destino si chofer está a ≤800m del origen del pasajero
 
 async function sendWAText(to: string, body: string): Promise<void> {
-  const token = process.env.META_WA_TOKEN || "";
-  const phoneId = process.env.META_PHONE_ID || "";
+  const token = process.env.ECODRIVE_META_ACCESS_TOKEN || process.env.META_WA_TOKEN || "";
+  const phoneId = process.env.ECODRIVE_META_PHONE_ID || process.env.META_PHONE_ID || "";
   if (!token || !phoneId) return; // silently skip si no hay credenciales
   try {
     await fetch(`https://graph.facebook.com/v22.0/${phoneId}/messages`, {
