@@ -189,7 +189,7 @@ export default function MapaClient() {
         const L = await loadLeaflet();
         if (!alive || !mapRef.current || !L) return;
         if (!mapInstance.current) {
-          mapInstance.current = L.map(mapRef.current).setView([-9.19, -75.0152], 5);
+          mapInstance.current = L.map(mapRef.current).setView([-8.11, -79.03], 11);
           L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png", {
             attribution: "© OpenStreetMap, © CARTO",
             subdomains: "abcd",
@@ -237,7 +237,7 @@ export default function MapaClient() {
         >
           ← Dashboard
         </Link>
-        <h1 className="text-xl font-bold ml-2">🗺️ Mapa Perú EcoDrive+</h1>
+        <h1 className="text-xl font-bold ml-2">🗺️ Mapa EcoDrive+ — Trujillo</h1>
         <div className="flex gap-1 ml-auto">
           {(["origen", "destino", "ambos"] as Mode[]).map((m) => (
             <button

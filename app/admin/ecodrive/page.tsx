@@ -138,7 +138,7 @@ export default async function EcodriveAdminPage() {
           <div>
             <h1 className="text-3xl font-bold">🚗 EcoDrive+ Admin</h1>
             <p className="text-sm text-zinc-500 mt-1">
-              Datos en vivo · {new Date().toLocaleString("es-PE", { timeZone: "America/Lima" })}
+              Datos en vivo · Trujillo, La Libertad · {new Date().toLocaleString("es-PE", { timeZone: "America/Lima" })}
             </p>
           </div>
           <div className="flex gap-2">
@@ -169,7 +169,7 @@ export default async function EcodriveAdminPage() {
         )}
 
         {/* HOY */}
-        <h2 className="text-lg font-semibold mb-3 text-zinc-300">🔥 Hoy (Lima)</h2>
+        <h2 className="text-lg font-semibold mb-3 text-zinc-300">🔥 Hoy</h2>
         <section className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-8">
           <Stat label="Viajes hoy" value={stats.trips_today} highlight />
           <Stat label="Completados" value={stats.trips_completed_today} highlight />
@@ -191,7 +191,7 @@ export default async function EcodriveAdminPage() {
         </section>
 
         {/* GRÁFICO VIAJES/HORA 24H */}
-        <Panel title="📈 Viajes últimas 24h (por hora · Lima)" className="mb-8">
+        <Panel title="📈 Viajes últimas 24h (por hora · hora Perú)" className="mb-8">
           {hourlyTrips.length === 0 ? (
             <Empty>—</Empty>
           ) : (
