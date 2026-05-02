@@ -21,8 +21,23 @@ type Stats = {
   lastError: string | null;
 };
 
-const POST_INTERVAL_MS = 8000; // cada 8s envia ping
-const MIN_DISTANCE_M = 15; // o si se movio >15m
+type PendingOffer = {
+  has_offer: boolean;
+  kind?: "asignado" | "oferta_pendiente";
+  viaje_id?: number;
+  offer_id?: number;
+  origen?: string;
+  destino?: string;
+  precio?: number;
+  distancia_km?: number;
+  estado?: string;
+  estado_viaje?: string;
+  created_at?: string;
+};
+
+const POST_INTERVAL_MS = 8000;
+const MIN_DISTANCE_M = 15;
+const POLL_OFFER_MS = 5000;
 
 function distanceM(a: { lat: number; lng: number }, b: { lat: number; lng: number }): number {
   const R = 6371000;
@@ -32,6 +47,27 @@ function distanceM(a: { lat: number; lng: number }, b: { lat: number; lng: numbe
   const la2 = (b.lat * Math.PI) / 180;
   const x = Math.sin(dLat / 2) ** 2 + Math.cos(la1) * Math.cos(la2) * Math.sin(dLng / 2) ** 2;
   return 2 * R * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
+}
+
+// Web Audio: 3 beeps ascendentes (alarma)
+function playAlarmTones(audioCtx: AudioContext) {
+  const beep = (freq: number, dur: number, delay: number) => {
+    const startAt = audioCtx.currentTime + delay;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = freq;
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    gain.gain.setValueAtTime(0.0, startAt);
+    gain.gain.linearRampToValueAtTime(0.45, startAt + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, startAt + dur);
+    osc.start(startAt);
+    osc.stop(startAt + dur + 0.05);
+  };
+  beep(880, 0.18, 0);
+  beep(1100, 0.18, 0.22);
+  beep(1320, 0.36, 0.44);
 }
 
 export default function TrackChoferClient({ token }: { token: string }) {
@@ -48,11 +84,63 @@ export default function TrackChoferClient({ token }: { token: string }) {
   const [tokenInfo, setTokenInfo] = useState<{ chofer_id: number; expires_at_ms: number } | null>(
     null
   );
+  const [pendingOffer, setPendingOffer] = useState<PendingOffer | null>(null);
+  const [silenced, setSilenced] = useState(false);
+  const [flashOn, setFlashOn] = useState(false);
 
   const watchIdRef = useRef<number | null>(null);
   const lastPostAtRef = useRef<number>(0);
   const lastPostedRef = useRef<{ lat: number; lng: number } | null>(null);
   const wakeLockRef = useRef<{ release: () => Promise<void> } | null>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const lastOfferKeyRef = useRef<string | null>(null);
+  const offerPollerRef = useRef<number | null>(null);
+  const silencedRef = useRef(false);
+
+  // Mantener silencedRef sincronizado
+  useEffect(() => {
+    silencedRef.current = silenced;
+  }, [silenced]);
+
+  // Inicializar AudioContext en primera interacción del usuario (autoplay policy)
+  const ensureAudioCtx = useCallback(() => {
+    if (audioCtxRef.current) return audioCtxRef.current;
+    try {
+      const Ctx =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      audioCtxRef.current = new Ctx();
+    } catch {
+      /* ignore */
+    }
+    return audioCtxRef.current;
+  }, []);
+
+  // Disparar alarma: sonido + vibración + flash visual
+  const fireAlarm = useCallback(() => {
+    if (silencedRef.current) return;
+    const ctx = audioCtxRef.current;
+    if (ctx) {
+      try {
+        if (ctx.state === "suspended") ctx.resume();
+        playAlarmTones(ctx);
+        // Repetir 2 veces más con 1.2s de separación
+        setTimeout(() => playAlarmTones(ctx), 1300);
+        setTimeout(() => playAlarmTones(ctx), 2600);
+      } catch {
+        /* ignore */
+      }
+    }
+    if ("vibrate" in navigator) {
+      try {
+        navigator.vibrate([300, 150, 300, 150, 600]);
+      } catch {
+        /* ignore */
+      }
+    }
+    setFlashOn(true);
+    setTimeout(() => setFlashOn(false), 2000);
+  }, []);
 
   // 1) Validar token via GET
   useEffect(() => {
@@ -131,10 +219,7 @@ export default function TrackChoferClient({ token }: { token: string }) {
       const lat = pos.coords.latitude;
       const lng = pos.coords.longitude;
       const accuracy = Number.isFinite(pos.coords.accuracy) ? pos.coords.accuracy : null;
-
       setStats((s) => ({ ...s, lastLat: lat, lastLng: lng, lastAccuracy: accuracy }));
-
-      // Throttle: cada POST_INTERVAL_MS o si se movio mas de MIN_DISTANCE_M
       const now = Date.now();
       const moved =
         lastPostedRef.current &&
@@ -153,6 +238,33 @@ export default function TrackChoferClient({ token }: { token: string }) {
     setStats((s) => ({ ...s, lastError: err.message || `geo_err_${err.code}` }));
   }, []);
 
+  // Poll de pedidos pendientes
+  const pollPendingOffer = useCallback(async () => {
+    try {
+      const r = await fetch(`/api/ecodrive/tracker/pending-offer?token=${encodeURIComponent(token)}`, {
+        cache: "no-store",
+      });
+      if (!r.ok) return;
+      const data: PendingOffer = await r.json();
+      if (!data.has_offer) {
+        setPendingOffer(null);
+        lastOfferKeyRef.current = null;
+        return;
+      }
+      // Key única para detectar oferta nueva
+      const key = `${data.kind}:${data.viaje_id}:${data.offer_id || 0}`;
+      if (lastOfferKeyRef.current !== key) {
+        lastOfferKeyRef.current = key;
+        setPendingOffer(data);
+        fireAlarm();
+      } else {
+        setPendingOffer(data);
+      }
+    } catch {
+      /* ignore */
+    }
+  }, [token, fireAlarm]);
+
   const startTracking = useCallback(async () => {
     if (!("geolocation" in navigator)) {
       setStatus("error_geo");
@@ -160,8 +272,7 @@ export default function TrackChoferClient({ token }: { token: string }) {
       return;
     }
     setStatus("tracking");
-
-    // Wake Lock para que la pantalla no se duerma (no funciona en todos los browsers, OK if fails)
+    ensureAudioCtx();
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const nav = navigator as any;
@@ -171,14 +282,18 @@ export default function TrackChoferClient({ token }: { token: string }) {
     } catch {
       /* ignore */
     }
-
     const id = navigator.geolocation.watchPosition(onPosition, onError, {
       enableHighAccuracy: true,
       maximumAge: 5000,
       timeout: 30000,
     });
     watchIdRef.current = id;
-  }, [onPosition, onError]);
+
+    // Empezar polling de pedidos pendientes
+    pollPendingOffer(); // disparar inmediato
+    if (offerPollerRef.current) window.clearInterval(offerPollerRef.current);
+    offerPollerRef.current = window.setInterval(pollPendingOffer, POLL_OFFER_MS);
+  }, [onPosition, onError, ensureAudioCtx, pollPendingOffer]);
 
   const stopTracking = useCallback(async () => {
     if (watchIdRef.current != null) {
@@ -193,18 +308,18 @@ export default function TrackChoferClient({ token }: { token: string }) {
       }
       wakeLockRef.current = null;
     }
+    if (offerPollerRef.current) {
+      window.clearInterval(offerPollerRef.current);
+      offerPollerRef.current = null;
+    }
     setStatus("paused");
   }, []);
 
-  // Cleanup
   useEffect(() => {
     return () => {
-      if (watchIdRef.current != null) {
-        navigator.geolocation.clearWatch(watchIdRef.current);
-      }
-      if (wakeLockRef.current) {
-        wakeLockRef.current.release().catch(() => {});
-      }
+      if (watchIdRef.current != null) navigator.geolocation.clearWatch(watchIdRef.current);
+      if (wakeLockRef.current) wakeLockRef.current.release().catch(() => {});
+      if (offerPollerRef.current) window.clearInterval(offerPollerRef.current);
     };
   }, []);
 
@@ -215,15 +330,57 @@ export default function TrackChoferClient({ token }: { token: string }) {
     ? Math.round((Date.now() - stats.lastSentAt) / 1000)
     : null;
 
+  // Test alarm para que el chofer pruebe el sonido
+  const testAlarm = useCallback(() => {
+    ensureAudioCtx();
+    fireAlarm();
+  }, [ensureAudioCtx, fireAlarm]);
+
   return (
-    <main className="min-h-screen bg-zinc-950 text-zinc-100 p-5 flex flex-col">
+    <main
+      className={`min-h-screen text-zinc-100 p-5 flex flex-col transition-colors duration-200 ${
+        flashOn ? "bg-emerald-500" : "bg-zinc-950"
+      }`}
+    >
       <header className="mb-6">
         <h1 className="text-2xl font-bold flex items-center gap-2">🚗 EcoDrive+ Rastreador</h1>
         <p className="text-sm text-zinc-400 mt-1">
-          Mantén esta página abierta mientras estés en turno. El bot avisa al pasajero con tu
-          ubicación en tiempo real.
+          Mantén esta página abierta mientras estés en turno. Aviso sonoro cuando entre un pedido.
         </p>
       </header>
+
+      {/* Banner de pedido entrante */}
+      {pendingOffer && pendingOffer.has_offer && (
+        <section className="rounded-xl border-2 border-emerald-400 bg-emerald-500/10 p-4 mb-4 animate-pulse">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-emerald-300 font-bold text-lg">
+              {pendingOffer.kind === "asignado" ? "🎯 Pedido asignado" : "🔔 Pedido pendiente"}
+            </span>
+            <span className="text-xs text-zinc-300">#{pendingOffer.viaje_id}</span>
+          </div>
+          <div className="text-sm space-y-1 text-zinc-100">
+            <div>
+              📍 <span className="text-zinc-300">Recoges:</span>{" "}
+              <span className="font-semibold">{pendingOffer.origen?.split(",")[0] || "—"}</span>
+            </div>
+            <div>
+              🎯 <span className="text-zinc-300">Vas a:</span>{" "}
+              <span className="font-semibold">{pendingOffer.destino?.split(",")[0] || "—"}</span>
+            </div>
+            <div className="flex gap-4 mt-2">
+              <span className="text-emerald-300 font-bold text-xl">
+                S/.{Number(pendingOffer.precio || 0).toFixed(2)}
+              </span>
+              {pendingOffer.distancia_km && (
+                <span className="text-zinc-400">📏 {pendingOffer.distancia_km} km</span>
+              )}
+            </div>
+          </div>
+          <p className="text-[11px] text-zinc-400 mt-3">
+            Responde al bot por WhatsApp para aceptar/rechazar.
+          </p>
+        </section>
+      )}
 
       <section className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-5 mb-4">
         {status === "init" || status === "validating" ? (
@@ -266,8 +423,8 @@ export default function TrackChoferClient({ token }: { token: string }) {
               ▶️ Empezar a transmitir mi ubicación
             </button>
             <p className="text-[11px] text-zinc-500 mt-3">
-              Tu navegador te pedirá permiso para acceder al GPS. Acepta para que el pasajero te
-              vea en el mapa.
+              Tu navegador te pedirá permiso para acceder al GPS y reproducir sonido. Acepta para
+              recibir alertas de pedidos.
             </p>
           </div>
         ) : status === "tracking" ? (
@@ -275,6 +432,24 @@ export default function TrackChoferClient({ token }: { token: string }) {
             <div className="flex items-center gap-2 mb-3">
               <div className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
               <div className="text-sm text-emerald-300">Transmitiendo en vivo</div>
+            </div>
+            <div className="grid grid-cols-2 gap-2 mb-2">
+              <button
+                onClick={testAlarm}
+                className="rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 py-2 text-xs"
+              >
+                🔊 Probar alarma
+              </button>
+              <button
+                onClick={() => setSilenced((v) => !v)}
+                className={`rounded-lg py-2 text-xs ${
+                  silenced
+                    ? "bg-amber-600 hover:bg-amber-500 text-white"
+                    : "bg-zinc-800 hover:bg-zinc-700 text-zinc-200"
+                }`}
+              >
+                {silenced ? "🔇 Silenciado" : "🔔 Sonido activo"}
+              </button>
             </div>
             <button
               onClick={stopTracking}
