@@ -49,25 +49,57 @@ function distanceM(a: { lat: number; lng: number }, b: { lat: number; lng: numbe
   return 2 * R * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
 }
 
-// Web Audio: 3 beeps ascendentes (alarma)
-function playAlarmTones(audioCtx: AudioContext) {
+// Beeps tipo campana antes y despues de la voz
+function playBellChime(audioCtx: AudioContext, baseDelay = 0) {
   const beep = (freq: number, dur: number, delay: number) => {
-    const startAt = audioCtx.currentTime + delay;
+    const startAt = audioCtx.currentTime + baseDelay + delay;
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
-    osc.type = "sine";
+    osc.type = "triangle";
     osc.frequency.value = freq;
     osc.connect(gain);
     gain.connect(audioCtx.destination);
     gain.gain.setValueAtTime(0.0, startAt);
-    gain.gain.linearRampToValueAtTime(0.45, startAt + 0.02);
+    gain.gain.linearRampToValueAtTime(0.5, startAt + 0.02);
     gain.gain.exponentialRampToValueAtTime(0.001, startAt + dur);
     osc.start(startAt);
     osc.stop(startAt + dur + 0.05);
   };
-  beep(880, 0.18, 0);
-  beep(1100, 0.18, 0.22);
-  beep(1320, 0.36, 0.44);
+  // Campana doble ascendente (estilo notificacion premium)
+  beep(1320, 0.25, 0);
+  beep(1760, 0.5, 0.18);
+}
+
+// Voz "Nuevo pedido EcoDrive Plus" usando SpeechSynthesis del navegador
+function speakBrandedAlert() {
+  if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+  try {
+    window.speechSynthesis.cancel(); // por si hay algo encolado
+    const utter = new SpeechSynthesisUtterance(
+      "¡Nuevo pedido EcoDrive Plus! Revisa tu WhatsApp para aceptar."
+    );
+    utter.lang = "es-PE";
+    utter.rate = 1.05;
+    utter.pitch = 1.0;
+    utter.volume = 1.0;
+    // Intentar elegir voz en español si existe
+    const voices = window.speechSynthesis.getVoices();
+    const esVoice =
+      voices.find((v) => v.lang === "es-PE") ||
+      voices.find((v) => v.lang.startsWith("es-")) ||
+      voices.find((v) => v.lang.startsWith("es"));
+    if (esVoice) utter.voice = esVoice;
+    window.speechSynthesis.speak(utter);
+  } catch {
+    /* ignore */
+  }
+}
+
+// Secuencia completa: campana → voz → campana
+function playAlarmTones(audioCtx: AudioContext) {
+  playBellChime(audioCtx, 0); // campana inicial (0.7s)
+  setTimeout(() => speakBrandedAlert(), 750); // voz despues de la campana
+  setTimeout(() => playBellChime(audioCtx, 0), 3500); // campana final tras la voz
 }
 
 export default function TrackChoferClient({ token }: { token: string }) {
@@ -102,7 +134,7 @@ export default function TrackChoferClient({ token }: { token: string }) {
     silencedRef.current = silenced;
   }, [silenced]);
 
-  // Inicializar AudioContext en primera interacción del usuario (autoplay policy)
+  // Inicializar AudioContext + desbloquear SpeechSynthesis en primera interacción del usuario
   const ensureAudioCtx = useCallback(() => {
     if (audioCtxRef.current) return audioCtxRef.current;
     try {
@@ -113,10 +145,20 @@ export default function TrackChoferClient({ token }: { token: string }) {
     } catch {
       /* ignore */
     }
+    // Desbloquear SpeechSynthesis: iOS/Safari lo requieren tras primer touch
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      try {
+        const dummy = new SpeechSynthesisUtterance("");
+        dummy.volume = 0;
+        window.speechSynthesis.speak(dummy);
+      } catch {
+        /* ignore */
+      }
+    }
     return audioCtxRef.current;
   }, []);
 
-  // Disparar alarma: sonido + vibración + flash visual
+  // Disparar alarma: campana + voz "Nuevo pedido EcoDrive Plus" + campana + vibración + flash
   const fireAlarm = useCallback(() => {
     if (silencedRef.current) return;
     const ctx = audioCtxRef.current;
@@ -124,12 +166,12 @@ export default function TrackChoferClient({ token }: { token: string }) {
       try {
         if (ctx.state === "suspended") ctx.resume();
         playAlarmTones(ctx);
-        // Repetir 2 veces más con 1.2s de separación
-        setTimeout(() => playAlarmTones(ctx), 1300);
-        setTimeout(() => playAlarmTones(ctx), 2600);
       } catch {
         /* ignore */
       }
+    } else {
+      // Fallback: solo voz si no hay AudioContext
+      speakBrandedAlert();
     }
     if ("vibrate" in navigator) {
       try {
@@ -139,7 +181,7 @@ export default function TrackChoferClient({ token }: { token: string }) {
       }
     }
     setFlashOn(true);
-    setTimeout(() => setFlashOn(false), 2000);
+    setTimeout(() => setFlashOn(false), 4500); // flash dura toda la alarma (~4.5s)
   }, []);
 
   // 1) Validar token via GET
