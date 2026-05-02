@@ -76,7 +76,7 @@ function speakBrandedAlert() {
   try {
     window.speechSynthesis.cancel(); // por si hay algo encolado
     const utter = new SpeechSynthesisUtterance(
-      "¡Nuevo pedido EcoDrive Plus! Acepta en WhatsApp."
+      "¡Nuevo pedido EcoDrive! Acepta en WhatsApp."
     );
     utter.lang = "es-PE";
     utter.rate = 1.05;
