@@ -13,7 +13,7 @@ const features = [
   { icon: "🤝", title: "Modelo Indrive: tú nombras precio", desc: "Pasajero sugiere precio, conductor acepta o contraoferta. Sin tarifas dinámicas abusivas." },
   { icon: "📍", title: "Matching geolocalizado", desc: "Sistema notifica solo a conductores cercanos. Tiempo de respuesta promedio: 90 segundos." },
   { icon: "🚗", title: "Multi-categoría", desc: "Auto, moto, mototaxi, encomienda. Cada categoría con su tarifa base por ciudad." },
-  { icon: "📊", title: "Dashboard del operador", desc: "Viajes en tiempo real, conductores activos, MRR de membresías, top rutas." },
+  { icon: "📊", title: "Panel del operador", desc: "Viajes en tiempo real, conductores activos, ingresos recurrentes de membresías, rutas más usadas." },
 ];
 
 const sampleChat = [
@@ -121,7 +121,7 @@ export default function EcoDrivePlusPage() {
               <li>✦ Matching geolocalizado en 90 segundos</li>
               <li>✦ Pasajero negocia precio (modelo Indrive)</li>
               <li>✦ Conductor gana 100% del viaje</li>
-              <li>✦ Plataforma cobra fee mensual al conductor</li>
+              <li>✦ Plataforma cobra cargo mensual al conductor</li>
             </ul>
           </div>
 
@@ -209,6 +209,110 @@ export default function EcoDrivePlusPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      </section>
+
+      {/* Sistema de niveles */}
+      <section className="px-6 py-20">
+        <div className="mx-auto max-w-6xl">
+          <div className="text-center mb-12">
+            <p className="text-amber-400 text-sm font-medium mb-3 tracking-widest uppercase">Sistema de niveles</p>
+            <h2 className="text-3xl md:text-4xl font-bold mb-3">
+              Mientras más viajas, más ganas
+            </h2>
+            <p className="text-zinc-400 max-w-2xl mx-auto">
+              Pasajeros y conductores suben de nivel acumulando servicios. Una vez subes,
+              nunca bajas. Cada nivel desbloquea más beneficios reales.
+            </p>
+          </div>
+
+          {/* Tabla pasajero */}
+          <div className="mb-14">
+            <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+              🧍 Niveles de pasajero <span className="text-zinc-500 text-sm font-normal">(recompensa escalada por viaje)</span>
+            </h3>
+            <div className="overflow-x-auto rounded-xl border border-[#2A2A2A]">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-[#0F0F0F] border-b border-[#2A2A2A]">
+                    <th className="text-left py-3 px-4 text-zinc-500 font-medium uppercase tracking-widest text-xs">Nivel</th>
+                    <th className="text-center py-3 px-4 text-zinc-500 font-medium uppercase tracking-widest text-xs">Servicios</th>
+                    <th className="text-center py-3 px-4 text-zinc-500 font-medium uppercase tracking-widest text-xs">Recompensa</th>
+                    <th className="text-center py-3 px-4 text-zinc-500 font-medium uppercase tracking-widest text-xs">Cancelaciones libres</th>
+                    <th className="text-center py-3 px-4 text-zinc-500 font-medium uppercase tracking-widest text-xs">Cargo tardío</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    ["🌱 Iniciante", "0 - 9", "0.3%", "1/día", "S/.2"],
+                    ["🥉 Bronce", "10 - 18", "0.6%", "1/día", "S/.2"],
+                    ["🥈 Plata", "19 - 33", "0.9%", "2/día", "S/.2"],
+                    ["🥇 Oro", "34 - 63", "1.2%", "2/día +1 extra/mes", "S/.1.5"],
+                    ["💎 Platino", "64 - 93", "1.5%", "3/día +2 extra/mes", "S/.1"],
+                    ["💙 Zafiro", "94 - 123", "1.8%", "3/día +3 extra/mes", "Sin cargo"],
+                    ["❤️ Rubí", "124 - 153", "2.1%", "5/día +4 extra/mes", "Sin cargo"],
+                    ["💚 Esmeralda", "154 - 183", "2.4%", "Ilimitadas razonables", "Sin cargo"],
+                    ["👑 Diamante", "184+", "2.7%", "Ilimitadas VIP", "Sin cargo"],
+                  ].map((row) => (
+                    <tr key={row[0]} className="border-b border-[#2A2A2A]/50 hover:bg-[#0F0F0F]/50">
+                      <td className="py-3 px-4 text-zinc-200 font-medium">{row[0]}</td>
+                      <td className="py-3 px-4 text-center text-zinc-400">{row[1]}</td>
+                      <td className="py-3 px-4 text-center text-amber-400 font-semibold">{row[2]}</td>
+                      <td className="py-3 px-4 text-center text-zinc-400 text-xs">{row[3]}</td>
+                      <td className="py-3 px-4 text-center text-zinc-400">{row[4]}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Tabla chofer */}
+          <div>
+            <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+              🚗 Niveles de conductor <span className="text-zinc-500 text-sm font-normal">(comisión más baja del Perú: 6.3% → 3.9%)</span>
+            </h3>
+            <div className="overflow-x-auto rounded-xl border border-[#2A2A2A]">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-[#0F0F0F] border-b border-[#2A2A2A]">
+                    <th className="text-left py-3 px-4 text-zinc-500 font-medium uppercase tracking-widest text-xs">Nivel</th>
+                    <th className="text-center py-3 px-4 text-zinc-500 font-medium uppercase tracking-widest text-xs">Servicios</th>
+                    <th className="text-center py-3 px-4 text-zinc-500 font-medium uppercase tracking-widest text-xs">Comisión</th>
+                    <th className="text-center py-3 px-4 text-zinc-500 font-medium uppercase tracking-widest text-xs">Bono mensual</th>
+                    <th className="text-left py-3 px-4 text-zinc-500 font-medium uppercase tracking-widest text-xs">Beneficios destacados</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    ["🌱 Aspirante", "0 - 90", "6.3%", "S/.9", "🩺 Chequeo médico anual + bono S/.20 al primer servicio"],
+                    ["🥉 Bronce", "91 - 270", "6.0%", "S/.27", "🩺 Chequeo + insignia + soporte prioritario"],
+                    ["🥈 Plata", "271 - 450", "5.7%", "S/.45", "🩺 Chequeo + prioridad zonas cercanas"],
+                    ["🥇 Oro", "451 - 750", "5.4%", "S/.75", "🩺 Chequeo + insignia Oro + zonas céntricas"],
+                    ["💎 Platino", "751 - 1050", "5.1%", "S/.105", "🩺 Chequeo + servicios corporativos + constancia financiera express"],
+                    ["💙 Zafiro", "1051 - 1850", "4.8%", "S/.135", "🩺 Chequeo + tarifa dinámica +5% en hora pico"],
+                    ["❤️ Rubí", "1851 - 2890", "4.5%", "S/.195", "🩺 Chequeo + análisis · 💵 Préstamo S/.500 (1 mes) · 🎓 1 activo digital ActivosYA · ⭐ Foto destacada"],
+                    ["💚 Esmeralda", "2891 - 3930", "4.2%", "S/.255", "🏥 Plan salud anual · 💵 Préstamo S/.1,000 (2 meses) · 🎓 2 activos digitales · ✈️ Vacaciones 3D/2N para 2 personas (S/.1,500/año) · 👥 Referidos doble"],
+                    ["👑 Diamante", "3931+", "3.9%", "S/.315", "🏥 Plan salud familiar · 💵 Préstamo S/.1,500 (3 meses) · 🎓 3 activos digitales · ✈️ Vacaciones 3D/2N para 2 personas (S/.2,500/año) · 🎁 Sorteo anual · 🎄 Aguinaldo S/.500"],
+                  ].map((row) => (
+                    <tr key={row[0]} className="border-b border-[#2A2A2A]/50 hover:bg-[#0F0F0F]/50 align-top">
+                      <td className="py-3 px-4 text-zinc-200 font-medium whitespace-nowrap">{row[0]}</td>
+                      <td className="py-3 px-4 text-center text-zinc-400 whitespace-nowrap">{row[1]}</td>
+                      <td className="py-3 px-4 text-center text-amber-400 font-semibold whitespace-nowrap">{row[2]}</td>
+                      <td className="py-3 px-4 text-center text-emerald-400 font-semibold whitespace-nowrap">{row[3]}</td>
+                      <td className="py-3 px-4 text-zinc-400 text-xs leading-relaxed">{row[4]}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="text-zinc-500 text-xs mt-3 leading-relaxed">
+              ✦ El bono mensual se abona el último día del mes a conductores activos (mínimo 10 servicios completados ese mes).<br />
+              ✦ Préstamos sin intereses con descuento diario prorrateado de los servicios realizados.<br />
+              ✦ Los activos digitales son productos del marketplace ActivosYA (Miss Sofia, TuDestinoYa, TuNoviaIA, TuPedidoYa, TuReservaYa) que el conductor canjea según su nivel.<br />
+              ✦ Una vez subes de nivel, nunca bajas: la antigüedad cuenta de por vida.
+            </p>
           </div>
         </div>
       </section>

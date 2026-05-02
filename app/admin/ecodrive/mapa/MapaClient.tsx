@@ -346,7 +346,7 @@ export default function MapaClient() {
           href="/admin/ecodrive"
           className="text-amber-400 hover:text-amber-300 text-sm border border-zinc-800 rounded px-3 py-1"
         >
-          ← Dashboard
+          ← Panel
         </Link>
         <h1 className="text-xl font-bold ml-2">🗺️ Mapa EcoDrive+ — Trujillo</h1>
         <div className="flex gap-1 ml-auto">
