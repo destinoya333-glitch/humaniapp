@@ -76,7 +76,7 @@ function speakBrandedAlert() {
   try {
     window.speechSynthesis.cancel(); // por si hay algo encolado
     const utter = new SpeechSynthesisUtterance(
-      "¡Nuevo pedido EcoDrive Plus! Revisa tu WhatsApp para aceptar."
+      "¡Nuevo pedido EcoDrive Plus! Acepta en WhatsApp."
     );
     utter.lang = "es-PE";
     utter.rate = 1.05;
@@ -99,7 +99,7 @@ function speakBrandedAlert() {
 function playAlarmTones(audioCtx: AudioContext) {
   playBellChime(audioCtx, 0); // campana inicial (0.7s)
   setTimeout(() => speakBrandedAlert(), 750); // voz despues de la campana
-  setTimeout(() => playBellChime(audioCtx, 0), 3500); // campana final tras la voz
+  setTimeout(() => playBellChime(audioCtx, 0), 2800); // campana final tras la voz
 }
 
 export default function TrackChoferClient({ token }: { token: string }) {
@@ -181,7 +181,7 @@ export default function TrackChoferClient({ token }: { token: string }) {
       }
     }
     setFlashOn(true);
-    setTimeout(() => setFlashOn(false), 4500); // flash dura toda la alarma (~4.5s)
+    setTimeout(() => setFlashOn(false), 3700); // flash dura toda la alarma (~3.7s)
   }, []);
 
   // 1) Validar token via GET
