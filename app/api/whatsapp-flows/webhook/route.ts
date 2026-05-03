@@ -55,13 +55,20 @@ export async function POST(req: NextRequest) {
         data?: Record<string, unknown>;
       };
 
-      // Routing: el flow_token o flow_id_meta nos dice qué flow es
-      // Por ahora hardcoded a hello-test mientras testeamos pipeline
-      // En producción: lookup del flow_id_meta en wa_flows table
-      const flow = getFlow("ecodrive", "hello-test");
+      // Routing: identificamos el flow por screen + flow_token contexto
+      // Si data tiene flow_key explícito (lo pasamos cuando enviamos el flow), usarlo.
+      // Sino caemos a tracking-viaje (el flow productivo principal).
+      const explicitKey = (payload.data as Record<string, unknown> | undefined)?.flow_key as string | undefined;
+      const screenHint = payload.screen?.toUpperCase();
+
+      let flowKey = "tracking-viaje"; // default
+      if (explicitKey) flowKey = explicitKey;
+      else if (screenHint === "WELCOME" || screenHint === "SUCCESS") flowKey = "hello-test";
+
+      const flow = getFlow("ecodrive", flowKey);
       if (!flow) {
         statusCode = 404;
-        errorMsg = "Flow no encontrado";
+        errorMsg = `Flow ecodrive:${flowKey} no encontrado`;
         return new NextResponse("Flow not found", { status: 404 });
       }
 
