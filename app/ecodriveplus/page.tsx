@@ -4,7 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "EcoDrive+ — Pides tu carro como pides delivery",
   description:
-    "EcoDrive+ es el primer servicio de viajes 100% por WhatsApp en Trujillo. Sin app, sin descargas. Pides taxi, eliges chofer, pagas con wallet. Más barato que Indrive y Didi.",
+    "EcoDrive+ es el primer servicio de viajes 100% por WhatsApp en Trujillo. Sin app, sin descargas. Pides taxi, eliges chofer, pagas con BilleteraEco. Más barato que Indrive y Didi.",
   alternates: { canonical: "https://ecodriveplus.com" },
 };
 
@@ -65,7 +65,7 @@ export default function EcoDrivePlusPage() {
           </div>
 
           <div className="mt-6 text-xs text-zinc-500">
-            Bono S/.5 wallet en tu primer viaje · Sin tarifa fija, tú comparas precios
+            Bono S/.5 en tu BilleteraEco al primer viaje · Sin tarifa fija, tú comparas precios
           </div>
         </div>
       </section>
@@ -178,7 +178,7 @@ export default function EcoDrivePlusPage() {
             <Step n={1} title="Dile Hola" desc="Por WhatsApp. Eco te saluda y te pregunta qué necesitas." />
             <Step n={2} title="Comparte ubicación" desc="Click clip 📎 → Ubicación. Eco identifica al toque dónde estás." />
             <Step n={3} title="Elige chofer" desc="Te llegan 3 ofertas con foto, vehículo, rating y precio. Eliges una." />
-            <Step n={4} title="Listo" desc="El chofer llega. Pagas con tu wallet o efectivo. Cashback 2% al toque." />
+            <Step n={4} title="Listo" desc="El chofer llega. Pagas con tu BilleteraEco o efectivo. Recibes 2% de retorno al toque." />
           </div>
         </div>
       </section>
@@ -223,7 +223,7 @@ export default function EcoDrivePlusPage() {
             Si eres chofer
           </div>
           <h2 className="mt-2 text-3xl md:text-4xl font-bold">
-            Cobras directo a tu wallet, retiras por Yape
+            Cobras directo a tu BilleteraEco, retiras por Yape
           </h2>
           <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6">
             <ChoferCard
