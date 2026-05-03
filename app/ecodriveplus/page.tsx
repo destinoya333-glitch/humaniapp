@@ -81,7 +81,7 @@ export default function EcoDrivePlusPage() {
 
       {/* === HEADER STICKY === */}
       <header className="sticky top-0 z-50 border-b border-white/5 bg-[#0A0A0A]/70 backdrop-blur-xl">
-        <div className="mx-auto max-w-6xl px-6 h-20 flex items-center justify-between">
+        <div className="mx-auto max-w-6xl px-6 h-40 md:h-48 flex items-center justify-between">
           <Link href="/ecodriveplus" className="flex items-center gap-3 group">
             <Image
               src="/ecodrive-logo.png"
@@ -89,7 +89,7 @@ export default function EcoDrivePlusPage() {
               width={420}
               height={148}
               priority
-              className="h-12 w-auto md:h-14 object-contain group-hover:scale-105 transition-transform"
+              className="h-32 w-auto md:h-40 object-contain group-hover:scale-105 transition-transform"
             />
           </Link>
           <nav className="hidden md:flex items-center gap-8 text-sm text-zinc-400">
