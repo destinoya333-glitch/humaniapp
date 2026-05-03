@@ -2,156 +2,316 @@
 
 import { useEffect, useState } from "react";
 
-type Profile = {
-  current_level: string;
-  current_week: number;
-  current_day: string;
-  streak_days: number;
-  total_minutes_practiced: number;
-  fluency_score: number;
-  cefr_estimate: string;
-  vocabulary_mastered: string[];
-  recurring_errors: unknown[];
-  personal_facts: Record<string, unknown>;
-  last_session_summary: string | null;
+/* ─── Types matching /api/sofia-progress/dashboard ────────────── */
+
+type Dashboard = {
+  phase: {
+    number: number;
+    name: string;
+    subtitle: string;
+    day: number;
+    total_days: number;
+    completion_pct: number;
+    exit_signal: string;
+  };
+  metrics: {
+    days_in_cuna: number;
+    tiempo_de_boca_minutes: number;
+    palabras_tuyas_count: number;
+    milestones_unlocked_count: number;
+    chapters_completed_count: number;
+    chapters_total_count: number;
+  };
+  dictionary: Array<{
+    word: string;
+    learned_on: string;
+    context: string;
+    phase_when_learned: number;
+    uses_count: number;
+    last_used_at: string;
+  }>;
+  milestones: Array<{ key: string; achieved_at: string; context: string | null }>;
+  chapters: Array<{
+    id: string;
+    chapter_number: number;
+    title: string;
+    audio_url: string | null;
+    student_part_audio_url: string | null;
+    cliffhanger: string | null;
+    generated_at: string;
+    completed_at: string | null;
+    phase_when_generated: number;
+  }>;
+  sessions: Array<{
+    id: string;
+    session_type: string | null;
+    duration_seconds: number | null;
+    started_at: string;
+    ended_at: string | null;
+  }>;
+  cuna_started_at: string | null;
+  profile_summary: {
+    last_session_summary: string | null;
+    recurring_errors_count: number;
+  };
 };
 
-type Session = {
-  id: string;
-  level: string;
-  week_number: number;
-  day_name: string;
-  session_type: string;
-  duration_seconds: number;
-  started_at: string;
+const PHASE_VISUALS: Record<number, { icon: string; color: string; bg: string; border: string }> = {
+  0: { icon: "🌙", color: "text-indigo-400", bg: "bg-indigo-400/10", border: "border-indigo-400/20" },
+  1: { icon: "💧", color: "text-sky-400", bg: "bg-sky-400/10", border: "border-sky-400/20" },
+  2: { icon: "⚡", color: "text-emerald-400", bg: "bg-emerald-400/10", border: "border-emerald-400/20" },
+  3: { icon: "🌱", color: "text-amber-400", bg: "bg-amber-400/10", border: "border-amber-400/20" },
+  4: { icon: "🌊", color: "text-orange-400", bg: "bg-orange-400/10", border: "border-orange-400/20" },
+  5: { icon: "🔥", color: "text-rose-400", bg: "bg-rose-400/10", border: "border-rose-400/20" },
 };
 
-type Exam = {
-  id: string;
-  level: string;
-  week_number: number;
-  fluency_score: number;
-  cefr_estimate: string;
-  recommendation: string;
-  taken_at: string;
+const MILESTONE_LABELS: Record<string, { label: string; emoji: string }> = {
+  first_dream_in_english: { label: "Primer sueño en inglés", emoji: "🌙" },
+  first_thought_without_translation: { label: "Pensaste en inglés sin traducir", emoji: "💭" },
+  first_joke_landed: { label: "Hiciste reír en inglés", emoji: "😄" },
+  first_native_understood_first_try: { label: "Un nativo te entendió a la primera", emoji: "🇺🇸" },
+  first_word_in_real_life: { label: "Tu primera palabra en la vida real", emoji: "💧" },
+  first_30sec_no_spanish: { label: "30 segundos sin español", emoji: "⚡" },
+  first_60sec_no_spanish: { label: "60 segundos sin español", emoji: "⚡" },
+  first_full_conversation_5min: { label: "Conversación completa de 5 min", emoji: "💬" },
+  first_podcast_understood: { label: "Entendiste un podcast completo", emoji: "🎧" },
+  first_series_no_subs: { label: "Viste una serie sin subtítulos", emoji: "📺" },
+  sello_cuna_completed: { label: "Sello Cuna obtenido", emoji: "🏆" },
 };
 
-type UsageDay = { usage_date: string; seconds_used: number };
+/* ─── Page ───────────────────────────────────────────────────── */
 
 export default function SofiaProgressPage() {
-  const [data, setData] = useState<{
-    profile: Profile | null;
-    sessions: Session[];
-    exams: Exam[];
-    weeklyUsage: UsageDay[];
-  } | null>(null);
+  const [data, setData] = useState<Dashboard | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
-      const meRes = await fetch("/api/sofia-auth/me");
-      const me = await meRes.json();
-      if (!me.authenticated) {
-        window.location.href = "/sofia-auth/login";
-        return;
+      try {
+        const meRes = await fetch("/api/sofia-auth/me");
+        const me = await meRes.json();
+        if (!me.authenticated) {
+          window.location.href = "/sofia-auth/login";
+          return;
+        }
+        const r = await fetch(`/api/sofia-progress/dashboard?user_id=${me.user_id}`);
+        if (!r.ok) {
+          const err = await r.json().catch(() => ({}));
+          throw new Error(err.message || err.error || "No pude cargar tu progreso");
+        }
+        setData(await r.json());
+      } catch (e) {
+        setError((e as Error).message);
+      } finally {
+        setLoading(false);
       }
-      const r = await fetch(`/api/sofia-progress?user_id=${me.user_id}`);
-      setData(await r.json());
-      setLoading(false);
     })();
   }, []);
 
-  if (loading) return <div className="p-6 text-gray-500">Loading...</div>;
-  if (!data?.profile) return <div className="p-6 text-gray-500">No profile yet. Start a session first.</div>;
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-[#0A0A0A] text-zinc-400 flex items-center justify-center">
+        Cargando tu progreso...
+      </main>
+    );
+  }
 
-  const p = data.profile;
-  const totalSessions = data.sessions.length;
-  const minutesThisWeek = data.weeklyUsage.reduce((s, d) => s + d.seconds_used, 0) / 60;
+  if (error) {
+    return (
+      <main className="min-h-screen bg-[#0A0A0A] p-6">
+        <div className="max-w-md mx-auto bg-rose-500/10 border border-rose-500/30 text-rose-300 text-sm p-4 rounded-xl">
+          {error}
+        </div>
+      </main>
+    );
+  }
+
+  if (!data) {
+    return (
+      <main className="min-h-screen bg-[#0A0A0A] p-6 text-zinc-400">
+        Aún no hay datos. Inicia tu primera sesión en{" "}
+        <a href="/sofia-chat" className="text-amber-400 hover:underline">
+          /sofia-chat
+        </a>
+        .
+      </main>
+    );
+  }
+
+  const phaseVis = PHASE_VISUALS[data.phase.number] ?? PHASE_VISUALS[0];
 
   return (
-    <main className="min-h-screen bg-gray-50 p-4 sm:p-6">
-      <div className="max-w-4xl mx-auto">
-        <header className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Your Progress</h1>
-          <p className="text-sm text-gray-500">Miss Sofia</p>
+    <main className="min-h-screen bg-[#0A0A0A] text-zinc-100">
+      <div className="max-w-4xl mx-auto p-4 sm:p-6">
+
+        {/* ── Header ─────────────────────────────────────── */}
+        <header className="mb-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Tu progreso</h1>
+            <p className="text-sm text-zinc-500">Miss Sofia · Método Cuna</p>
+          </div>
+          <a href="/sofia-chat" className="text-xs text-amber-400 hover:text-amber-300">
+            ← Volver al chat
+          </a>
         </header>
 
-        {/* Top stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-          <Stat label="Current level" value={p.current_level} highlight />
-          <Stat label="Week" value={`${p.current_week} / 12`} />
-          <Stat label="Streak" value={`${p.streak_days} days`} />
-          <Stat label="Fluency" value={`${p.fluency_score}/100`} />
-        </div>
+        {/* ── Hero phase card ────────────────────────────── */}
+        <section className={`rounded-2xl p-6 mb-6 ${phaseVis.bg} border ${phaseVis.border}`}>
+          <div className="flex items-center gap-4 mb-4">
+            <span className="text-5xl">{phaseVis.icon}</span>
+            <div className="flex-1">
+              <p className="text-sm text-zinc-400 uppercase tracking-widest">Fase {data.phase.number}</p>
+              <h2 className={`text-2xl font-bold ${phaseVis.color}`}>{data.phase.name}</h2>
+              <p className="text-sm text-zinc-400">"{data.phase.subtitle}"</p>
+            </div>
+            <div className="text-right">
+              <p className="text-4xl font-bold text-zinc-100">{data.phase.completion_pct}%</p>
+              <p className="text-xs text-zinc-500">Día {data.phase.day} de {data.phase.total_days}</p>
+            </div>
+          </div>
 
-        {/* This week */}
-        <section className="bg-white rounded-2xl shadow-sm p-5 mb-6">
-          <h2 className="font-semibold text-gray-900 mb-2">This week</h2>
-          <p className="text-sm text-gray-600">
-            You&apos;re on {p.current_level} Week {p.current_week}, {p.current_day}.
-            <br />
-            Practice this week: <strong>{minutesThisWeek.toFixed(1)} minutes</strong> across{" "}
-            {data.weeklyUsage.length} days.
+          <div className="h-2 bg-[#0A0A0A] rounded-full overflow-hidden mb-4">
+            <div
+              className={`h-full ${phaseVis.color.replace("text-", "bg-")} opacity-70 transition-all`}
+              style={{ width: `${data.phase.completion_pct}%` }}
+            />
+          </div>
+
+          <p className="text-xs text-zinc-400">
+            🎯 <strong className="text-zinc-300">Hito de salida:</strong> {data.phase.exit_signal}
           </p>
-          {p.last_session_summary && (
-            <p className="mt-3 text-sm italic text-gray-500">
-              “{p.last_session_summary}”
+        </section>
+
+        {/* ── Stats grid ─────────────────────────────────── */}
+        <section className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+          <Stat icon="📅" label="Días en Cuna" value={String(data.metrics.days_in_cuna)} />
+          <Stat icon="🎙️" label="Tiempo de boca" value={`${data.metrics.tiempo_de_boca_minutes} min`} />
+          <Stat icon="📚" label="Palabras tuyas" value={String(data.metrics.palabras_tuyas_count)} />
+          <Stat icon="🌟" label="Hitos viscerales" value={String(data.metrics.milestones_unlocked_count)} />
+        </section>
+
+        {/* ── Visceral milestones ────────────────────────── */}
+        <section className="card-surface rounded-2xl p-5 mb-6 border border-[#2A2A2A]">
+          <h3 className="font-bold text-zinc-100 mb-3">🌟 Hitos viscerales</h3>
+          {data.milestones.length === 0 ? (
+            <p className="text-sm text-zinc-500">
+              Aún no has desbloqueado ningún hito. El primero típicamente es{" "}
+              <em className="text-zinc-400">"tu primera palabra en la vida real"</em> en Fase 1.
             </p>
+          ) : (
+            <div className="space-y-3">
+              {data.milestones.map((m) => {
+                const meta = MILESTONE_LABELS[m.key] ?? { label: m.key, emoji: "✨" };
+                return (
+                  <div key={m.key} className="flex items-start gap-3">
+                    <span className="text-2xl">{meta.emoji}</span>
+                    <div className="flex-1">
+                      <p className="text-sm text-zinc-200">{meta.label}</p>
+                      <p className="text-xs text-zinc-500">
+                        {formatDate(m.achieved_at)}
+                        {m.context && <> · <span className="italic">"{m.context}"</span></>}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           )}
         </section>
 
-        {/* Recent exams */}
-        {data.exams.length > 0 && (
-          <section className="bg-white rounded-2xl shadow-sm p-5 mb-6">
-            <h2 className="font-semibold text-gray-900 mb-3">Weekly exams</h2>
-            <div className="space-y-2">
-              {data.exams.map((e) => (
-                <div
-                  key={e.id}
-                  className="flex justify-between items-center text-sm py-2 border-b last:border-0"
-                >
-                  <div>
-                    <span className="font-mono text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded mr-2">
-                      {e.level} W{e.week_number}
-                    </span>
-                    <span className="text-gray-600">
-                      Fluency {e.fluency_score} · CEFR {e.cefr_estimate}
+        {/* ── Personal dictionary ─────────────────────────── */}
+        <section className="card-surface rounded-2xl p-5 mb-6 border border-[#2A2A2A]">
+          <div className="flex items-baseline justify-between mb-3">
+            <h3 className="font-bold text-zinc-100">📚 Tu diccionario personal</h3>
+            <span className="text-xs text-zinc-500">{data.dictionary.length} palabras</span>
+          </div>
+          {data.dictionary.length === 0 ? (
+            <p className="text-sm text-zinc-500">
+              Aún no hay palabras. Cada palabra que uses queda atada al momento real en que la aprendiste.
+            </p>
+          ) : (
+            <div className="space-y-2 max-h-96 overflow-y-auto pr-2">
+              {data.dictionary.slice(0, 50).map((d) => (
+                <div key={d.word} className="border-b border-[#1A1A1A] last:border-0 py-2">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <p className="font-mono text-amber-400">{d.word}</p>
+                    <span className="text-xs text-zinc-500">
+                      usada {d.uses_count}× · Fase {d.phase_when_learned}
                     </span>
                   </div>
-                  <span
-                    className={`text-xs font-medium ${
-                      e.recommendation === "advance"
-                        ? "text-green-600"
-                        : e.recommendation === "review"
-                        ? "text-yellow-600"
-                        : "text-red-600"
-                    }`}
-                  >
-                    {e.recommendation}
-                  </span>
+                  <p className="text-xs text-zinc-400 italic mt-0.5">"{d.context}"</p>
+                </div>
+              ))}
+              {data.dictionary.length > 50 && (
+                <p className="text-xs text-zinc-500 pt-2">
+                  ...y {data.dictionary.length - 50} más
+                </p>
+              )}
+            </div>
+          )}
+        </section>
+
+        {/* ── Novel chapters ──────────────────────────────── */}
+        <section className="card-surface rounded-2xl p-5 mb-6 border border-[#2A2A2A]">
+          <div className="flex items-baseline justify-between mb-3">
+            <h3 className="font-bold text-zinc-100">📖 Capítulos de tu novela</h3>
+            <span className="text-xs text-zinc-500">
+              {data.metrics.chapters_completed_count} de {data.metrics.chapters_total_count} completados
+            </span>
+          </div>
+          {data.chapters.length === 0 ? (
+            <p className="text-sm text-zinc-500">
+              Tu novela personal arranca cuando avances a Fase 3.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {data.chapters.map((c) => (
+                <div key={c.id} className="border border-[#1A1A1A] rounded-xl p-3">
+                  <div className="flex items-baseline justify-between gap-2 mb-1">
+                    <p className="text-sm font-medium text-zinc-200">
+                      Capítulo {c.chapter_number} · {c.title}
+                    </p>
+                    {c.completed_at ? (
+                      <span className="text-xs text-emerald-400">✓ Completado</span>
+                    ) : (
+                      <span className="text-xs text-amber-400">En curso</span>
+                    )}
+                  </div>
+                  {c.audio_url && (
+                    // eslint-disable-next-line jsx-a11y/media-has-caption
+                    <audio controls className="w-full mt-2 h-8" src={c.audio_url} />
+                  )}
+                  {c.cliffhanger && (
+                    <p className="text-xs text-zinc-500 italic mt-2">→ {c.cliffhanger}</p>
+                  )}
                 </div>
               ))}
             </div>
-          </section>
-        )}
+          )}
+        </section>
 
-        {/* Recent sessions */}
-        <section className="bg-white rounded-2xl shadow-sm p-5 mb-6">
-          <h2 className="font-semibold text-gray-900 mb-3">Recent sessions ({totalSessions})</h2>
+        {/* ── Recent sessions ─────────────────────────────── */}
+        <section className="card-surface rounded-2xl p-5 mb-6 border border-[#2A2A2A]">
+          <div className="flex items-baseline justify-between mb-3">
+            <h3 className="font-bold text-zinc-100">💬 Sesiones recientes</h3>
+            <span className="text-xs text-zinc-500">{data.sessions.length}</span>
+          </div>
           {data.sessions.length === 0 ? (
-            <p className="text-sm text-gray-500">No sessions yet.</p>
+            <p className="text-sm text-zinc-500">Aún no tienes sesiones.</p>
           ) : (
-            <div className="space-y-1">
-              {data.sessions.map((s) => (
+            <div className="space-y-1.5">
+              {data.sessions.slice(0, 10).map((s) => (
                 <div
                   key={s.id}
-                  className="flex justify-between items-center text-sm py-1.5 border-b last:border-0"
+                  className="flex justify-between items-center text-sm py-1.5 border-b border-[#1A1A1A] last:border-0"
                 >
-                  <span className="text-gray-700">
-                    {s.level} W{s.week_number} · {s.day_name} · {s.session_type}
+                  <span className="text-zinc-300">
+                    {s.session_type ?? "—"}
+                    <span className="text-zinc-500 text-xs ml-2">{formatDate(s.started_at)}</span>
                   </span>
-                  <span className="text-xs text-gray-500">
-                    {Math.round(s.duration_seconds)}s
+                  <span className="text-xs text-zinc-500">
+                    {s.duration_seconds ? `${Math.round(s.duration_seconds)}s` : "—"}
                   </span>
                 </div>
               ))}
@@ -159,60 +319,38 @@ export default function SofiaProgressPage() {
           )}
         </section>
 
-        {/* Vocabulary mastered */}
-        {p.vocabulary_mastered?.length > 0 && (
-          <section className="bg-white rounded-2xl shadow-sm p-5 mb-6">
-            <h2 className="font-semibold text-gray-900 mb-2">
-              Vocabulary mastered ({p.vocabulary_mastered.length})
-            </h2>
-            <div className="flex flex-wrap gap-1.5">
-              {p.vocabulary_mastered.slice(0, 50).map((w, i) => (
-                <span
-                  key={i}
-                  className="text-xs bg-green-50 text-green-700 px-2 py-1 rounded"
-                >
-                  {w}
-                </span>
-              ))}
-            </div>
+        {/* ── Last session summary ─────────────────────────── */}
+        {data.profile_summary.last_session_summary && (
+          <section className="card-surface rounded-2xl p-5 mb-6 border border-[#2A2A2A]">
+            <h3 className="font-bold text-zinc-100 mb-2">Última sesión</h3>
+            <p className="text-sm text-zinc-400 italic">
+              "{data.profile_summary.last_session_summary}"
+            </p>
           </section>
         )}
+
       </div>
     </main>
   );
 }
 
-function Stat({
-  label,
-  value,
-  highlight,
-}: {
-  label: string;
-  value: string;
-  highlight?: boolean;
-}) {
+/* ─── Sub-components ─────────────────────────────────────────── */
+
+function Stat({ icon, label, value }: { icon: string; label: string; value: string }) {
   return (
-    <div
-      className={`rounded-2xl p-4 ${
-        highlight
-          ? "bg-gradient-to-br from-blue-500 to-purple-600 text-white"
-          : "bg-white shadow-sm"
-      }`}
-    >
-      <div
-        className={`text-xs font-medium ${
-          highlight ? "text-white/80" : "text-gray-500"
-        }`}
-      >
-        {label}
-      </div>
-      <div
-        className={`text-2xl font-bold mt-1 ${
-          highlight ? "text-white" : "text-gray-900"
-        }`}
-      >
-        {value}
-      </div>
+    <div className="card-surface rounded-2xl p-4 border border-[#2A2A2A]">
+      <p className="text-2xl mb-1">{icon}</p>
+      <p className="text-2xl font-bold text-zinc-100">{value}</p>
+      <p className="text-xs text-zinc-500 uppercase tracking-wider mt-0.5">{label}</p>
     </div>
   );
+}
+
+function formatDate(iso: string): string {
+  try {
+    const d = new Date(iso);
+    return d.toLocaleDateString("es-PE", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+  } catch {
+    return iso;
+  }
 }
