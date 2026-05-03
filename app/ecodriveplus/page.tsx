@@ -81,15 +81,16 @@ export default function EcoDrivePlusPage() {
 
       {/* === HEADER STICKY === */}
       <header className="sticky top-0 z-50 border-b border-white/5 bg-[#0A0A0A]/70 backdrop-blur-xl">
-        <div className="mx-auto max-w-6xl px-6 h-16 flex items-center justify-between">
+        <div className="mx-auto max-w-6xl px-6 h-20 flex items-center justify-between">
           <Link href="/ecodriveplus" className="flex items-center gap-3 group">
-            <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center shadow-lg shadow-orange-500/30 group-hover:scale-110 transition-transform">
-              <Image src="/ecodrive-logo.png" alt="EcoDrive+" width={32} height={32} className="object-contain" />
-            </div>
-            <div className="flex flex-col leading-none">
-              <span className="font-bold text-lg tracking-tight">EcoDrive<span className="text-orange-400">+</span></span>
-              <span className="text-[10px] text-zinc-500 tracking-wider uppercase">Movilidad por WhatsApp</span>
-            </div>
+            <Image
+              src="/ecodrive-logo.png"
+              alt="EcoDrive+"
+              width={420}
+              height={148}
+              priority
+              className="h-12 w-auto md:h-14 object-contain group-hover:scale-105 transition-transform"
+            />
           </Link>
           <nav className="hidden md:flex items-center gap-8 text-sm text-zinc-400">
             <a href="#como-funciona" className="hover:text-white transition">Cómo funciona</a>
