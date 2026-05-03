@@ -51,7 +51,7 @@ function dailyGreeting(name: string, dayName: string, topic: string, sessionType
     reflection: "reflexión + preview 🌱",
   }[sessionType] ?? sessionType;
 
-  return `Buenos días, ${name}! ☀️\n\n${m}: hoy es ${dayName} y vamos con ${sessionLabel}.\n\nTema: *${topic}*\n\nCuando estés listo, entra a tu sesión: https://humaniapp.com/sofia-chat\n\n— Sofia 💜`;
+  return `Buenos días, ${name}. ☀️\n\n${m}: hoy es ${dayName} y vamos con ${sessionLabel}.\n\nTema: *${topic}*\n\nCuando estés listo, entra a tu sesión: https://activosya.com/sofia-chat\n\n— Sofia`;
 }
 
 async function sendWhatsApp(to: string, body: string): Promise<boolean> {

@@ -60,7 +60,30 @@ export async function generateShadowCoachReport(
 }
 
 /**
- * Extract <exam_result> from Sofia's last message (Saturday only).
+ * Extract <phase_progress> from Sofia's last message (Cuna v2).
+ * Sofia emits this when phase_day reaches the exit-signal day.
+ */
+export function extractPhaseProgress(text: string): {
+  current_phase?: number;
+  phase_completion_pct?: number;
+  exit_signal_met?: boolean;
+  exit_signal_evidence?: string;
+  ready_to_advance?: boolean;
+  visceral_milestone_unlocked?: string | null;
+  celebration_message_es?: string;
+} | null {
+  const m = text.match(/<phase_progress>([\s\S]*?)<\/phase_progress>/);
+  if (!m) return null;
+  try {
+    return JSON.parse(m[1].trim());
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * @deprecated Legacy CEFR weekly exam — superseded by extractPhaseProgress.
+ * Mantener hasta retirar el funnel WhatsApp viejo.
  */
 export function extractExamResult(text: string): Record<string, unknown> | null {
   const m = text.match(/<exam_result>([\s\S]*?)<\/exam_result>/);

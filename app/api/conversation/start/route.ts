@@ -1,24 +1,24 @@
 /**
  * POST /api/conversation/start
  * Body: { user_id: string }
- * Returns: { sessionId, audioUrl?, text, secondsRemaining }
+ * Returns: { sessionId, audioBase64?, audioContentType?, text, secondsRemaining, context }
  *
- * Initializes a new conversation. Loads student profile + curriculum context,
- * generates Sofia's opening message, optionally synthesizes voice via ElevenLabs.
+ * Initializes a new conversation under the Método Cuna.
+ * Loads student profile + current phase + ritual slot + today's mission +
+ * latest novel chapter, generates Sofia's opening message, optionally
+ * synthesizes voice via ElevenLabs.
  */
 import { NextRequest, NextResponse } from "next/server";
 import {
+  appendToTranscript,
   createSession,
   ensureStudentProfile,
-  getCurriculumSession,
   getTodayUsage,
   getUser,
-  appendToTranscript,
 } from "@/lib/miss-sofia-voice/db";
 import {
-  buildSessionContext,
+  buildCunaContext,
   contextAsFirstUserMessage,
-  getCurrentDayName,
 } from "@/lib/miss-sofia-voice/context-builder";
 import { callMissSofia } from "@/lib/miss-sofia-voice/ai/claude";
 import { cleanTextForTTS, elevenLabsTTS } from "@/lib/miss-sofia-voice/ai/elevenlabs";
@@ -35,7 +35,6 @@ export async function POST(req: NextRequest) {
     const user = await getUser(user_id);
     if (!user) return NextResponse.json({ error: "user not found" }, { status: 404 });
 
-    // Free tier daily limit check
     const usage = await getTodayUsage(user_id);
     if (user.plan === "free" && usage.seconds_used >= FREE_TIER_DAILY_SECONDS) {
       return NextResponse.json(
@@ -49,42 +48,26 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const profile = await ensureStudentProfile(user_id);
+    // Ensure profile exists (Cuna defaults set automatically by schema).
+    await ensureStudentProfile(user_id);
 
-    // Override day from server clock if reasonable; otherwise use profile.current_day
-    const today = getCurrentDayName();
-    const sessionDay = today; // always use real current day
-    const curriculum = await getCurriculumSession(
-      profile.current_level,
-      profile.current_week,
-      sessionDay
-    );
-    if (!curriculum) {
-      return NextResponse.json(
-        { error: `no curriculum found for ${profile.current_level} W${profile.current_week} ${sessionDay}` },
-        { status: 500 }
-      );
-    }
-
-    const ctx = buildSessionContext(user, profile, curriculum.week, curriculum.daily);
+    // Build full Cuna context: phase, ritual slot, mission, novel, dictionary,
+    // visceral milestones. This is what Sofia will react to.
+    const ctx = await buildCunaContext(user_id);
 
     const session = await createSession({
       user_id,
-      level: profile.current_level,
-      week_number: profile.current_week,
-      day_name: sessionDay,
-      session_type: curriculum.daily.session_type,
+      session_type: ctx.ritual_slot,
     });
 
-    // Generate Sofia's opening
+    // Generate Sofia's opening turn.
     const firstUserMsg = contextAsFirstUserMessage(ctx);
     const openingText = await callMissSofia([{ role: "user", content: firstUserMsg }]);
 
-    // Persist as initial assistant turn (without the context message — that's metadata)
     await appendToTranscript(session.id, { role: "user", content: firstUserMsg });
     await appendToTranscript(session.id, { role: "assistant", content: openingText });
 
-    // Optional voice synthesis (skip if ElevenLabs not configured)
+    // Optional voice synthesis.
     let audioBase64: string | null = null;
     let audioContentType: string | null = null;
     try {
@@ -94,7 +77,6 @@ export async function POST(req: NextRequest) {
         audioContentType = tts.contentType;
       }
     } catch (e) {
-      // TTS failure shouldn't break the session
       console.error("TTS error:", e);
     }
 
@@ -108,11 +90,11 @@ export async function POST(req: NextRequest) {
           ? Math.max(0, FREE_TIER_DAILY_SECONDS - usage.seconds_used)
           : null,
       context: {
-        level: profile.current_level,
-        week: profile.current_week,
-        day: sessionDay,
-        sessionType: curriculum.daily.session_type,
-        topic: curriculum.week.topic,
+        phase: ctx.current_phase,
+        phase_day: ctx.phase_day,
+        ritual_slot: ctx.ritual_slot,
+        mission_title: ctx.today_mission?.title ?? null,
+        novel_chapter: ctx.novel?.current_chapter_number ?? null,
       },
     });
   } catch (e) {

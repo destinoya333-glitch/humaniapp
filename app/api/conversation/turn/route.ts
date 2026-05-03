@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
     }
     if (!userText.trim()) {
       return NextResponse.json({
-        text: "Hmm, I didn't catch that. Can you say it again, mi amor?",
+        text: "Hmm, I didn't catch that. Can you say it again?",
         userText: "",
       });
     }

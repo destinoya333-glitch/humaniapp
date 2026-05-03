@@ -1,32 +1,35 @@
 /**
  * POST /api/conversation/end
  * Body: { session_id }
- * Returns: { report, examResult? }
+ * Returns: { report, phaseProgress?, processed, durationSeconds }
  *
- * Finalizes a conversation:
- *   - Generates Shadow Coach JSON report
- *   - Updates student_profile (memory)
- *   - If session_type === 'weekly_exam', extracts exam result + advances week
+ * Finalizes a conversation under the Método Cuna:
+ *   1. Generate Shadow Coach JSON report from the transcript
+ *   2. Extract <phase_progress> from Sofia's last turn (if present)
+ *   3. Run processSessionEnd which dispatches to:
+ *        - mse_personal_dictionary (words used in real context)
+ *        - mse_visceral_milestones (milestone unlocked)
+ *        - mse_real_life_missions  (today's mission completed)
+ *        - mse_novel_chapters      (current chapter completed)
+ *        - mse_student_profiles    (tiempo_de_boca + recurring_errors merge)
+ *        - mse_phase_progress      (when ready_to_advance and validated server-side)
+ *   4. Persist transcript + duration via closeSession
  */
 import { NextRequest, NextResponse } from "next/server";
+import { closeSession, getTranscript } from "@/lib/miss-sofia-voice/db";
 import {
-  closeSession,
-  getTranscript,
-  saveWeeklyExam,
-  updateStudentProfile,
-} from "@/lib/miss-sofia-voice/db";
-import {
-  extractExamResult,
+  extractPhaseProgress,
   generateShadowCoachReport,
 } from "@/lib/miss-sofia-voice/ai/claude";
+import {
+  processSessionEnd,
+  type ShadowCoachReport,
+} from "@/lib/miss-sofia-voice/shadow-coach";
 import { createClient } from "@supabase/supabase-js";
 
 type SessionRow = {
   id: string;
   user_id: string;
-  level: string;
-  week_number: number;
-  day_name: string;
   session_type: string;
   started_at: string;
 };
@@ -34,7 +37,9 @@ type SessionRow = {
 export async function POST(req: NextRequest) {
   try {
     const { session_id } = await req.json();
-    if (!session_id) return NextResponse.json({ error: "session_id required" }, { status: 400 });
+    if (!session_id) {
+      return NextResponse.json({ error: "session_id required" }, { status: 400 });
+    }
 
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -42,91 +47,51 @@ export async function POST(req: NextRequest) {
     );
     const { data: sessionRaw } = await supabase
       .from("mse_sessions")
-      .select("id, user_id, level, week_number, day_name, session_type, started_at")
+      .select("id, user_id, session_type, started_at")
       .eq("id", session_id)
       .single();
     const session = sessionRaw as SessionRow | null;
-    if (!session) return NextResponse.json({ error: "session not found" }, { status: 404 });
+    if (!session) {
+      return NextResponse.json({ error: "session not found" }, { status: 404 });
+    }
 
     const transcript = await getTranscript(session_id);
     const durationSec = Math.round(
       (Date.now() - new Date(session.started_at).getTime()) / 1000
     );
 
-    // Generate Shadow Coach report
-    const report = (await generateShadowCoachReport(transcript)) ?? {
+    // 1. Shadow Coach JSON report from the full transcript
+    const reportRaw = await generateShadowCoachReport(transcript);
+    const report: ShadowCoachReport = (reportRaw as ShadowCoachReport) ?? {
       session_summary: "(report generation failed)",
       highlights: [],
       errors_detected: [],
       new_vocabulary_introduced: [],
-      vocabulary_mastered_today: [],
+      vocabulary_used_in_real_context: [],
       personal_facts_learned: [],
-      next_session_recommendation: null,
     };
 
-    // Persist to session
-    await closeSession(session_id, report, durationSec);
+    // 2. <phase_progress> from Sofia's last assistant turn (optional)
+    const lastSofiaTurn = [...transcript].reverse().find((m) => m.role === "assistant");
+    const phaseProgress = lastSofiaTurn
+      ? extractPhaseProgress(lastSofiaTurn.content)
+      : null;
 
-    // Update student profile memory (merge errors, vocab, facts)
-    const { data: profile } = await supabase
-      .from("mse_student_profiles")
-      .select("recurring_errors, vocabulary_mastered, personal_facts")
-      .eq("user_id", session.user_id)
-      .single();
+    // 3. Persist session metadata + report
+    await closeSession(session_id, report as Record<string, unknown>, durationSec);
 
-    const existingErrors = (profile?.recurring_errors as unknown[]) ?? [];
-    const newErrors = (report.errors_detected as unknown[]) ?? [];
-    const recurring_errors = [...existingErrors, ...newErrors].slice(-10);
-
-    const existingVocab = new Set((profile?.vocabulary_mastered as string[]) ?? []);
-    ((report.vocabulary_mastered_today as string[]) ?? []).forEach((v) =>
-      existingVocab.add(v)
-    );
-
-    const personalFactsExisting = (profile?.personal_facts as Record<string, unknown>) ?? {};
-    const newFacts = (report.personal_facts_learned as string[]) ?? [];
-    const personalFactsMerged = { ...personalFactsExisting };
-    newFacts.forEach((f, i) => {
-      personalFactsMerged[`fact_${Date.now()}_${i}`] = f;
+    // 4. Process the report — close the learning loop
+    const processed = await processSessionEnd({
+      userId: session.user_id,
+      report,
+      phaseProgress,
+      sessionSummary: report.session_summary ?? "",
     });
-
-    await updateStudentProfile(session.user_id, {
-      recurring_errors,
-      vocabulary_mastered: Array.from(existingVocab),
-      personal_facts: personalFactsMerged,
-      last_session_summary: report.session_summary as string,
-    });
-
-    // Weekly exam handling (Saturday)
-    let examResult: Record<string, unknown> | null = null;
-    if (session.session_type === "weekly_exam") {
-      const lastSofiaTurn = [...transcript].reverse().find((m) => m.role === "assistant");
-      if (lastSofiaTurn) {
-        examResult = extractExamResult(lastSofiaTurn.content);
-        if (examResult) {
-          await saveWeeklyExam({
-            user_id: session.user_id,
-            level: session.level,
-            week_number: session.week_number,
-            exam: examResult,
-          });
-
-          if (examResult.recommendation === "advance") {
-            // Advance to next week (or next level)
-            const next = nextWeekFor(session.level, session.week_number);
-            await updateStudentProfile(session.user_id, {
-              current_level: next.level,
-              current_week: next.week,
-              current_day: "Monday",
-            });
-          }
-        }
-      }
-    }
 
     return NextResponse.json({
       report,
-      examResult,
+      phaseProgress,
+      processed,
       durationSeconds: durationSec,
     });
   } catch (e) {
@@ -136,12 +101,4 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
-}
-
-function nextWeekFor(level: string, week: number): { level: string; week: number } {
-  const levels = ["A1", "A2", "B1", "B2", "C1", "C2"];
-  if (week < 12) return { level, week: week + 1 };
-  const idx = levels.indexOf(level);
-  if (idx < 0 || idx >= levels.length - 1) return { level, week };
-  return { level: levels[idx + 1], week: 1 };
 }

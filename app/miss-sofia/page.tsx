@@ -2,208 +2,208 @@
 
 import { useState } from "react";
 
-const WA_LINK = "https://wa.me/51979385499?text=Hola%20Miss%20Sofia%2C%20quiero%20mi%20prueba%20gratis%20de%207%20d%C3%ADas";
+const WA_LINK = "https://wa.me/51979385499?text=Hola%20Miss%20Sofia%2C%20quiero%20empezar%20mi%20Fase%200";
 
 /* ── Data ──────────────────────────────────────────────────── */
 
-const levels = [
+const phases = [
   {
-    code: "A1 → A2",
-    name: "Básico",
-    subtitle: "Finding My Voice",
-    duration: "4 meses",
-    weeks: "16 semanas",
-    words: "600+ palabras",
-    situations: "48 escenarios",
-    icon: "◎",
+    n: 0,
+    icon: "🌙",
+    name: "Cuna",
+    subtitle: "Despertar Silencioso",
+    days: "Días 1–30",
+    brain: "Tu cerebro calibra los sonidos del inglés",
+    you_do: "Escuchas 5 min al día. Marcas 👍 / 👎.",
+    you_dont: "No hablas. No traduces. No memorizas.",
+    exit: "Día 30: entiendes un audio que el día 1 no entendías.",
+    color: "text-indigo-400",
+    border: "border-indigo-400/20",
+    bg: "bg-indigo-400/5",
+  },
+  {
+    n: 1,
+    icon: "💧",
+    name: "Primera Palabra",
+    subtitle: "One Word Magic",
+    days: "Días 31–60",
+    brain: "Una palabra = una intención completa",
+    you_do: "Respondes con UNA palabra real. 'Hungry'. 'Tired'. 'Happy'.",
+    you_dont: "No frases. No conjugaciones. No 'I am'.",
+    exit: "30 palabras inglesas que USAS en tu vida real.",
+    color: "text-sky-400",
+    border: "border-sky-400/20",
+    bg: "bg-sky-400/5",
+  },
+  {
+    n: 2,
+    icon: "⚡",
+    name: "Telegráfico",
+    subtitle: "Two-Word Magic",
+    days: "Días 61–90",
+    brain: "Combinas 2-3 palabras. La gramática emerge sola.",
+    you_do: "'Want water.' 'Tired today.' 'Where bathroom.'",
+    you_dont: "No estrés por gramática. Sofia jamás te corrige el orden.",
+    exit: "Audio de 60 segundos sin tirar al español ni una vez.",
     color: "text-emerald-400",
     border: "border-emerald-400/20",
     bg: "bg-emerald-400/5",
-    outcome: "Puedes presentarte, describir tu rutina y mantener conversación básica de 15 min.",
-    topics: ["Yo y mi mundo", "Rutinas diarias", "Casa y lugares", "Comida y salud", "Trabajo básico", "Conversación real"],
   },
   {
-    code: "B1 → B2",
-    name: "Intermedio",
-    subtitle: "Living in English",
-    duration: "5 meses",
-    weeks: "20 semanas",
-    words: "900+ palabras",
-    situations: "72 escenarios",
-    icon: "◈",
+    n: 3,
+    icon: "🌱",
+    name: "Tu Voz",
+    subtitle: "Sentence Builder",
+    days: "Días 91–150",
+    brain: "Frases completas con errores OK. La gramática se acomoda implícita.",
+    you_do: "Conversaciones de 3-5 min con Sofia. Empieza tu novela personal.",
+    you_dont: "Estudiar tablas de verbos. Sofia los contrabandea en historias.",
+    exit: "Cuentas un recuerdo de tu infancia en inglés en 2 min.",
     color: "text-amber-400",
     border: "border-amber-400/20",
     bg: "bg-amber-400/5",
-    outcome: "Trabajas, negocias y te expresas en inglés con confianza. Piensas sin traducir.",
-    topics: ["Inglés profesional", "Reuniones y datos", "Series sin subtítulos", "Storytelling", "Debates y opiniones", "Slang e idioms"],
   },
   {
-    code: "C1 → C2",
-    name: "Avanzado",
-    subtitle: "Mastering the Language",
-    duration: "6 meses",
-    weeks: "24 semanas",
-    words: "1,000+ palabras",
-    situations: "72 escenarios",
-    icon: "✦",
-    color: "text-purple-400",
-    border: "border-purple-400/20",
-    bg: "bg-purple-400/5",
-    outcome: "Hablas, presentas y lideras en inglés como segunda lengua natural. Certificación IELTS/TOEFL.",
-    topics: ["Fluencia cognitiva", "Retórica y persuasión", "Humor e ironía", "Escritura C1", "Preparación IELTS/TOEFL", "Inglés de tu industria"],
+    n: 4,
+    icon: "🌊",
+    name: "Tu Mundo",
+    subtitle: "Storyteller",
+    days: "Días 151–240",
+    brain: "Vives EN inglés. Pasado, futuro, hipotético. Humor.",
+    you_do: "Series con subs en inglés. Misión mensual: hacer reír a alguien en inglés.",
+    you_dont: "Caer en respuestas de una palabra. 'Mi amor, full sentence. You've earned it.'",
+    exit: "Cuentas la trama de tu serie favorita en 5 min sin prepararlo.",
+    color: "text-orange-400",
+    border: "border-orange-400/20",
+    bg: "bg-orange-400/5",
   },
+  {
+    n: 5,
+    icon: "🔥",
+    name: "Tu Yo en Inglés",
+    subtitle: "Native Self",
+    days: "Días 241–365",
+    brain: "Piensas sin filtro. Lees ironía. Dominas registros.",
+    you_do: "Debates con Sofia. Inglés industria-específico. Misión final: el Sello Cuna.",
+    you_dont: "Baby-talk. Sofia te trata como par.",
+    exit: "Un nativo en USA, en 5 min, no sabe que eres hispanohablante.",
+    color: "text-rose-400",
+    border: "border-rose-400/20",
+    bg: "bg-rose-400/5",
+  },
+];
+
+const ritualSlots = [
+  { time: "🌅 Mañana", duration: "3-5 min", what: "Audio-novela mientras te bañas o desayunas", from: "Día 1" },
+  { time: "🌞 Almuerzo", duration: "2 min", what: "Misión real-life del día", from: "Fase 1 · Día 31" },
+  { time: "🌙 Noche", duration: "10-15 min", what: "Conversación íntima con Sofia", from: "Fase 3 · Día 91" },
+  { time: "🌌 Antes de dormir", duration: "90 seg", what: "Audio-cuento relajante. Subliminal.", from: "Día 1" },
+];
+
+const visceralMetrics = [
+  { icon: "🎙️", label: "Tiempo de boca", desc: "Minutos reales hablando inglés. No tiempo de estudio." },
+  { icon: "📚", label: "Palabras tuyas", desc: "Palabras que USAS en tu vida real, no que memorizaste." },
+  { icon: "💭", label: "Pensaste en inglés", desc: "Días que te sorprendiste pensando en inglés sin querer." },
+  { icon: "🌙", label: "Soñaste en inglés", desc: "El primer día que sueñas en inglés es mítico. Lo registramos." },
+  { icon: "😄", label: "Hiciste reír", desc: "Veces que tu chiste en inglés funcionó." },
+  { icon: "🇺🇸", label: "Te entendieron", desc: "Veces que un nativo te entendió a la primera." },
+];
+
+const cunaVsDuolingo = [
+  ["Métrica de éxito", "Racha de días + gemas", "Días que soñaste en inglés"],
+  ["Cómo aprendes vocabulario", "Listas y flashcards", "Palabras atadas a momentos de tu vida"],
+  ["Cuándo empiezas a hablar", "Desde el día 1 (frustración)", "Tras 30 días de escucha (sin presión)"],
+  ["Qué dice el contenido", "'The boy eats an apple'", "Tu novela personal donde TÚ eres protagonista"],
+  ["Quién corrige tus errores", "Pop-up rojo inmediato", "Sofia los modela sin interrumpir"],
+  ["Resultado a 1 año", "Sabes traducir frases sueltas", "Conversas con un nativo sin que note acento"],
+  ["Certificado", "PDF que nadie ve", "Video real de un nativo USA"],
 ];
 
 const plans = [
   {
-    name: "Básico",
-    subtitle: "Finding My Voice",
-    level: "A1 → A2",
-    duration: "4 meses",
-    monthly: "$15",
-    total: "$60",
-    once: "$45",
-    save: "25%",
-    color: "border-emerald-400/30",
-    tag: null,
-    features: [
-      "16 semanas de lecciones diarias",
-      "Lección por WhatsApp con Miss Sofia",
-      "Audio de pronunciación incluido",
-      "4 evaluaciones mensuales",
-      "Certificado A2 digital",
-      "Soporte lun–sáb",
-    ],
-  },
-  {
-    name: "Intermedio",
-    subtitle: "Living in English",
-    level: "B1 → B2",
-    duration: "5 meses",
-    monthly: "$20",
-    total: "$100",
-    once: "$75",
-    save: "25%",
+    name: "Sofia Cuna",
+    subtitle: "El método completo",
+    monthly: "S/49",
+    yearly: "S/449",
+    yearly_save: "Ahorras S/139",
     color: "border-amber-400/40",
-    tag: "Más popular",
+    tag: "Recomendado",
     features: [
-      "20 semanas de lecciones diarias",
-      "Roleplay avanzado con voz IA",
-      "Biblioteca de audios nativos",
-      "Simulaciones laborales y viajes",
-      "1 sesión mensual de feedback",
-      "Certificado B2 digital",
+      "Las 6 fases · 12 meses",
+      "Sofia 24/7 por WhatsApp (audio + texto)",
+      "Tu novela personal generada cada semana",
+      "Tu diccionario personal (palabras atadas a tu vida)",
+      "Misiones diarias real-life",
+      "Métricas viscerales (no rachas vacías)",
+      "Garantía 6 meses o devolvemos todo",
     ],
   },
   {
-    name: "Avanzado",
-    subtitle: "Mastering the Language",
-    level: "C1 → C2",
-    duration: "6 meses",
-    monthly: "$30",
-    total: "$180",
-    once: "$140",
-    save: "22%",
-    color: "border-purple-400/30",
+    name: "Sofia Cuna VIP",
+    subtitle: "+ Sello humano",
+    monthly: "S/89",
+    yearly: "S/799",
+    yearly_save: "Ahorras S/269",
+    color: "border-purple-400/40",
     tag: null,
     features: [
-      "24 semanas de lecciones diarias",
-      "Inglés especializado en tu industria",
-      "Preparación IELTS / TOEFL",
-      "2 videosesiones/mes con avatar Sofia",
-      "Acceso de por vida al material",
-      "Certificado C1–C2 digital",
-    ],
-  },
-  {
-    name: "Completo",
-    subtitle: "The Full Journey",
-    level: "A1 → C2",
-    duration: "15 meses",
-    monthly: "$20 prom.",
-    total: "$300",
-    once: "$220",
-    save: "27%",
-    color: "border-amber-500/50",
-    tag: "Mejor valor",
-    features: [
-      "Los 3 niveles completos",
-      "Precio bloqueado desde el inicio",
-      "Los 3 certificados incluidos",
-      "Video avatar Miss Sofia incluido",
-      "Preparación certificación internacional",
-      "Acceso de por vida + comunidad VIP",
-      "Garantía 30 días o te devolvemos",
+      "Todo lo del plan Cuna",
+      "2 sesiones video al mes con Sofia humana real",
+      "Llamada Sello Cuna con nativo USA al graduarte",
+      "Video testimonial del nativo (tu certificado)",
+      "Acceso prioritario a nuevas funciones",
+      "Comunidad VIP de graduados",
     ],
   },
 ];
 
 const faqs = [
   {
-    q: "¿Necesito saber inglés para empezar?",
-    a: "No. El nivel Básico empieza desde cero absoluto. Miss Sofia hace un test de 5 preguntas para ubicarte en el nivel correcto.",
+    q: "¿Por qué no empiezo a hablar el día 1 como en otros cursos?",
+    a: "Porque tu cerebro no está listo. Un bebé escucha 12 meses antes de decir 'mamá'. Saltarse esa fase es la razón #1 por la que la gente abandona. En Fase 0 (los primeros 30 días) tu cerebro CALIBRA los sonidos del inglés. Es invisible pero crítico. El día 31 vas a empezar a hablar y vas a sentir que el inglés ya estaba ahí dentro tuyo.",
   },
   {
-    q: "¿Cómo funciona la lección diaria por WhatsApp?",
-    a: "Cada día Miss Sofia te envía la historia del día, el audio de pronunciación y tu ejercicio. Tú respondes desde tu celular. Son 45 minutos divididos en bloques que puedes hacer en cualquier momento.",
+    q: "¿En cuánto tiempo voy a hablar inglés de verdad?",
+    a: "Día 90: ya combinas frases simples y mantienes 30 segundos sin tirar al español. Día 150: cuentas recuerdos en inglés. Día 240: hablas tu serie favorita en 5 min sin prepararlo. Día 365: un nativo USA no sabe que eres hispanohablante. Todo esto medible y visible en tu app.",
   },
   {
-    q: "¿Qué método usa Miss Sofia?",
-    a: "El Método NAS (Natural Acquisition System): basado en Comprehensible Input de Krashen, TPRS (aprendizaje por historias), Repetición Espaciada y Shadowing. El mismo método que usan los países con mayor éxito en enseñanza de idiomas.",
+    q: "¿Qué pasa con mis 'palabras nuevas'? ¿Tengo que memorizarlas?",
+    a: "No. Sofia te las contrabandea en TU novela personal y en TUS misiones reales. Cada palabra queda anclada a un momento emocional ('overwhelmed la aprendiste el día que contaste el caos del tráfico'). Eso se queda pegado al cerebro 10× más que una flashcard.",
   },
   {
-    q: "¿Los certificados tienen validez internacional?",
-    a: "Los certificados de Miss Sofia acreditan los niveles del Marco Europeo (A2, B2, C1–C2). Para el nivel Avanzado incluimos preparación para IELTS y TOEFL, que sí tienen validez internacional.",
+    q: "¿Tienes garantía de verdad?",
+    a: "Sí, garantía Klaric: si en 6 meses (180 días) no puedes mantener una conversación de 5 minutos con un nativo, te devolvemos cada centavo. Sin trámites, sin preguntas. Tenemos métricas viscerales objetivas para verificarlo.",
   },
   {
-    q: "¿Puedo cambiar de plan en cualquier momento?",
-    a: "Sí. Puedes hacer upgrade al siguiente nivel en cualquier momento. Si pagaste mensual, el pago único del nivel siguiente se descuenta proporcionalmente.",
+    q: "¿Qué es el Sello Cuna y cómo es mi 'certificado'?",
+    a: "Cuando completas las 6 fases, te conectamos a una llamada de 30 minutos con un nativo USA real. Si la conversación fluye, el nativo te graba un video testimonial: 'this person speaks English'. ESE video es tu certificado. Lo subes a LinkedIn y te genera trabajos. Mucho más útil que un PDF A2.",
   },
   {
-    q: "¿Qué pasa si un día no puedo estudiar?",
-    a: "Miss Sofia guarda tu progreso. Puedes retomar en cualquier momento. Las lecciones no se pierden y el material queda disponible siempre.",
+    q: "¿Necesito horario fijo?",
+    a: "No. Vives con Sofia en tu WhatsApp como vivirías con un compañero de cuarto bilingüe. Audio en la mañana mientras te bañas, misión rapidita al almuerzo, conversación nocturna cuando puedas. 15-20 min al día total.",
   },
   {
-    q: "¿Tienen garantía?",
-    a: "Sí. Si en los primeros 30 días no notas diferencia en tu inglés, te devolvemos el pago sin preguntas.",
-  },
-];
-
-const methodology = [
-  {
-    icon: "◎",
-    title: "Comprehensible Input",
-    desc: "El 95–98% del contenido es comprensible. El cerebro adquiere el idioma igual que un niño — naturalmente, sin esfuerzo consciente.",
+    q: "¿Qué pasa si no puedo hacer la misión de un día?",
+    a: "Nada. No hay racha que perder. No hay búho que regañe. Sofia te extraña y te recibe de vuelta. La adicción real viene de ver tu novela avanzar y tus métricas viscerales subir, no de mantener un contador artificial.",
   },
   {
-    icon: "◈",
-    title: "TPRS — Historias",
-    desc: "Vocabulario en contexto narrativo. El cerebro retiene 7× más palabras en historias que en listas.",
+    q: "¿Por qué no usan niveles A1, A2, B1, B2 como todos?",
+    a: "Porque CEFR es un sistema de EXAMEN, no de aprendizaje. Nadie aprende su lengua materna por niveles. Los reemplazamos por las 6 fases reales del cerebro adquiriendo lengua. Si necesitas certificado A2/B2 para algo formal, en Fase 4-5 te preparamos para IELTS/TOEFL.",
   },
-  {
-    icon: "✦",
-    title: "Repetición Espaciada",
-    desc: "Revisión inteligente en intervalos crecientes. +25% de retención demostrado científicamente.",
-  },
-  {
-    icon: "◇",
-    title: "Shadowing",
-    desc: "Imitas la pronunciación de Miss Sofia en tiempo real. Activa la memoria muscular del idioma.",
-  },
-];
-
-const stats = [
-  { value: "630", label: "Horas totales de contenido" },
-  { value: "2,500+", label: "Palabras y expresiones" },
-  { value: "192", label: "Escenarios reales" },
-  { value: "3", label: "Certificados internacionales" },
 ];
 
 const competitors = [
-  { name: "Duolingo Max", price: "$30/mes", personal: false, whatsapp: false, cert: false, method: "Gamificado" },
-  { name: "Open English", price: "$39–49/mes", personal: false, whatsapp: false, cert: true, method: "Clases grupales" },
-  { name: "Academia local", price: "$80–150/mes", personal: true, whatsapp: false, cert: true, method: "Presencial" },
-  { name: "Miss Sofia", price: "Desde $15/mes", personal: true, whatsapp: true, cert: true, method: "NAS + IA" },
+  { name: "Duolingo Max", price: "$30/mes", method: "Gamificación vacía", real_speaker: false, personal: false, guarantee: false },
+  { name: "Open English", price: "$39–49/mes", method: "Clases grupales", real_speaker: true, personal: false, guarantee: false },
+  { name: "Academia local", price: "$80–150/mes", method: "Pizarrón presencial", real_speaker: true, personal: true, guarantee: false },
+  { name: "Sofia Cuna", price: "S/49/mes", method: "Método Cuna 6 fases", real_speaker: true, personal: true, guarantee: true },
+];
+
+const stats = [
+  { value: "12", label: "Meses al inglés real" },
+  { value: "6", label: "Fases neurolingüísticas" },
+  { value: "180d", label: "Garantía o devolvemos" },
+  { value: "1", label: "Sello Cuna con nativo USA" },
 ];
 
 /* ── Components ─────────────────────────────────────────────── */
@@ -219,6 +219,7 @@ function Pill({ children, color = "amber" }: { children: React.ReactNode; color?
     amber: "text-amber-400 bg-amber-400/10 border-amber-400/20",
     emerald: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20",
     purple: "text-purple-400 bg-purple-400/10 border-purple-400/20",
+    indigo: "text-indigo-400 bg-indigo-400/10 border-indigo-400/20",
   };
   return (
     <span className={`text-xs px-3 py-1 rounded-full border font-medium ${styles[color] ?? styles.amber}`}>
@@ -260,8 +261,8 @@ export default function MissSofiaPage() {
             <span className="text-amber-400">✦</span> ActivosYA
           </a>
           <div className="hidden md:flex items-center gap-6 text-sm text-zinc-400">
-            <a href="#metodo" className="hover:text-white transition-colors">Método</a>
-            <a href="#niveles" className="hover:text-white transition-colors">Niveles</a>
+            <a href="#metodo" className="hover:text-white transition-colors">Método Cuna</a>
+            <a href="#fases" className="hover:text-white transition-colors">Las 6 fases</a>
             <a href="#precios" className="hover:text-white transition-colors">Precios</a>
             <a href="#faq" className="hover:text-white transition-colors">FAQ</a>
           </div>
@@ -271,14 +272,13 @@ export default function MissSofiaPage() {
             rel="noopener noreferrer"
             className="px-5 py-2.5 bg-amber-500 text-black text-sm font-bold rounded-full hover:bg-amber-400 transition-colors"
           >
-            Prueba gratis →
+            Empezar Fase 0 →
           </a>
         </div>
       </nav>
 
       {/* ── Hero ── */}
       <section className="relative min-h-screen flex items-center justify-center px-6 pt-20 overflow-hidden">
-        {/* Background orbs */}
         <div className="absolute inset-0 pointer-events-none">
           <div
             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full"
@@ -298,31 +298,28 @@ export default function MissSofiaPage() {
         </div>
 
         <div className="relative mx-auto max-w-4xl text-center">
-          {/* Live badge */}
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-amber-500/30 bg-amber-500/5 text-amber-400 text-sm mb-8">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-400" />
             </span>
-            Disponible ahora · Prueba gratis 7 días
+            Método Cuna · único en LATAM · garantía 6 meses
           </div>
 
-          {/* Headline */}
           <h1 className="text-5xl md:text-7xl font-bold tracking-tight leading-tight mb-6">
-            Aprende inglés con{" "}
+            Aprende inglés{" "}
             <br />
-            <span className="gold-gradient-animated">Miss Sofia</span>
+            <span className="gold-gradient-animated">como aprendiste español</span>
           </h1>
 
           <p className="text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto mb-4 leading-relaxed">
-            Tu profesora IA personal por WhatsApp. Del nivel A1 al C2 en 15 meses
-            con el método que usan los países más avanzados en enseñanza de idiomas.
+            Si pudiste aprender español sin estudiar gramática, puedes aprender inglés igual.
+            Sofia te enseña como tu mamá te enseñó español: <strong className="text-zinc-200">hablándote todos los días.</strong>
           </p>
           <p className="text-sm text-zinc-500 mb-10">
-            Sin horarios fijos · Sin clases grupales · Sin miedo a equivocarte
+            6 fases neurolingüísticas · 12 meses · sin gramática · sin flashcards · sin rachas vacías
           </p>
 
-          {/* CTAs */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
             <a
               href={WA_LINK}
@@ -330,17 +327,16 @@ export default function MissSofiaPage() {
               rel="noopener noreferrer"
               className="w-full sm:w-auto px-8 py-4 text-base font-bold bg-amber-500 text-black rounded-full hover:bg-amber-400 transition-all glow-gold"
             >
-              Empezar gratis 7 días →
+              Empezar mi Fase 0 →
             </a>
             <a
-              href="#niveles"
+              href="#metodo"
               className="w-full sm:w-auto px-8 py-4 text-base font-medium border border-[#2A2A2A] text-zinc-300 rounded-full hover:border-amber-500/40 hover:text-white transition-all"
             >
-              Ver los niveles
+              ¿Por qué Cuna funciona?
             </a>
           </div>
 
-          {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 border-t border-[#2A2A2A] pt-10">
             {stats.map((s) => (
               <div key={s.label} className="text-center">
@@ -352,109 +348,77 @@ export default function MissSofiaPage() {
         </div>
       </section>
 
-      {/* ── Cómo funciona ── */}
+      {/* ── El problema con los demás ── */}
       <section className="py-24 px-6 border-t border-[#2A2A2A]">
-        <div className="mx-auto max-w-5xl">
-          <div className="text-center mb-16">
-            <p className="text-amber-400 text-sm font-medium mb-3 tracking-widest uppercase">Simple y sin fricción</p>
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">¿Cómo funciona?</h2>
-            <p className="text-zinc-400 max-w-xl mx-auto">Todo desde tu WhatsApp. Sin apps que descargar, sin horarios que respetar.</p>
+        <div className="mx-auto max-w-4xl">
+          <div className="text-center mb-12">
+            <p className="text-rose-400 text-sm font-medium mb-3 tracking-widest uppercase">El problema</p>
+            <h2 className="text-4xl md:text-5xl font-bold mb-4">
+              Llevas años con apps y aún no hablas inglés.
+            </h2>
+            <p className="text-zinc-400 max-w-2xl mx-auto leading-relaxed">
+              No es tu culpa. Es el método. Duolingo te hace sentir que avanzas mientras
+              te llena de gemas, traducciones y rachas. Pasan 3 años y sigues sin poder
+              pedir un café en inglés. <strong className="text-zinc-200">Es un casino disfrazado de escuela.</strong>
+            </p>
           </div>
 
-          <div className="grid md:grid-cols-4 gap-6">
-            {[
-              { step: "01", icon: "◎", title: "Test de nivel", desc: "5 preguntas rápidas. Miss Sofia te ubica en A1, A2, B1, B2 o C1 automáticamente." },
-              { step: "02", icon: "◈", title: "Elige tu plan", desc: "Básico, Intermedio, Avanzado o Completo. Mensual o pago único. Tú decides." },
-              { step: "03", icon: "✦", title: "Lección diaria", desc: "Miss Sofia te escribe cada día: historia, audio, ejercicio. 45 minutos que puedes hacer en bloques." },
-              { step: "04", icon: "◇", title: "Certifícate", desc: "Evaluación mensual + certificado al terminar cada nivel. A2, B2 y C1–C2." },
-            ].map((item) => (
-              <div key={item.step} className="card-surface rounded-2xl p-6 flex flex-col gap-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-zinc-600 font-mono">{item.step}</span>
-                  <span className="text-2xl text-amber-400/60">{item.icon}</span>
-                </div>
-                <h3 className="text-lg font-bold">{item.title}</h3>
-                <p className="text-zinc-400 text-sm leading-relaxed">{item.desc}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Daily routine */}
-          <div className="mt-12 card-surface rounded-2xl p-8">
-            <p className="text-amber-400 text-xs font-medium tracking-widest uppercase mb-6">Rutina diaria con Miss Sofia · 45 minutos</p>
-            <div className="grid md:grid-cols-6 gap-3">
+          <div className="card-surface rounded-2xl p-8 border border-rose-400/10">
+            <p className="text-zinc-400 text-sm mb-4 italic">Lo que pasa con la mayoría de cursos online:</p>
+            <ul className="grid md:grid-cols-2 gap-4 text-sm">
               {[
-                { time: "0–5 min", label: "Wake up", desc: "Saludo + repaso del día anterior" },
-                { time: "5–15 min", label: "Input", desc: "Historia, audio o video del día" },
-                { time: "15–25 min", label: "Comprensión", desc: "Preguntas sobre lo que escuchaste" },
-                { time: "25–35 min", label: "Producción", desc: "Tú hablas o escribes en inglés" },
-                { time: "35–40 min", label: "Shadowing", desc: "Imitas la pronunciación de Sofia" },
-                { time: "40–45 min", label: "Cierre", desc: "5 palabras nuevas · spaced repetition" },
-              ].map((block) => (
-                <div key={block.time} className="bg-[#1A1A1A] rounded-xl p-4 text-center">
-                  <p className="text-amber-400 text-xs font-mono mb-2">{block.time}</p>
-                  <p className="text-white text-sm font-semibold mb-1">{block.label}</p>
-                  <p className="text-zinc-500 text-xs leading-tight">{block.desc}</p>
-                </div>
+                "Te enseñan gramática antes de comunicar — bloqueas la voz.",
+                "Memorizas listas de palabras que olvidas en 1 mes.",
+                "Te corrigen mid-sentence — desarrollas miedo a equivocarte.",
+                "Diálogos de libro: 'The cat is on the table' — nadie habla así.",
+                "La racha te genera ansiedad, no fluidez.",
+                "Pasas años sin un solo minuto de boca real.",
+              ].map((p) => (
+                <li key={p} className="flex items-start gap-3 text-zinc-400">
+                  <span className="text-rose-400 mt-0.5 shrink-0">✗</span>
+                  {p}
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
         </div>
       </section>
 
-      {/* ── Método NAS ── */}
+      {/* ── El Método Cuna ── */}
       <section id="metodo" className="py-24 px-6 border-t border-[#2A2A2A]">
         <div className="mx-auto max-w-5xl">
           <div className="text-center mb-16">
-            <p className="text-amber-400 text-sm font-medium mb-3 tracking-widest uppercase">Respaldo científico</p>
+            <p className="text-amber-400 text-sm font-medium mb-3 tracking-widest uppercase">La solución</p>
             <h2 className="text-4xl md:text-5xl font-bold mb-4">
-              El método{" "}
-              <span className="gold-gradient">NAS</span>
+              El <span className="gold-gradient">Método Cuna</span>
             </h2>
-            <p className="text-zinc-400 max-w-2xl mx-auto">
-              Natural Acquisition System — el mismo enfoque que usan Singapur, Finlandia y los Países Bajos.
-              Aprende como un niño aprende su lengua materna, pero adaptado para adultos.
+            <p className="text-zinc-400 max-w-2xl mx-auto leading-relaxed">
+              El cerebro humano ya sabe cómo aprender un idioma — lo hizo con tu lengua materna.
+              Cuna respeta esas 6 fases neurolingüísticas en lugar de pelearse con ellas.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-4 gap-6 mb-12">
-            {methodology.map((m) => (
-              <div key={m.title} className="card-surface rounded-2xl p-6 flex flex-col gap-3">
-                <span className="text-2xl text-amber-400/60">{m.icon}</span>
-                <h3 className="font-bold text-white">{m.title}</h3>
-                <p className="text-zinc-400 text-sm leading-relaxed">{m.desc}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Comparison table */}
-          <div className="card-surface rounded-2xl overflow-hidden">
+          {/* Comparación Cuna vs Duolingo */}
+          <div className="card-surface rounded-2xl overflow-hidden mb-12">
             <div className="p-6 border-b border-[#2A2A2A]">
-              <p className="text-amber-400 text-xs font-medium tracking-widest uppercase mb-1">Comparación</p>
-              <h3 className="text-xl font-bold">Método tradicional vs. Método NAS</h3>
+              <p className="text-amber-400 text-xs font-medium tracking-widest uppercase mb-1">Comparación honesta</p>
+              <h3 className="text-xl font-bold">Duolingo & cía vs. Método Cuna</h3>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-[#2A2A2A]">
                     <th className="text-left px-6 py-4 text-zinc-500 font-normal">Aspecto</th>
-                    <th className="text-center px-6 py-4 text-zinc-500 font-normal">Método tradicional</th>
-                    <th className="text-center px-6 py-4 text-amber-400 font-semibold">Método NAS · Miss Sofia</th>
+                    <th className="text-center px-6 py-4 text-zinc-500 font-normal">Duolingo & cía</th>
+                    <th className="text-center px-6 py-4 text-amber-400 font-semibold">Método Cuna</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {[
-                    ["Punto de partida", "Gramática y reglas", "Inmersión y contexto"],
-                    ["Vocabulario", "Listas de memoria", "Historias y situaciones reales"],
-                    ["Errores", "Corrección inmediata (bloquea)", "Ambiente seguro, luego modelas"],
-                    ["Traducción", "Constante", "Se elimina progresivamente"],
-                    ["Resultado en 4 meses", "Conjugar verbos", "Conversación real de 15 minutos"],
-                    ["Retención a 1 año", "~20%", "~75% con spaced repetition"],
-                  ].map(([aspect, trad, nas]) => (
+                  {cunaVsDuolingo.map(([aspect, trad, cuna]) => (
                     <tr key={aspect} className="border-b border-[#1A1A1A]">
                       <td className="px-6 py-4 text-zinc-400">{aspect}</td>
                       <td className="px-6 py-4 text-center text-zinc-500">{trad}</td>
-                      <td className="px-6 py-4 text-center text-amber-400 font-medium">{nas}</td>
+                      <td className="px-6 py-4 text-center text-amber-400 font-medium">{cuna}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -464,88 +428,166 @@ export default function MissSofiaPage() {
         </div>
       </section>
 
-      {/* ── Niveles ── */}
-      <section id="niveles" className="py-24 px-6 border-t border-[#2A2A2A]">
-        <div className="mx-auto max-w-5xl">
+      {/* ── Las 6 Fases ── */}
+      <section id="fases" className="py-24 px-6 border-t border-[#2A2A2A]">
+        <div className="mx-auto max-w-6xl">
           <div className="text-center mb-16">
-            <p className="text-amber-400 text-sm font-medium mb-3 tracking-widest uppercase">Programa completo</p>
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">3 niveles · 15 meses · 1 certificado por nivel</h2>
-            <p className="text-zinc-400 max-w-xl mx-auto">
-              Puedes entrar en cualquier nivel según tu test de diagnóstico.
+            <p className="text-amber-400 text-sm font-medium mb-3 tracking-widest uppercase">El programa completo</p>
+            <h2 className="text-4xl md:text-5xl font-bold mb-4">Las 6 fases del Método Cuna</h2>
+            <p className="text-zinc-400 max-w-2xl mx-auto">
+              Cada fase respeta exactamente lo que tu cerebro está listo para hacer en ese momento.
+              Saltarte una fase rompe el método.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6 mb-10">
-            {levels.map((level) => (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {phases.map((phase) => (
               <div
-                key={level.name}
-                className={`card-surface rounded-2xl p-6 flex flex-col gap-5 border ${level.border}`}
+                key={phase.n}
+                className={`card-surface rounded-2xl p-6 flex flex-col gap-4 border ${phase.border}`}
               >
                 <div className="flex items-center justify-between">
-                  <Pill color={level.name === "Básico" ? "emerald" : level.name === "Intermedio" ? "amber" : "purple"}>
-                    {level.code}
-                  </Pill>
-                  <span className={`text-2xl ${level.color} opacity-60`}>{level.icon}</span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-3xl">{phase.icon}</span>
+                    <div>
+                      <p className="text-zinc-500 text-xs uppercase tracking-widest">Fase {phase.n}</p>
+                      <h3 className="text-xl font-bold">{phase.name}</h3>
+                    </div>
+                  </div>
+                </div>
+
+                <p className={`text-sm font-medium ${phase.color}`}>"{phase.subtitle}"</p>
+
+                <div className={`${phase.bg} rounded-xl p-3 text-center`}>
+                  <p className="text-white text-sm font-semibold">{phase.days}</p>
                 </div>
 
                 <div>
-                  <h3 className="text-2xl font-bold mb-1">{level.name}</h3>
-                  <p className={`text-sm font-medium ${level.color} mb-3`}>"{level.subtitle}"</p>
-                  <p className="text-zinc-400 text-sm leading-relaxed">{level.outcome}</p>
+                  <p className="text-xs text-zinc-500 uppercase tracking-widest mb-2">🧠 Tu cerebro</p>
+                  <p className="text-zinc-300 text-sm leading-relaxed">{phase.brain}</p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  {[
-                    { label: "Duración", val: level.duration },
-                    { label: "Semanas", val: level.weeks },
-                    { label: "Vocabulario", val: level.words },
-                    { label: "Escenarios", val: level.situations },
-                  ].map((d) => (
-                    <div key={d.label} className={`${level.bg} rounded-xl p-3 text-center`}>
-                      <p className="text-white text-sm font-semibold">{d.val}</p>
-                      <p className="text-zinc-500 text-xs mt-0.5">{d.label}</p>
-                    </div>
-                  ))}
+                <div>
+                  <p className="text-xs text-emerald-500 uppercase tracking-widest mb-2">✅ Sí haces</p>
+                  <p className="text-zinc-400 text-sm leading-relaxed">{phase.you_do}</p>
+                </div>
+
+                <div>
+                  <p className="text-xs text-rose-500 uppercase tracking-widest mb-2">❌ No haces</p>
+                  <p className="text-zinc-400 text-sm leading-relaxed">{phase.you_dont}</p>
                 </div>
 
                 <div className="border-t border-[#2A2A2A] pt-4">
-                  <p className="text-xs text-zinc-500 uppercase tracking-widest mb-3">Temas del nivel</p>
-                  <ul className="flex flex-col gap-2">
-                    {level.topics.map((t) => (
-                      <li key={t} className="flex items-center gap-2 text-sm text-zinc-400">
-                        <span className={`w-1.5 h-1.5 rounded-full ${level.color.replace("text-", "bg-")} opacity-60 shrink-0`} />
-                        {t}
-                      </li>
-                    ))}
-                  </ul>
+                  <p className="text-xs text-amber-400 uppercase tracking-widest mb-2">🎯 Hito de salida</p>
+                  <p className="text-zinc-300 text-sm leading-relaxed italic">{phase.exit}</p>
                 </div>
               </div>
             ))}
           </div>
+        </div>
+      </section>
 
-          {/* Journey timeline */}
-          <div className="card-surface rounded-2xl p-8">
-            <p className="text-amber-400 text-xs font-medium tracking-widest uppercase mb-6">Tu transformación mes a mes</p>
-            <div className="flex flex-col md:flex-row gap-4">
-              {[
-                { mes: "Mes 1", texto: "Dices tu nombre y rutina en inglés" },
-                { mes: "Mes 4", texto: "Conversas 15 min con fluidez · Certificado A2" },
-                { mes: "Mes 6", texto: "Trabajas y negocias en inglés" },
-                { mes: "Mes 9", texto: "Piensas directamente en inglés · Certificado B2" },
-                { mes: "Mes 12", texto: "Presentas, lideras y persuades" },
-                { mes: "Mes 15", texto: "El inglés es parte de ti · Certificado C1–C2" },
-              ].map((item, i) => (
-                <div key={item.mes} className="flex-1 flex flex-col items-center text-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 text-xs font-bold">
-                    {i + 1}
-                  </div>
-                  <p className="text-amber-400 text-xs font-semibold">{item.mes}</p>
-                  <p className="text-zinc-400 text-xs leading-tight">{item.texto}</p>
-                  {i < 5 && (
-                    <div className="hidden md:block w-full h-px bg-gradient-to-r from-amber-500/30 to-transparent absolute" />
-                  )}
-                </div>
-              ))}
+      {/* ── Ritual circadiano ── */}
+      <section className="py-24 px-6 border-t border-[#2A2A2A]">
+        <div className="mx-auto max-w-5xl">
+          <div className="text-center mb-16">
+            <p className="text-amber-400 text-sm font-medium mb-3 tracking-widest uppercase">Cómo es un día contigo</p>
+            <h2 className="text-4xl md:text-5xl font-bold mb-4">El ritual circadiano</h2>
+            <p className="text-zinc-400 max-w-2xl mx-auto leading-relaxed">
+              Un papá no le agenda "martes es día de gramática" a su bebé. Vive con él.
+              Lo mismo aquí: el mismo ritual todos los días, ajustado a tu fase.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-4 gap-4">
+            {ritualSlots.map((slot) => (
+              <div key={slot.time} className="card-surface rounded-2xl p-6">
+                <p className="text-2xl mb-3">{slot.time}</p>
+                <p className="text-amber-400 text-xs font-mono mb-3">{slot.duration}</p>
+                <p className="text-zinc-300 text-sm leading-relaxed mb-4">{slot.what}</p>
+                <p className="text-zinc-600 text-xs uppercase tracking-widest">Aparece desde {slot.from}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-8 card-surface rounded-2xl p-6 border border-amber-400/10 text-center">
+            <p className="text-zinc-300 text-sm leading-relaxed">
+              <strong className="text-amber-400">Domingo es día de asado familiar.</strong> Sin misión, sin presión.
+              Sofia te manda un capítulo extra divertido de tu novela y te deja descansar de verdad.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Métricas viscerales ── */}
+      <section className="py-24 px-6 border-t border-[#2A2A2A]">
+        <div className="mx-auto max-w-5xl">
+          <div className="text-center mb-16">
+            <p className="text-amber-400 text-sm font-medium mb-3 tracking-widest uppercase">Lo que medimos</p>
+            <h2 className="text-4xl md:text-5xl font-bold mb-4">
+              Métricas que <span className="gold-gradient">sí importan</span>
+            </h2>
+            <p className="text-zinc-400 max-w-2xl mx-auto leading-relaxed">
+              Olvídate de "racha de 100 días" o "nivel B1 alcanzado". Son métricas vacías.
+              Cuna mide lo que de verdad le pasa a tu cerebro.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {visceralMetrics.map((m) => (
+              <div key={m.label} className="card-surface rounded-2xl p-6">
+                <p className="text-3xl mb-3">{m.icon}</p>
+                <h3 className="text-lg font-bold text-white mb-2">{m.label}</h3>
+                <p className="text-zinc-400 text-sm leading-relaxed">{m.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Diferenciadores únicos ── */}
+      <section className="py-24 px-6 border-t border-[#2A2A2A]">
+        <div className="mx-auto max-w-5xl">
+          <div className="text-center mb-16">
+            <p className="text-amber-400 text-sm font-medium mb-3 tracking-widest uppercase">Lo que nadie más tiene</p>
+            <h2 className="text-4xl md:text-5xl font-bold mb-4">3 cosas únicas en el mundo</h2>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            <div className="card-surface rounded-2xl p-8 border border-amber-400/20">
+              <p className="text-3xl mb-4">📖</p>
+              <h3 className="text-xl font-bold text-white mb-3">Tu novela personal</h3>
+              <p className="text-zinc-400 text-sm leading-relaxed mb-4">
+                Cada semana Sofia genera un capítulo donde TÚ eres el protagonista.
+                Usa tu nombre, tu ciudad, tu trabajo, tu familia.
+              </p>
+              <p className="text-amber-400 text-xs italic">
+                Imposible no querer saber qué pasa el siguiente capítulo.
+              </p>
+            </div>
+
+            <div className="card-surface rounded-2xl p-8 border border-amber-400/20">
+              <p className="text-3xl mb-4">📚</p>
+              <h3 className="text-xl font-bold text-white mb-3">Tu diccionario personal</h3>
+              <p className="text-zinc-400 text-sm leading-relaxed mb-4">
+                Cada palabra atada a un momento real de tu vida.
+                "Overwhelmed la aprendiste el lunes que contaste el caos del tráfico."
+              </p>
+              <p className="text-amber-400 text-xs italic">
+                10× más memorable que cualquier flashcard.
+              </p>
+            </div>
+
+            <div className="card-surface rounded-2xl p-8 border border-amber-400/20">
+              <p className="text-3xl mb-4">🎬</p>
+              <h3 className="text-xl font-bold text-white mb-3">El Sello Cuna</h3>
+              <p className="text-zinc-400 text-sm leading-relaxed mb-4">
+                Tu graduación es una llamada de 30 min con un nativo USA real.
+                Si fluye, te graba un video diciendo "this person speaks English".
+              </p>
+              <p className="text-amber-400 text-xs italic">
+                Tu video va a LinkedIn. Te genera trabajos.
+              </p>
             </div>
           </div>
         </div>
@@ -553,20 +595,21 @@ export default function MissSofiaPage() {
 
       {/* ── Precios ── */}
       <section id="precios" className="py-24 px-6 border-t border-[#2A2A2A]">
-        <div className="mx-auto max-w-6xl">
+        <div className="mx-auto max-w-4xl">
           <div className="text-center mb-16">
             <p className="text-amber-400 text-sm font-medium mb-3 tracking-widest uppercase">Sin sorpresas</p>
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">Planes y precios</h2>
+            <h2 className="text-4xl md:text-5xl font-bold mb-4">Un viaje, dos formas</h2>
             <p className="text-zinc-400 max-w-xl mx-auto">
-              Paga mensual o ahorra con pago único. Empieza gratis 7 días sin tarjeta.
+              No vendemos niveles. Vendemos la transformación completa de 12 meses.
+              Empieza con tu Fase 0 gratis.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+          <div className="grid md:grid-cols-2 gap-6 mb-10">
             {plans.map((plan) => (
               <div
                 key={plan.name}
-                className={`card-surface rounded-2xl p-6 flex flex-col gap-5 border ${plan.color} relative`}
+                className={`card-surface rounded-2xl p-8 flex flex-col gap-5 border ${plan.color} relative`}
               >
                 {plan.tag && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
@@ -577,23 +620,22 @@ export default function MissSofiaPage() {
                 )}
 
                 <div>
-                  <p className="text-zinc-500 text-xs uppercase tracking-widest mb-1">{plan.level}</p>
-                  <h3 className="text-xl font-bold mb-0.5">{plan.name}</h3>
-                  <p className="text-zinc-500 text-xs">"{plan.subtitle}"</p>
+                  <h3 className="text-2xl font-bold mb-1">{plan.name}</h3>
+                  <p className="text-zinc-500 text-sm">{plan.subtitle}</p>
                 </div>
 
-                <div className="border-t border-[#2A2A2A] pt-4">
-                  <div className="mb-3">
+                <div className="border-t border-[#2A2A2A] pt-5">
+                  <div className="mb-4">
                     <p className="text-zinc-500 text-xs mb-1">Pago mensual</p>
                     <div className="flex items-baseline gap-1">
-                      <span className="text-3xl font-bold text-white">{plan.monthly}</span>
-                      <span className="text-zinc-500 text-sm">/ mes · {plan.duration}</span>
+                      <span className="text-4xl font-bold text-white">{plan.monthly}</span>
+                      <span className="text-zinc-500 text-sm">/ mes</span>
                     </div>
-                    <p className="text-zinc-600 text-xs mt-0.5">Total: {plan.total}</p>
                   </div>
-                  <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-3">
-                    <p className="text-amber-400 text-xs mb-0.5">Pago único · ahorra {plan.save}</p>
-                    <span className="text-2xl font-bold text-amber-400">{plan.once}</span>
+                  <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-4">
+                    <p className="text-amber-400 text-xs mb-1">Pago anual · {plan.yearly_save}</p>
+                    <span className="text-2xl font-bold text-amber-400">{plan.yearly}</span>
+                    <span className="text-zinc-500 text-sm"> / año</span>
                   </div>
                 </div>
 
@@ -616,26 +658,28 @@ export default function MissSofiaPage() {
                       : "border border-[#2A2A2A] text-zinc-300 hover:border-amber-500/40 hover:text-amber-400"
                   }`}
                 >
-                  Empezar gratis →
+                  Empezar Fase 0 →
                 </a>
               </div>
             ))}
           </div>
 
-          {/* Guarantee */}
-          <div className="card-surface rounded-2xl p-6 flex flex-col md:flex-row items-center gap-6 border border-emerald-400/20">
-            <div className="text-4xl">🛡</div>
-            <div>
-              <h4 className="font-bold text-white mb-1">Garantía 30 días</h4>
-              <p className="text-zinc-400 text-sm">
-                Si en los primeros 30 días no notas diferencia real en tu inglés, te devolvemos el pago completo. Sin preguntas, sin trámites.
+          {/* Garantía 6 meses */}
+          <div className="card-surface rounded-2xl p-8 flex flex-col md:flex-row items-center gap-6 border border-emerald-400/30 bg-emerald-400/5">
+            <div className="text-5xl shrink-0">🛡️</div>
+            <div className="flex-1 text-center md:text-left">
+              <h4 className="font-bold text-white text-xl mb-2">Garantía Klaric · 6 meses</h4>
+              <p className="text-zinc-300 text-sm leading-relaxed mb-2">
+                Si en 180 días no puedes mantener una conversación de 5 minutos con un nativo,
+                <strong className="text-emerald-400"> te devolvemos cada centavo.</strong> Sin trámites, sin preguntas.
               </p>
+              <p className="text-zinc-500 text-xs">Garantía objetiva: validamos con la llamada del Sello Cuna.</p>
             </div>
             <a
               href={WA_LINK}
               target="_blank"
               rel="noopener noreferrer"
-              className="shrink-0 px-6 py-3 bg-emerald-500/10 border border-emerald-400/30 text-emerald-400 text-sm font-semibold rounded-full hover:bg-emerald-500/20 transition-colors"
+              className="shrink-0 px-6 py-3 bg-emerald-500 text-black text-sm font-bold rounded-full hover:bg-emerald-400 transition-colors"
             >
               Empezar sin riesgo →
             </a>
@@ -647,8 +691,8 @@ export default function MissSofiaPage() {
       <section className="py-24 px-6 border-t border-[#2A2A2A]">
         <div className="mx-auto max-w-4xl">
           <div className="text-center mb-12">
-            <p className="text-amber-400 text-sm font-medium mb-3 tracking-widest uppercase">¿Por qué Miss Sofia?</p>
-            <h2 className="text-4xl font-bold mb-4">Miss Sofia vs. la competencia</h2>
+            <p className="text-amber-400 text-sm font-medium mb-3 tracking-widest uppercase">¿Por qué Sofia Cuna?</p>
+            <h2 className="text-4xl font-bold mb-4">Sofia Cuna vs. la competencia</h2>
           </div>
 
           <div className="card-surface rounded-2xl overflow-hidden">
@@ -658,9 +702,9 @@ export default function MissSofiaPage() {
                   <tr className="border-b border-[#2A2A2A]">
                     <th className="text-left px-6 py-5 text-zinc-500 font-normal">Plataforma</th>
                     <th className="text-center px-4 py-5 text-zinc-500 font-normal">Precio</th>
-                    <th className="text-center px-4 py-5 text-zinc-500 font-normal">Tutor personal</th>
-                    <th className="text-center px-4 py-5 text-zinc-500 font-normal">Por WhatsApp</th>
-                    <th className="text-center px-4 py-5 text-zinc-500 font-normal">Certificado</th>
+                    <th className="text-center px-4 py-5 text-zinc-500 font-normal">Te hace hablar</th>
+                    <th className="text-center px-4 py-5 text-zinc-500 font-normal">Personalizado</th>
+                    <th className="text-center px-4 py-5 text-zinc-500 font-normal">Garantía 6m</th>
                     <th className="text-center px-4 py-5 text-zinc-500 font-normal">Método</th>
                   </tr>
                 </thead>
@@ -677,9 +721,9 @@ export default function MissSofiaPage() {
                       <td className={`px-4 py-5 text-center ${i === competitors.length - 1 ? "text-amber-400 font-bold" : "text-zinc-400"}`}>
                         {c.price}
                       </td>
+                      <td className="px-4 py-5 text-center"><Check ok={c.real_speaker} /></td>
                       <td className="px-4 py-5 text-center"><Check ok={c.personal} /></td>
-                      <td className="px-4 py-5 text-center"><Check ok={c.whatsapp} /></td>
-                      <td className="px-4 py-5 text-center"><Check ok={c.cert} /></td>
+                      <td className="px-4 py-5 text-center"><Check ok={c.guarantee} /></td>
                       <td className={`px-4 py-5 text-center text-xs ${i === competitors.length - 1 ? "text-amber-400 font-semibold" : "text-zinc-500"}`}>
                         {c.method}
                       </td>
@@ -716,17 +760,17 @@ export default function MissSofiaPage() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-400" />
             </span>
-            7 días gratis · Sin tarjeta de crédito
+            Tu Fase 0 empieza hoy · sin tarjeta
           </div>
 
           <h2 className="text-5xl md:text-6xl font-bold tracking-tight mb-6">
-            Tu inglés empieza{" "}
-            <span className="gold-gradient-animated">hoy</span>
+            En 12 meses{" "}
+            <span className="gold-gradient-animated">hablas inglés.</span>
           </h2>
 
           <p className="text-zinc-400 text-lg max-w-xl mx-auto mb-10 leading-relaxed">
-            Miss Sofia está lista para tu primera lección. Empieza gratis, sin compromisos.
-            Si en 30 días no ves resultados, te devolvemos el dinero.
+            O te devolvemos cada centavo. Sofia te espera en WhatsApp para empezar
+            tu primera Fase 0 — los 30 días en los que tu cerebro empieza a calibrar el inglés.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
@@ -741,11 +785,11 @@ export default function MissSofiaPage() {
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-zinc-500">
-            <span className="flex items-center gap-2"><span className="text-emerald-400">✓</span> 7 días gratis</span>
+            <span className="flex items-center gap-2"><span className="text-emerald-400">✓</span> Fase 0 gratis</span>
             <span className="flex items-center gap-2"><span className="text-emerald-400">✓</span> Sin tarjeta</span>
-            <span className="flex items-center gap-2"><span className="text-emerald-400">✓</span> Garantía 30 días</span>
+            <span className="flex items-center gap-2"><span className="text-emerald-400">✓</span> Garantía 6 meses</span>
             <span className="flex items-center gap-2"><span className="text-emerald-400">✓</span> Por WhatsApp</span>
-            <span className="flex items-center gap-2"><span className="text-emerald-400">✓</span> Cancela cuando quieras</span>
+            <span className="flex items-center gap-2"><span className="text-emerald-400">✓</span> Sello Cuna con nativo USA</span>
           </div>
         </div>
       </section>
@@ -755,7 +799,7 @@ export default function MissSofiaPage() {
         <div className="mx-auto max-w-5xl flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-sm text-zinc-500">
             <span className="text-amber-400">✦</span>
-            <span>Miss Sofia · ActivosYA · Hecho en Perú</span>
+            <span>Miss Sofia · Método Cuna · ActivosYA · Hecho en Perú</span>
           </div>
           <div className="flex items-center gap-6 text-sm text-zinc-600">
             <a href="/" className="hover:text-zinc-400 transition-colors">Inicio</a>

@@ -53,5 +53,6 @@ export function cleanTextForTTS(text: string): string {
   return text
     .replace(/<exam_result>[\s\S]*?<\/exam_result>/g, "")
     .replace(/<session_report>[\s\S]*?<\/session_report>/g, "")
+    .replace(/<phase_progress>[\s\S]*?<\/phase_progress>/g, "")
     .trim();
 }
