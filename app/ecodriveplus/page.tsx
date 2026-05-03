@@ -70,6 +70,95 @@ export default function EcoDrivePlusPage() {
         </div>
       </section>
 
+      {/* Videos lanzamiento */}
+      <section className="px-6 py-16 border-t border-zinc-900">
+        <div className="mx-auto max-w-5xl">
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-500/10 border border-orange-500/30 text-orange-400 text-xs uppercase tracking-wider font-semibold">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75 animate-ping" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-400" />
+              </span>
+              Lanzamiento
+            </div>
+            <h2 className="mt-4 text-3xl md:text-4xl font-bold">
+              Mira EcoDrive+ en acción
+            </h2>
+            <p className="mt-3 text-zinc-400 max-w-2xl mx-auto">
+              Dos formas de empezar: como pasajero o como chofer. Elige la tuya.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Video Pasajero */}
+            <div className="rounded-2xl overflow-hidden border border-zinc-800 bg-zinc-900/30">
+              <div className="aspect-[9/16] bg-black">
+                <video
+                  className="w-full h-full object-cover"
+                  controls
+                  preload="metadata"
+                  playsInline
+                  poster="https://rfpmvnoaqibqiqxrmheb.supabase.co/storage/v1/object/public/ecodrive-content/pilar_tutorial.png"
+                >
+                  <source
+                    src="https://rfpmvnoaqibqiqxrmheb.supabase.co/storage/v1/object/public/ecodrive-videos/pasajero_final.mp4"
+                    type="video/mp4"
+                  />
+                </video>
+              </div>
+              <div className="p-5">
+                <div className="text-orange-400 text-xs uppercase tracking-wider font-semibold">
+                  Para pasajeros
+                </div>
+                <div className="mt-1 font-bold text-lg">Pides tu taxi por WhatsApp</div>
+                <div className="mt-1 text-sm text-zinc-400">
+                  Sin descargas, sin registros, en 12 segundos.
+                </div>
+                <a
+                  href={PASAJERO_WA}
+                  className="mt-4 w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-orange-500 hover:bg-orange-600 text-black font-bold transition"
+                >
+                  🚗 Pedir mi primer viaje
+                </a>
+              </div>
+            </div>
+
+            {/* Video Chofer */}
+            <div className="rounded-2xl overflow-hidden border border-zinc-800 bg-zinc-900/30">
+              <div className="aspect-[9/16] bg-black">
+                <video
+                  className="w-full h-full object-cover"
+                  controls
+                  preload="metadata"
+                  playsInline
+                  poster="https://rfpmvnoaqibqiqxrmheb.supabase.co/storage/v1/object/public/ecodrive-content/pilar_comision_choferes.png"
+                >
+                  <source
+                    src="https://rfpmvnoaqibqiqxrmheb.supabase.co/storage/v1/object/public/ecodrive-videos/chofer_final.mp4"
+                    type="video/mp4"
+                  />
+                </video>
+              </div>
+              <div className="p-5">
+                <div className="text-orange-400 text-xs uppercase tracking-wider font-semibold">
+                  Para choferes
+                </div>
+                <div className="mt-1 font-bold text-lg">La comisión más baja del Perú</div>
+                <div className="mt-1 text-sm text-zinc-400">
+                  Más viajes, más ganancia, sin nada que descargar.
+                </div>
+                <a
+                  href={CHOFER_WA}
+                  className="mt-4 w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg border border-orange-500/30 hover:bg-orange-500/10 text-orange-400 font-bold transition"
+                >
+                  💼 Quiero ser chofer
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* 3 ventajas grandes */}
       <section className="px-6 py-16 border-t border-zinc-900">
         <div className="mx-auto max-w-5xl grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -205,7 +294,7 @@ export default function EcoDrivePlusPage() {
 
       <footer className="px-6 py-12 border-t border-zinc-900 text-center text-xs text-zinc-500">
         <div>EcoDrive+ es un activo digital de <Link href="/" className="text-orange-400 hover:underline">ActivosYA</Link></div>
-        <div className="mt-2">© 2026 · Hecho con ✦ en Trujillo, Perú</div>
+        <div className="mt-2">© 2026 · Hecho con ✦ en Perú</div>
       </footer>
     </main>
   );
