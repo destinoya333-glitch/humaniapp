@@ -38,7 +38,7 @@ export const MISSIONS: MissionTemplate[] = [
     id: "p0_diary_in_spanish",
     phase: 0,
     title: "Cuéntame tu día (en español)",
-    description_es: "Mándame un audio de 1 minuto contándome cómo te fue hoy. EN ESPAÑOL. Mañana te lo devuelvo narrado en inglés para que escuches tu propia vida en otro idioma.",
+    description_es: "Mándame un audio de 1 minuto contándome cómo te fue hoy. EN ESPAÑOL. En segundos te lo devuelvo narrado en inglés para que escuches tu propia vida en otro idioma.",
     evidence_required: "audio",
     uses_profile: false,
   },

@@ -330,15 +330,12 @@ export default function SofiaChatPage() {
 
         {/* ── Misión del día ─────────────────────────────── */}
         {progress?.mission_today && (
-          <div className="mb-4 card-surface rounded-2xl p-4 border border-[#2A2A2A]">
-            <div className="flex items-start justify-between gap-3 mb-1">
-              <p className="text-xs text-amber-400 uppercase tracking-widest">🎯 Misión de hoy</p>
-              {progress.mission_today.completed && (
-                <span className="text-xs text-emerald-400">✓ Completada</span>
-              )}
-            </div>
-            <p className="text-zinc-200 text-sm">{progress.mission_today.title}</p>
-          </div>
+          <MissionCard
+            mission={progress.mission_today}
+            userId={userId}
+            phase={progress.phase.number}
+            onCompleted={() => refreshProgress(userId)}
+          />
         )}
 
         {/* ── Capítulo de novela ─────────────────────────── */}
@@ -404,6 +401,148 @@ function Metric({ label, value }: { label: string; value: string }) {
     <div className="text-center">
       <p className="text-zinc-200 font-bold">{value}</p>
       <p className="text-zinc-500 text-[10px] uppercase tracking-wider">{label}</p>
+    </div>
+  );
+}
+
+/**
+ * Mission card with optional inline diary recorder when the mission is the
+ * Spanish-diary one. Detects by title match (no template_id in DB schema).
+ */
+function MissionCard({
+  mission,
+  userId,
+  phase,
+  onCompleted,
+}: {
+  mission: { title: string; completed: boolean };
+  userId: string;
+  phase: number;
+  onCompleted: () => void;
+}) {
+  const [recording, setRecording] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [result, setResult] = useState<{
+    transcription_es: string;
+    narration_en: string;
+    narration_audio_url: string | null;
+  } | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+
+  // Detect by title (DB schema has no template_id) — only show recorder for the diary mission in Phase 0
+  const isDiaryMission =
+    phase === 0 &&
+    /cuéntame tu día|cuentame tu dia/i.test(mission.title);
+
+  async function startRecording() {
+    setError(null);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mr = new MediaRecorder(stream);
+      mediaRecorderRef.current = mr;
+      chunksRef.current = [];
+      mr.ondataavailable = (e) => chunksRef.current.push(e.data);
+      mr.onstop = () => {
+        stream.getTracks().forEach((t) => t.stop());
+        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+        uploadDiary(blob);
+      };
+      mr.start();
+      setRecording(true);
+    } catch {
+      setError("No pude acceder al micrófono. Revisa los permisos del navegador.");
+    }
+  }
+
+  function stopRecording() {
+    mediaRecorderRef.current?.stop();
+    setRecording(false);
+  }
+
+  async function uploadDiary(blob: Blob) {
+    setUploading(true);
+    setError(null);
+    try {
+      const base64 = await blobToBase64(blob);
+      const res = await fetch("/api/missions/diary-translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: userId,
+          audio_base64: base64,
+          audio_mime: "audio/webm",
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        throw new Error(data.message || data.error || "Error procesando tu audio");
+      }
+      setResult({
+        transcription_es: data.transcription_es,
+        narration_en: data.narration_en,
+        narration_audio_url: data.narration_audio_url,
+      });
+      onCompleted();
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  return (
+    <div className="mb-4 card-surface rounded-2xl p-4 border border-[#2A2A2A]">
+      <div className="flex items-start justify-between gap-3 mb-1">
+        <p className="text-xs text-amber-400 uppercase tracking-widest">🎯 Misión de hoy</p>
+        {mission.completed && <span className="text-xs text-emerald-400">✓ Completada</span>}
+      </div>
+      <p className="text-zinc-200 text-sm">{mission.title}</p>
+
+      {isDiaryMission && !result && !mission.completed && (
+        <div className="mt-4 pt-4 border-t border-[#2A2A2A]">
+          <p className="text-xs text-zinc-500 mb-3">
+            Graba 1 minuto en español. En segundos te lo devuelvo narrado en inglés.
+          </p>
+          {recording ? (
+            <button
+              type="button"
+              onClick={stopRecording}
+              className="bg-rose-500 text-white px-5 py-2 rounded-full text-sm font-semibold hover:bg-rose-400"
+            >
+              ⏹ Detener y enviar
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={startRecording}
+              disabled={uploading}
+              className="bg-amber-500 text-black px-5 py-2 rounded-full text-sm font-semibold hover:bg-amber-400 disabled:bg-zinc-700"
+            >
+              {uploading ? "Procesando..." : "🎙 Grabar mi día"}
+            </button>
+          )}
+          {error && <p className="text-rose-400 text-xs mt-2">{error}</p>}
+        </div>
+      )}
+
+      {result && (
+        <div className="mt-4 pt-4 border-t border-[#2A2A2A] space-y-3">
+          <div>
+            <p className="text-xs text-zinc-500 uppercase tracking-widest mb-1">Tu día (español)</p>
+            <p className="text-sm text-zinc-300 italic">"{result.transcription_es}"</p>
+          </div>
+          <div>
+            <p className="text-xs text-amber-400 uppercase tracking-widest mb-1">Tu día narrado en inglés</p>
+            <p className="text-sm text-zinc-200">{result.narration_en}</p>
+          </div>
+          {result.narration_audio_url && (
+            // eslint-disable-next-line jsx-a11y/media-has-caption
+            <audio controls className="w-full" src={result.narration_audio_url} />
+          )}
+        </div>
+      )}
     </div>
   );
 }
