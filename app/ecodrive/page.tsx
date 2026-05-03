@@ -4,13 +4,13 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "EcoDrive+ — Intermediación rideshare por WhatsApp · sin app",
   description:
-    "Plataforma rideshare tipo Indrive 100% por WhatsApp. Cliente nombra su precio, conductores aceptan. Sin descargar app, sin comisión escandalosa. Activo digital de ActivosYA.",
+    "Plataforma rideshare tipo InDrive 100% por WhatsApp. Cliente nombra su precio, conductores aceptan. Sin descargar app, sin comisión escandalosa. Activo digital de ActivosYA.",
 };
 
 const features = [
   { icon: "📱", title: "Sin app que descargar", desc: "Pasajero y conductor operan 100% por WhatsApp. Cero descargas, cero registros engorrosos." },
   { icon: "💸", title: "Cero comisión por viaje", desc: "El operador cobra membresía mensual al conductor (modelo predecible). Conductor gana 100% del viaje." },
-  { icon: "🤝", title: "Modelo Indrive: tú nombras precio", desc: "Pasajero sugiere precio, conductor acepta o contraoferta. Sin tarifas dinámicas abusivas." },
+  { icon: "🤝", title: "Modelo InDrive: tú nombras precio", desc: "Pasajero sugiere precio, conductor acepta o contraoferta. Sin tarifas dinámicas abusivas." },
   { icon: "📍", title: "Matching geolocalizado", desc: "Sistema notifica solo a conductores cercanos. Tiempo de respuesta promedio: 90 segundos." },
   { icon: "🚗", title: "Multi-categoría", desc: "Auto, moto, mototaxi, encomienda. Cada categoría con su tarifa base por ciudad." },
   { icon: "📊", title: "Panel del operador", desc: "Viajes en tiempo real, conductores activos, ingresos recurrentes de membresías, rutas más usadas." },
@@ -62,7 +62,7 @@ export default function EcoDrivePlusPage() {
 
           <p className="text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto mb-10 leading-relaxed">
             Sin descargar apps. Sin comisión escandalosa. Tú nombras tu precio,
-            los conductores aceptan. Modelo Indrive sobre WhatsApp con
+            los conductores aceptan. Modelo InDrive sobre WhatsApp con
             membresía mensual para el conductor — gana el 100% de cada viaje.
           </p>
 
@@ -119,7 +119,7 @@ export default function EcoDrivePlusPage() {
             </p>
             <ul className="flex flex-col gap-2 text-sm text-zinc-300">
               <li>✦ Matching geolocalizado en 90 segundos</li>
-              <li>✦ Pasajero negocia precio (modelo Indrive)</li>
+              <li>✦ Pasajero negocia precio (modelo InDrive)</li>
               <li>✦ Conductor gana 100% del viaje</li>
               <li>✦ Plataforma cobra cargo mensual al conductor</li>
             </ul>
@@ -188,7 +188,7 @@ export default function EcoDrivePlusPage() {
               <thead>
                 <tr className="border-b border-[#2A2A2A]">
                   <th className="text-left py-3 px-4 text-zinc-500 font-medium uppercase tracking-widest text-xs">Aspecto</th>
-                  <th className="text-center py-3 px-4 text-zinc-500 font-medium uppercase tracking-widest text-xs">Uber / Didi</th>
+                  <th className="text-center py-3 px-4 text-zinc-500 font-medium uppercase tracking-widest text-xs">Uber / DiDi</th>
                   <th className="text-center py-3 px-4 text-amber-400 font-medium uppercase tracking-widest text-xs">EcoDrive+</th>
                 </tr>
               </thead>

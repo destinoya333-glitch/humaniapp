@@ -1,7 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  async redirects() {
+    return [
+      // /ecodrive (legacy) -> /ecodriveplus (canonical)
+      { source: "/ecodrive", destination: "/ecodriveplus", permanent: true },
+    ];
+  },
 };
 
 export default nextConfig;

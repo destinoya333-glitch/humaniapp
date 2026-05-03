@@ -6,7 +6,7 @@ import Script from "next/script";
 export const metadata: Metadata = {
   title: "EcoDrive+ — Pides tu carro como pides delivery",
   description:
-    "EcoDrive+ es el primer servicio de viajes 100% por WhatsApp en Trujillo. Sin app, sin descargas. Pides taxi, eliges chofer, pagas con BilleteraEco. Más barato que Indrive y Didi.",
+    "EcoDrive+ es el primer servicio de viajes 100% por WhatsApp en Trujillo. Sin app, sin descargas. Pides taxi, eliges chofer, pagas con BilleteraEco. Más barato que InDrive y DiDi.",
   alternates: { canonical: "https://ecodriveplus.com" },
   keywords: [
     "taxi Trujillo WhatsApp",
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     "EcoDrive Trujillo",
     "taxi por WhatsApp",
     "chofer Trujillo comisión baja",
-    "Indrive alternativa Perú",
+    "InDrive alternativa Perú",
     "DiDi alternativa Trujillo",
   ],
 };
@@ -240,23 +240,146 @@ export default function EcoDrivePlusPage() {
         </div>
       </section>
 
-      {/* === MODOS ESPECIALES === */}
+      {/* === TIPOS DE SERVICIO === */}
       <section className="relative px-6 py-24 border-t border-white/5">
         <div className="mx-auto max-w-6xl">
-          <SectionHeader title="7 modos para cada situación" subtitle="Cada modo filtra automáticamente al chofer correcto." />
-          <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4">
+          <SectionHeader title="5 tipos de servicio" subtitle="Pides el que necesitas, el bot filtra al chofer correcto automáticamente." />
+          <div className="mt-12 grid grid-cols-2 md:grid-cols-5 gap-4">
             {[
-              { icon: "🚗", name: "Regular", desc: "Mejor precio" },
-              { icon: "🌱", name: "Eco", desc: "Vehículos eficientes" },
-              { icon: "⚡", name: "Express", desc: "Llega más rápido" },
-              { icon: "👩", name: "Mujer", desc: "Solo choferas" },
-              { icon: "👨‍👩‍👧", name: "Familia", desc: "Van 7 personas" },
-              { icon: "🐕", name: "Mascotas", desc: "Acepta mascotas" },
-              { icon: "👴", name: "Abuelo", desc: "Llamada por tel." },
-              { icon: "🏢", name: "Empresa", desc: "RUC + factura" },
+              { icon: "🚗", name: "Normal", desc: "Auto ≥2010, base", recargo: "Tarifa base" },
+              { icon: "💎", name: "Premium", desc: "Auto ≥2018 con A/C", recargo: "+20%" },
+              { icon: "👑", name: "VIP", desc: "Auto ≥2022 calificación 4.8+", recargo: "+30%" },
+              { icon: "🚐", name: "XL", desc: "5-7 personas o equipaje", recargo: "+30%" },
+              { icon: "📦", name: "Encomienda", desc: "Solo paquete sin pasajero", recargo: "−5%" },
             ].map((m) => (
-              <ModeCard key={m.name} icon={m.icon} name={m.name} desc={m.desc} />
+              <ModeCard key={m.name} icon={m.icon} name={m.name} desc={`${m.desc} · ${m.recargo}`} />
             ))}
+          </div>
+          <p className="mt-8 text-center text-sm text-zinc-500">
+            🪟 Modificador opcional: <span className="text-white font-semibold">lunas polarizadas</span> sin recargo extra (privacidad y comodidad).
+          </p>
+        </div>
+      </section>
+
+      {/* === SISTEMA DE NIVELES === */}
+      <section id="niveles" className="relative px-6 py-24 border-t border-white/5 bg-gradient-to-b from-transparent via-orange-500/[0.03] to-transparent">
+        <div className="mx-auto max-w-6xl">
+          <SectionHeader badge="9 NIVELES" title="Mientras más viajas, más ganas" subtitle="Pasajeros y conductores suben de nivel acumulando servicios. Una vez subes, nunca bajas." />
+
+          {/* Tabla Pasajero */}
+          <div className="mt-12 mb-12">
+            <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+              🧍 <span>Pasajero</span> <span className="text-zinc-500 text-sm font-normal">(recompensa escalada por viaje)</span>
+            </h3>
+            <div className="overflow-x-auto rounded-xl border border-white/10">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-white/5 border-b border-white/10">
+                    <th className="text-left py-3 px-4 text-zinc-400 font-medium uppercase tracking-widest text-xs">Nivel</th>
+                    <th className="text-center py-3 px-4 text-zinc-400 font-medium uppercase tracking-widest text-xs">Servicios</th>
+                    <th className="text-center py-3 px-4 text-zinc-400 font-medium uppercase tracking-widest text-xs">Recompensa</th>
+                    <th className="text-center py-3 px-4 text-zinc-400 font-medium uppercase tracking-widest text-xs">Cancelaciones libres</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    ["🌱 Iniciante", "0 - 9", "0.3%", "1/día"],
+                    ["🥉 Bronce", "10 - 18", "0.6%", "1/día"],
+                    ["🥈 Plata", "19 - 33", "0.9%", "2/día"],
+                    ["🥇 Oro", "34 - 63", "1.2%", "2/día +1 extra/mes"],
+                    ["💎 Platino", "64 - 93", "1.5%", "3/día +2 extra/mes"],
+                    ["💙 Zafiro", "94 - 123", "1.8%", "3/día +3 extra/mes"],
+                    ["❤️ Rubí", "124 - 153", "2.1%", "5/día +4 extra/mes"],
+                    ["💚 Esmeralda", "154 - 183", "2.4%", "Ilimitadas"],
+                    ["👑 Diamante", "184+", "2.7%", "Ilimitadas VIP"],
+                  ].map((row) => (
+                    <tr key={row[0]} className="border-b border-white/5 hover:bg-white/[0.02]">
+                      <td className="py-3 px-4 text-zinc-100 font-medium">{row[0]}</td>
+                      <td className="py-3 px-4 text-center text-zinc-400">{row[1]}</td>
+                      <td className="py-3 px-4 text-center text-orange-400 font-semibold">{row[2]}</td>
+                      <td className="py-3 px-4 text-center text-zinc-400 text-xs">{row[3]}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Tabla Conductor */}
+          <div>
+            <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+              🚗 <span>Conductor</span> <span className="text-zinc-500 text-sm font-normal">(comisión más baja del Perú: 6.3% → 3.9%)</span>
+            </h3>
+            <div className="overflow-x-auto rounded-xl border border-white/10">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-white/5 border-b border-white/10">
+                    <th className="text-left py-3 px-4 text-zinc-400 font-medium uppercase tracking-widest text-xs">Nivel</th>
+                    <th className="text-center py-3 px-4 text-zinc-400 font-medium uppercase tracking-widest text-xs">Servicios</th>
+                    <th className="text-center py-3 px-4 text-zinc-400 font-medium uppercase tracking-widest text-xs">Comisión</th>
+                    <th className="text-center py-3 px-4 text-zinc-400 font-medium uppercase tracking-widest text-xs">Bono mensual</th>
+                    <th className="text-left py-3 px-4 text-zinc-400 font-medium uppercase tracking-widest text-xs">Beneficios</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    ["🌱 Aspirante", "0 - 90", "6.3%", "S/.9", "Chequeo médico anual + bono S/.20"],
+                    ["🥉 Bronce", "91 - 270", "6.0%", "S/.27", "Chequeo + insignia + soporte prioritario"],
+                    ["🥈 Plata", "271 - 450", "5.7%", "S/.45", "Chequeo + prioridad zonas cercanas"],
+                    ["🥇 Oro", "451 - 750", "5.4%", "S/.75", "Chequeo + insignia Oro + zonas céntricas"],
+                    ["💎 Platino", "751 - 1050", "5.1%", "S/.105", "Servicios corporativos + constancia financiera"],
+                    ["💙 Zafiro", "1051 - 1850", "4.8%", "S/.135", "Tarifa dinámica +5% en hora pico"],
+                    ["❤️ Rubí", "1851 - 2890", "4.5%", "S/.195", "Préstamo S/.500 + 1 activo digital ActivosYA"],
+                    ["💚 Esmeralda", "2891 - 3930", "4.2%", "S/.255", "Plan salud + préstamo S/.1k + vacaciones 3D/2N S/.1500"],
+                    ["👑 Diamante", "3931+", "3.9%", "S/.315", "Plan salud familiar + préstamo S/.1.5k + vacaciones S/.2500 + sorteo + aguinaldo S/.500"],
+                  ].map((row) => (
+                    <tr key={row[0]} className="border-b border-white/5 hover:bg-white/[0.02] align-top">
+                      <td className="py-3 px-4 text-zinc-100 font-medium whitespace-nowrap">{row[0]}</td>
+                      <td className="py-3 px-4 text-center text-zinc-400 whitespace-nowrap">{row[1]}</td>
+                      <td className="py-3 px-4 text-center text-orange-400 font-semibold whitespace-nowrap">{row[2]}</td>
+                      <td className="py-3 px-4 text-center text-emerald-400 font-semibold whitespace-nowrap">{row[3]}</td>
+                      <td className="py-3 px-4 text-zinc-400 text-xs leading-relaxed">{row[4]}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="text-zinc-500 text-xs mt-3 leading-relaxed">
+              ✦ Bono mensual abonado el último día del mes a conductores activos (≥10 servicios).<br />
+              ✦ Préstamos sin intereses con descuento diario prorrateado.<br />
+              ✦ Activos digitales: Miss Sofia, TuDestinoYa, TuNoviaIA, TuPedidoYa, TuReservaYa.<br />
+              ✦ Una vez subes de nivel, nunca bajas.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* === PICHANGA ECO === */}
+      <section id="pichanga" className="relative px-6 py-24 border-t border-white/5">
+        <div className="mx-auto max-w-5xl text-center">
+          <SectionHeader badge="PROGRAMA DE SALUD" title="⚽ Pichanga Eco" subtitle="Único en LATAM: cuidamos la salud de nuestros conductores. Pagamos cancha, bebidas y agua para que jueguen una vez al mes con otros choferes cerca de tu zona." />
+
+          <div className="mt-12 grid md:grid-cols-3 gap-5 text-left">
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur">
+              <div className="text-4xl mb-3">⚽</div>
+              <h3 className="font-semibold mb-2">Fútbol / Fulbito</h3>
+              <p className="text-sm text-zinc-400">Cancha sintética, 8v8, sábados o domingos. EcoDrive+ paga la cancha + agua + Gatorade.</p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur">
+              <div className="text-4xl mb-3">🏐</div>
+              <h3 className="font-semibold mb-2">Vóley</h3>
+              <p className="text-sm text-zinc-400">Para los que prefieren menos contacto. Mismo formato, mismo apoyo.</p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur">
+              <div className="text-4xl mb-3">🎱</div>
+              <h3 className="font-semibold mb-2">Billar</h3>
+              <p className="text-sm text-zinc-400">Grupos de 2 a 4. Para los que se relajan en frente de una mesa.</p>
+            </div>
+          </div>
+
+          <div className="mt-10 inline-flex items-center gap-3 px-5 py-3 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-300 text-sm">
+            <span className="text-lg">💚</span>
+            <span>Mientras más activo, más beneficios extras: chequeo médico, polos, bonos.</span>
           </div>
         </div>
       </section>
@@ -294,7 +417,7 @@ export default function EcoDrivePlusPage() {
 
           <div className="mt-14 grid md:grid-cols-3 gap-6">
             <ChoferCard icon="🎁" title="EcoCredit Welcome" value="S/. 30" desc="Bono inicial al aprobarte. Lo descuentas despacio de comisiones." />
-            <ChoferCard icon="💸" title="Comisión más baja" value="6.3%" desc="vs Indrive/Didi 25%. Más plata para ti." />
+            <ChoferCard icon="💸" title="Comisión más baja" value="6.3%" desc="vs InDrive/DiDi 25%. Más plata para ti." />
             <ChoferCard icon="🚀" title="Tú eliges precio" value="Libre" desc="Sin tarifa fija. Tú pones tu oferta y compites." />
           </div>
 
