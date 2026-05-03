@@ -187,7 +187,8 @@ export default function EcoDrivePlusPage() {
         </div>
       </section>
 
-      {/* === VIDEOS LANZAMIENTO (compactos) === */}
+      {/* === VIDEOS LANZAMIENTO — OCULTO HASTA RELANZAMIENTO CON FLOWS === */}
+      {false && (
       <section id="videos" className="relative px-6 py-20">
         <div className="mx-auto max-w-6xl">
           <SectionHeader badge="LANZAMIENTO" title="Mira EcoDrive+ en acción" subtitle="Dos formas de empezar. Elige la tuya en 24 segundos." />
@@ -216,6 +217,7 @@ export default function EcoDrivePlusPage() {
           </div>
         </div>
       </section>
+      )}
 
       {/* === 3 VENTAJAS === */}
       <section className="relative px-6 py-20 border-t border-white/5">
