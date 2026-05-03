@@ -65,14 +65,18 @@ export async function POST(req: NextRequest) {
     const openingText = await callMissSofia([{ role: "user", content: firstUserMsg }]);
 
     await appendToTranscript(session.id, { role: "user", content: firstUserMsg });
+    // Append raw response (with tags if any) for Shadow Coach to analyze later
     await appendToTranscript(session.id, { role: "assistant", content: openingText });
+
+    // Strip system tags from text shown to user.
+    const cleanOpening = cleanTextForTTS(openingText);
 
     // Optional voice synthesis.
     let audioBase64: string | null = null;
     let audioContentType: string | null = null;
     try {
       if (process.env.ELEVENLABS_API_KEY && process.env.ELEVENLABS_MISS_SOFIA_VOICE_ID) {
-        const tts = await elevenLabsTTS(cleanTextForTTS(openingText));
+        const tts = await elevenLabsTTS(cleanOpening);
         audioBase64 = tts.audioBuffer.toString("base64");
         audioContentType = tts.contentType;
       }
@@ -82,7 +86,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       sessionId: session.id,
-      text: openingText,
+      text: cleanOpening,
       audioBase64,
       audioContentType,
       secondsRemaining:
