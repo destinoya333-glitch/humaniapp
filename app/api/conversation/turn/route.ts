@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   appendToTranscript,
+  getMonthUsageSeconds,
   getStudentProfile,
   getTodayUsage,
   getTranscript,
@@ -18,7 +19,13 @@ import { callMissSofia } from "@/lib/miss-sofia-voice/ai/claude";
 import { whisperSTT } from "@/lib/miss-sofia-voice/ai/whisper";
 import { cleanTextForTTS } from "@/lib/miss-sofia-voice/ai/elevenlabs";
 import { synthesizeAsBase64 } from "@/lib/miss-sofia-voice/ai/tts-router";
-import { getFreeTierStatus, hasSecondsAvailable, secondsRemainingToday } from "@/lib/miss-sofia-voice/tier";
+import {
+  getEffectivePlanForVoice,
+  getFreeTierStatus,
+  hasSecondsAvailable,
+  premiumVoiceQuota,
+  secondsRemainingToday,
+} from "@/lib/miss-sofia-voice/tier";
 import { createClient } from "@supabase/supabase-js";
 
 // Warn user when 30 seconds remain in their daily limit (limited tier only)
@@ -107,10 +114,17 @@ export async function POST(req: NextRequest) {
     // <session_report>/<phase_progress>/<exam_result> in conversational turns.
     const cleanText = cleanTextForTTS(responseText);
 
-    // TTS routed by user plan (premium → ElevenLabs Sofia, regular/free → OpenAI Nova)
+    // Premium voice cap (45 min/mes ElevenLabs, después switch a Nova)
+    const monthSecondsUsed = await getMonthUsageSeconds(user.id);
+    const effectivePlan = getEffectivePlanForVoice({
+      plan: user.plan,
+      monthSecondsUsed,
+    });
+
+    // TTS routed by EFFECTIVE plan
     const { audioBase64, audioContentType } = await synthesizeAsBase64({
       text: cleanText,
-      plan: user.plan,
+      plan: effectivePlan,
       context: "chat",
     });
 
@@ -119,12 +133,16 @@ export async function POST(req: NextRequest) {
     const newUsage = usage.seconds_used + turnDurationSec;
 
     const remaining = secondsRemainingToday({ status: tierStatus, secondsUsedToday: newUsage });
+    const premiumQuota = user.plan === "premium"
+      ? premiumVoiceQuota(monthSecondsUsed + turnDurationSec)
+      : null;
     return NextResponse.json({
       userText,
       text: cleanText,
       audioBase64,
       audioContentType,
       tier: tierStatus,
+      premiumVoiceQuota: premiumQuota,
       secondsRemaining: Number.isFinite(remaining) ? remaining : null,
       warningCue,
     });

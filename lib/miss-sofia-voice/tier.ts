@@ -6,11 +6,15 @@
  *   - Día 4-30:  6 min/día (hábito mantenido, presión natural a upgrade)
  *   - Día 31+:   bloqueado (paga Pro o se va)
  *
- * Cualquier user con plan != 'free' (pro / pro_vip) tiene acceso ilimitado
- * sin restricciones — el helper SOLO aplica a tier free.
+ * Premium voice cap (aprobado 2026-05-04):
+ *   - Premium plan tiene voz ElevenLabs Sofia hasta 45 min/mes de chat
+ *   - Después de 45 min: TTS router switch automático a OpenAI Nova
+ *   - Mantiene margen positivo en heavy users sin subir precio S/89
  */
 
 import { daysElapsedSince } from "./phase-engine";
+
+export const PREMIUM_VOICE_MONTHLY_CAP_SECONDS = 45 * 60; // 45 min
 
 export const FREE_TIER_TRIAL_DAYS = 3;
 export const FREE_TIER_LIMIT_DAYS = 30;
@@ -116,4 +120,43 @@ export function secondsRemainingToday(opts: {
   }
   if (opts.status.state === "blocked") return 0;
   return Math.max(0, opts.status.daily_seconds_limit - opts.secondsUsedToday);
+}
+
+export type PremiumVoiceQuota = {
+  used_seconds: number;
+  limit_seconds: number;
+  remaining_seconds: number;
+  exceeded: boolean;
+  used_pct: number;
+};
+
+/**
+ * Premium voice (ElevenLabs Sofia) tiene cap de 45 min/mes.
+ * Después del cap, voz cambia a Nova (OpenAI) automáticamente.
+ */
+export function premiumVoiceQuota(secondsUsedThisMonth: number): PremiumVoiceQuota {
+  const remaining = Math.max(0, PREMIUM_VOICE_MONTHLY_CAP_SECONDS - secondsUsedThisMonth);
+  return {
+    used_seconds: secondsUsedThisMonth,
+    limit_seconds: PREMIUM_VOICE_MONTHLY_CAP_SECONDS,
+    remaining_seconds: remaining,
+    exceeded: secondsUsedThisMonth >= PREMIUM_VOICE_MONTHLY_CAP_SECONDS,
+    used_pct: Math.min(100, Math.round((secondsUsedThisMonth / PREMIUM_VOICE_MONTHLY_CAP_SECONDS) * 100)),
+  };
+}
+
+/**
+ * Plan EFECTIVO para selección de voz: si es premium pero ya excedió el cap
+ * mensual, se trata como 'regular' a efectos de TTS (usa Nova en vez de ElevenLabs).
+ *
+ * Nota: NO cambia los demás privilegios del plan (sesión humana, Sello Cuna, etc),
+ * solo afecta el motor de voz para chat.
+ */
+export function getEffectivePlanForVoice(opts: {
+  plan: string | null | undefined;
+  monthSecondsUsed: number;
+}): string {
+  if (opts.plan !== "premium") return opts.plan ?? "free";
+  const quota = premiumVoiceQuota(opts.monthSecondsUsed);
+  return quota.exceeded ? "regular" : "premium";
 }

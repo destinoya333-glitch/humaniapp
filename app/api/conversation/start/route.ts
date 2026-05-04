@@ -13,6 +13,7 @@ import {
   appendToTranscript,
   createSession,
   ensureStudentProfile,
+  getMonthUsageSeconds,
   getStudentProfile,
   getTodayUsage,
   getUser,
@@ -24,7 +25,13 @@ import {
 import { callMissSofia } from "@/lib/miss-sofia-voice/ai/claude";
 import { cleanTextForTTS } from "@/lib/miss-sofia-voice/ai/elevenlabs";
 import { synthesizeAsBase64 } from "@/lib/miss-sofia-voice/ai/tts-router";
-import { getFreeTierStatus, hasSecondsAvailable, secondsRemainingToday } from "@/lib/miss-sofia-voice/tier";
+import {
+  getEffectivePlanForVoice,
+  getFreeTierStatus,
+  hasSecondsAvailable,
+  premiumVoiceQuota,
+  secondsRemainingToday,
+} from "@/lib/miss-sofia-voice/tier";
 
 export async function POST(req: NextRequest) {
   try {
@@ -79,20 +86,29 @@ export async function POST(req: NextRequest) {
     // Strip system tags from text shown to user.
     const cleanOpening = cleanTextForTTS(openingText);
 
-    // TTS routed by user plan (premium → ElevenLabs Sofia, regular/free → OpenAI Nova)
+    // Premium voice cap (45 min/mes ElevenLabs, después switch a Nova)
+    const monthSecondsUsed = await getMonthUsageSeconds(user_id);
+    const effectivePlan = getEffectivePlanForVoice({
+      plan: user.plan,
+      monthSecondsUsed,
+    });
+
+    // TTS routed by EFFECTIVE plan
     const { audioBase64, audioContentType } = await synthesizeAsBase64({
       text: cleanOpening,
-      plan: user.plan,
+      plan: effectivePlan,
       context: "chat",
     });
 
     const remaining = secondsRemainingToday({ status: tierStatus, secondsUsedToday: usage.seconds_used });
+    const premiumQuota = user.plan === "premium" ? premiumVoiceQuota(monthSecondsUsed) : null;
     return NextResponse.json({
       sessionId: session.id,
       text: cleanOpening,
       audioBase64,
       audioContentType,
       tier: tierStatus,
+      premiumVoiceQuota: premiumQuota,
       secondsRemaining: Number.isFinite(remaining) ? remaining : null,
       context: {
         phase: ctx.current_phase,

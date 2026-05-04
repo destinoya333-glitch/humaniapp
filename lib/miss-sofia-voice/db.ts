@@ -86,7 +86,7 @@ export type User = {
   country: string | null;
   profession: string | null;
   motivation: string | null;
-  plan: "free" | "pro" | "elite";
+  plan: "free" | "regular" | "premium";
   whatsapp_phone: string | null;
 };
 
@@ -529,6 +529,23 @@ export async function getTodayUsage(userId: string): Promise<{ seconds_used: num
     .eq("usage_date", today)
     .maybeSingle();
   return { seconds_used: data?.seconds_used ?? 0 };
+}
+
+/**
+ * Suma todos los segundos usados por el user en el mes actual (UTC).
+ * Usado para aplicar el soft cap de 45 min de voz Premium ElevenLabs.
+ */
+export async function getMonthUsageSeconds(userId: string): Promise<number> {
+  const now = new Date();
+  const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1))
+    .toISOString().slice(0, 10);
+  const { data } = await getClient()
+    .from("mse_daily_usage")
+    .select("seconds_used")
+    .eq("user_id", userId)
+    .gte("usage_date", monthStart);
+  if (!data) return 0;
+  return data.reduce((sum, row) => sum + (row.seconds_used ?? 0), 0);
 }
 
 export async function incrementUsage(userId: string, seconds: number): Promise<void> {
