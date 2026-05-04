@@ -12,6 +12,11 @@
 const OPENAI_BASE_URL = "https://api.openai.com/v1";
 const OPENAI_TTS_MODEL = process.env.OPENAI_TTS_MODEL ?? "tts-1";
 
+// Default speed: 0.9 = 10% más despacio que normal. Mejor para alumnos de
+// inglés (Método Cuna), que necesitan procesar cada palabra. Range 0.25-4.0.
+// Override con env OPENAI_TTS_SPEED si quieres ajustar globalmente.
+const OPENAI_TTS_DEFAULT_SPEED = parseFloat(process.env.OPENAI_TTS_SPEED ?? "0.9");
+
 export type OpenAIVoice = "alloy" | "echo" | "fable" | "onyx" | "nova" | "shimmer" | "sage" | "coral";
 
 export type OpenAITTSResult = {
@@ -21,10 +26,14 @@ export type OpenAITTSResult = {
 
 export async function openaiTTS(
   text: string,
-  voice: OpenAIVoice = "nova"
+  voice: OpenAIVoice = "nova",
+  speed: number = OPENAI_TTS_DEFAULT_SPEED
 ): Promise<OpenAITTSResult> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) throw new Error("OPENAI_API_KEY not set");
+
+  // Clamp speed to valid range
+  const clampedSpeed = Math.max(0.25, Math.min(4.0, speed));
 
   const res = await fetch(`${OPENAI_BASE_URL}/audio/speech`, {
     method: "POST",
@@ -37,6 +46,7 @@ export async function openaiTTS(
       input: text,
       voice,
       response_format: "mp3",
+      speed: clampedSpeed,
     }),
   });
 
