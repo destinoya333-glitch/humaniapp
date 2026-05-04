@@ -38,7 +38,8 @@ import {
   recordWordLearned,
 } from "@/lib/miss-sofia-voice/db";
 import { whisperSTT } from "@/lib/miss-sofia-voice/ai/whisper";
-import { cleanTextForTTS, elevenLabsTTS } from "@/lib/miss-sofia-voice/ai/elevenlabs";
+import { cleanTextForTTS } from "@/lib/miss-sofia-voice/ai/elevenlabs";
+import { synthesizeForPlan } from "@/lib/miss-sofia-voice/ai/tts-router";
 import type { CunaPhase } from "@/lib/miss-sofia-voice/phase-engine";
 
 export const runtime = "nodejs";
@@ -155,11 +156,16 @@ Re-narrate to them in English (2nd person, warm, phase-appropriate). Output the 
       return NextResponse.json({ ok: false, error: "narration_failed" }, { status: 500 });
     }
 
-    // 3. ElevenLabs TTS — narración en inglés con voz de Sofia
+    // 3. TTS narración en inglés — context: 'hero' = SIEMPRE ElevenLabs
+    // (mantenemos la magia del audio-diario aunque sea Free/Regular)
     let narrationAudioUrl: string | null = null;
     try {
-      if (process.env.ELEVENLABS_API_KEY && process.env.ELEVENLABS_MISS_SOFIA_VOICE_ID) {
-        const tts = await elevenLabsTTS(cleanTextForTTS(narrationEn));
+      const tts = await synthesizeForPlan({
+        text: cleanTextForTTS(narrationEn),
+        plan: user.plan,
+        context: "hero",
+      });
+      if (tts) {
         const supabase = createClient(
           process.env.NEXT_PUBLIC_SUPABASE_URL!,
           process.env.SUPABASE_SERVICE_ROLE_KEY!

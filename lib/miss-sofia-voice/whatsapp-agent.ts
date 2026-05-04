@@ -23,7 +23,8 @@ import {
   getOrCreateLead,
   updateLead,
 } from "./whatsapp-leads";
-import { cleanTextForTTS, elevenLabsTTS } from "./ai/elevenlabs";
+import { cleanTextForTTS } from "./ai/elevenlabs";
+import { synthesizeForPlan } from "./ai/tts-router";
 
 const SUPABASE_URL = (
   process.env.NEXT_PUBLIC_SUPABASE_URL ?? "https://rfpmvnoaqibqiqxrmheb.supabase.co"
@@ -162,13 +163,16 @@ async function getDiaUnoAudioUrl(): Promise<string | null> {
     // network blip — fall through to generation attempt
   }
 
-  // Need to generate. Bail if ElevenLabs not configured.
-  if (!process.env.ELEVENLABS_API_KEY || !process.env.ELEVENLABS_MISS_SOFIA_VOICE_ID) {
-    return null;
-  }
-
+  // Audio Día 1 = momento HERO → siempre ElevenLabs Sofia (la magia)
+  // Si no hay ningún TTS configurado, retorna null (caller usa fallback texto).
   try {
-    const tts = await elevenLabsTTS(cleanTextForTTS(DIA_UNO_AUDIO_TEXT));
+    const tts = await synthesizeForPlan({
+      text: cleanTextForTTS(DIA_UNO_AUDIO_TEXT),
+      plan: "premium", // forzar hero context
+      context: "hero",
+    });
+    if (!tts) return null;
+
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!

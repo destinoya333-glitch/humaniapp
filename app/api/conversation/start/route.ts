@@ -22,7 +22,8 @@ import {
   contextAsFirstUserMessage,
 } from "@/lib/miss-sofia-voice/context-builder";
 import { callMissSofia } from "@/lib/miss-sofia-voice/ai/claude";
-import { cleanTextForTTS, elevenLabsTTS } from "@/lib/miss-sofia-voice/ai/elevenlabs";
+import { cleanTextForTTS } from "@/lib/miss-sofia-voice/ai/elevenlabs";
+import { synthesizeAsBase64 } from "@/lib/miss-sofia-voice/ai/tts-router";
 import { getFreeTierStatus, hasSecondsAvailable, secondsRemainingToday } from "@/lib/miss-sofia-voice/tier";
 
 export async function POST(req: NextRequest) {
@@ -78,18 +79,12 @@ export async function POST(req: NextRequest) {
     // Strip system tags from text shown to user.
     const cleanOpening = cleanTextForTTS(openingText);
 
-    // Optional voice synthesis.
-    let audioBase64: string | null = null;
-    let audioContentType: string | null = null;
-    try {
-      if (process.env.ELEVENLABS_API_KEY && process.env.ELEVENLABS_MISS_SOFIA_VOICE_ID) {
-        const tts = await elevenLabsTTS(cleanOpening);
-        audioBase64 = tts.audioBuffer.toString("base64");
-        audioContentType = tts.contentType;
-      }
-    } catch (e) {
-      console.error("TTS error:", e);
-    }
+    // TTS routed by user plan (premium → ElevenLabs Sofia, regular/free → OpenAI Nova)
+    const { audioBase64, audioContentType } = await synthesizeAsBase64({
+      text: cleanOpening,
+      plan: user.plan,
+      context: "chat",
+    });
 
     const remaining = secondsRemainingToday({ status: tierStatus, secondsUsedToday: usage.seconds_used });
     return NextResponse.json({

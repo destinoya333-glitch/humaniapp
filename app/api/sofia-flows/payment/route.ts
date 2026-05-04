@@ -31,7 +31,10 @@ export const runtime = "nodejs";
 
 // Pricing — single source of truth (en sync con landing page.tsx)
 const PRICING: Record<string, Record<string, number>> = {
-  cuna: { monthly: 49, yearly: 449 },
+  regular: { monthly: 39, yearly: 349 },
+  premium: { monthly: 89, yearly: 799 },
+  // Legacy keys aliased to new ones (backwards compat)
+  cuna: { monthly: 39, yearly: 349 },
   cuna_vip: { monthly: 89, yearly: 799 },
 };
 
@@ -60,10 +63,12 @@ export async function POST(req: NextRequest) {
     if (!phone) return NextResponse.json({ error: "phone required (E.164)" }, { status: 400 });
     if (!plan || !PRICING[plan]) {
       return NextResponse.json(
-        { error: "plan must be 'cuna' or 'cuna_vip'" },
+        { error: "plan must be 'regular' or 'premium'" },
         { status: 400 }
       );
     }
+    // Normalize legacy keys to new ones for DB insert
+    const normalizedPlan = plan === "cuna" ? "regular" : plan === "cuna_vip" ? "premium" : plan;
     if (!billing || !PRICING[plan][billing]) {
       return NextResponse.json(
         { error: "billing must be 'monthly' or 'yearly'" },
@@ -83,7 +88,7 @@ export async function POST(req: NextRequest) {
       .insert({
         user_id: userId ?? null,
         phone,
-        plan,
+        plan: normalizedPlan,
         billing,
         amount_pen: amount,
         yape_operation_code: yapeOperationCode?.trim() || null,

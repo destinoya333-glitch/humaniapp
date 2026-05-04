@@ -16,7 +16,8 @@ import {
 } from "@/lib/miss-sofia-voice/db";
 import { callMissSofia } from "@/lib/miss-sofia-voice/ai/claude";
 import { whisperSTT } from "@/lib/miss-sofia-voice/ai/whisper";
-import { cleanTextForTTS, elevenLabsTTS } from "@/lib/miss-sofia-voice/ai/elevenlabs";
+import { cleanTextForTTS } from "@/lib/miss-sofia-voice/ai/elevenlabs";
+import { synthesizeAsBase64 } from "@/lib/miss-sofia-voice/ai/tts-router";
 import { getFreeTierStatus, hasSecondsAvailable, secondsRemainingToday } from "@/lib/miss-sofia-voice/tier";
 import { createClient } from "@supabase/supabase-js";
 
@@ -106,18 +107,12 @@ export async function POST(req: NextRequest) {
     // <session_report>/<phase_progress>/<exam_result> in conversational turns.
     const cleanText = cleanTextForTTS(responseText);
 
-    // TTS
-    let audioBase64: string | null = null;
-    let audioContentType: string | null = null;
-    try {
-      if (process.env.ELEVENLABS_API_KEY && process.env.ELEVENLABS_MISS_SOFIA_VOICE_ID) {
-        const tts = await elevenLabsTTS(cleanText);
-        audioBase64 = tts.audioBuffer.toString("base64");
-        audioContentType = tts.contentType;
-      }
-    } catch (e) {
-      console.error("TTS error:", e);
-    }
+    // TTS routed by user plan (premium → ElevenLabs Sofia, regular/free → OpenAI Nova)
+    const { audioBase64, audioContentType } = await synthesizeAsBase64({
+      text: cleanText,
+      plan: user.plan,
+      context: "chat",
+    });
 
     // Track usage
     await incrementUsage(user.id, turnDurationSec);

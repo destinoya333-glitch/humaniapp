@@ -4,17 +4,19 @@ import { useEffect, useState } from "react";
 
 const PLANS = [
   {
-    id: "cuna",
-    name: "Sofia Cuna",
-    subtitle: "El método completo",
+    id: "regular",
+    name: "Sofia Regular",
+    subtitle: "Conversación ilimitada · voz natural",
     color: "border-amber-400/40",
     tag: "Recomendado",
-    monthly: { label: "S/49 / mes", amount: 49, billing: "monthly" as const },
-    yearly: { label: "S/449 / año", amount: 449, billing: "yearly" as const, save: "Ahorras S/139" },
+    monthly: { label: "S/39 / mes", amount: 39, billing: "monthly" as const },
+    yearly: { label: "S/349 / año", amount: 349, billing: "yearly" as const, save: "Ahorras S/119" },
     features: [
       "Las 6 fases · 12 meses",
       "Sofia 24/7 ilimitado",
-      "Tu novela personal",
+      "Voz Sofia (Nova) — clara y natural",
+      "Tu novela personal con voz premium",
+      "Audio-diario inmediato con voz premium",
       "Tu diccionario personal",
       "Misiones diarias",
       "Métricas viscerales",
@@ -22,19 +24,20 @@ const PLANS = [
     ],
   },
   {
-    id: "cuna_vip",
-    name: "Sofia Cuna VIP",
-    subtitle: "+ Sello humano",
+    id: "premium",
+    name: "Sofia Premium",
+    subtitle: "Voz cálida · Sello humano",
     color: "border-purple-400/40",
     tag: null,
     monthly: { label: "S/89 / mes", amount: 89, billing: "monthly" as const },
     yearly: { label: "S/799 / año", amount: 799, billing: "yearly" as const, save: "Ahorras S/269" },
     features: [
-      "Todo lo del Cuna",
-      "2 sesiones video al mes con Sofia humana",
-      "Llamada Sello Cuna con nativo USA al graduarte",
-      "Video testimonial del nativo (tu certificado)",
-      "Comunidad VIP",
+      "TODO lo del plan Regular",
+      "🎙️ Voz Sofia premium (cálida, casi humana) en TODOS los chats",
+      "📞 2 sesiones video al mes con Sofia humana real",
+      "🏆 Llamada Sello Cuna con nativo USA al graduarte",
+      "🎬 Video testimonial del nativo (tu certificado)",
+      "✨ Comunidad VIP",
     ],
   },
 ];
@@ -50,7 +53,7 @@ export default function SofiaUpgradePage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [phone, setPhone] = useState<string>("");
   const [step, setStep] = useState<Step>("select");
-  const [chosenPlan, setChosenPlan] = useState<"cuna" | "cuna_vip">("cuna");
+  const [chosenPlan, setChosenPlan] = useState<"regular" | "premium">("regular");
   const [chosenBilling, setChosenBilling] = useState<"monthly" | "yearly">("yearly");
   const [yapeCode, setYapeCode] = useState("");
   const [loading, setLoading] = useState(false);
@@ -131,7 +134,7 @@ export default function SofiaUpgradePage() {
                   className={`card-surface rounded-2xl p-6 border ${p.color} relative cursor-pointer transition-all ${
                     chosenPlan === p.id ? "ring-2 ring-amber-400/60" : ""
                   }`}
-                  onClick={() => setChosenPlan(p.id as "cuna" | "cuna_vip")}
+                  onClick={() => setChosenPlan(p.id as "regular" | "premium")}
                 >
                   {p.tag && (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2">
@@ -151,7 +154,7 @@ export default function SofiaUpgradePage() {
                       }`}
                       onClick={(e) => {
                         e.stopPropagation();
-                        setChosenPlan(p.id as "cuna" | "cuna_vip");
+                        setChosenPlan(p.id as "regular" | "premium");
                         setChosenBilling("monthly");
                       }}
                     >
@@ -165,7 +168,7 @@ export default function SofiaUpgradePage() {
                       }`}
                       onClick={(e) => {
                         e.stopPropagation();
-                        setChosenPlan(p.id as "cuna" | "cuna_vip");
+                        setChosenPlan(p.id as "regular" | "premium");
                         setChosenBilling("yearly");
                       }}
                     >

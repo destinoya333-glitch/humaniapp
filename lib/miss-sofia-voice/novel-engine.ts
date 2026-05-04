@@ -25,7 +25,8 @@ import {
   getUser,
   type NovelChapter,
 } from "./db";
-import { cleanTextForTTS, elevenLabsTTS } from "./ai/elevenlabs";
+import { cleanTextForTTS } from "./ai/elevenlabs";
+import { synthesizeForPlan } from "./ai/tts-router";
 import type { CunaPhase } from "./phase-engine";
 
 const CLAUDE_MODEL = (process.env.CLAUDE_MODEL ?? "claude-sonnet-4-6").trim();
@@ -166,18 +167,17 @@ async function synthesizeAndUpload(opts: {
   userId: string;
   chapterNumber: number;
   scriptForTTS: string;
+  plan: string | null | undefined;
 }): Promise<string | null> {
-  // TTS skipped if ElevenLabs not configured — return null and let caller
-  // store the chapter without audio_url (audio can be regenerated later).
-  if (!process.env.ELEVENLABS_API_KEY || !process.env.ELEVENLABS_MISS_SOFIA_VOICE_ID) {
-    return null;
-  }
-
-  let tts;
-  try {
-    tts = await elevenLabsTTS(cleanTextForTTS(opts.scriptForTTS));
-  } catch (e) {
-    console.error("novel-engine: TTS failed, storing chapter without audio:", e);
+  // Capítulos novela = momento HERO → siempre ElevenLabs Sofia para mantener
+  // la magia del producto (la novela es el activo central del Método Cuna).
+  const tts = await synthesizeForPlan({
+    text: cleanTextForTTS(opts.scriptForTTS),
+    plan: opts.plan,
+    context: "hero",
+  });
+  if (!tts) {
+    console.error("novel-engine: no TTS engine configured, storing chapter without audio");
     return null;
   }
 
@@ -238,6 +238,7 @@ export async function generateNextChapter(userId: string): Promise<NovelChapter>
     userId,
     chapterNumber: nextNumber,
     scriptForTTS: generated.script_full,
+    plan: user.plan,
   });
 
   return await createChapter({
