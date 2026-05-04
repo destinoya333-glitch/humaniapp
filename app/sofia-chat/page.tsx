@@ -53,6 +53,14 @@ type TierStatus = {
   display_message: string;
 };
 
+type PremiumVoiceQuota = {
+  used_seconds: number;
+  limit_seconds: number;
+  remaining_seconds: number;
+  exceeded: boolean;
+  used_pct: number;
+};
+
 type LatestChapter = {
   id: string;
   chapter_number: number;
@@ -87,6 +95,7 @@ export default function SofiaChatPage() {
   const [progress, setProgress] = useState<ProgressData | null>(null);
   const [chapter, setChapter] = useState<LatestChapter>(null);
   const [tier, setTier] = useState<TierStatus | null>(null);
+  const [premiumQuota, setPremiumQuota] = useState<PremiumVoiceQuota | null>(null);
   const [secondsRemaining, setSecondsRemaining] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
@@ -180,6 +189,7 @@ export default function SofiaChatPage() {
         throw new Error(data.message || data.error || "Error iniciando sesión");
       }
       if (data.tier) setTier(data.tier);
+      if (data.premiumVoiceQuota !== undefined) setPremiumQuota(data.premiumVoiceQuota);
       setSession({
         sessionId: data.sessionId,
         phase: data.context.phase,
@@ -220,6 +230,7 @@ export default function SofiaChatPage() {
         throw new Error(data.message || data.error || "Error en el turno");
       }
       if (data.tier) setTier(data.tier);
+      if (data.premiumVoiceQuota !== undefined) setPremiumQuota(data.premiumVoiceQuota);
       setMessages((prev) => [
         ...prev,
         { role: "user", content: data.userText, timestamp: Date.now() },
@@ -319,6 +330,10 @@ export default function SofiaChatPage() {
 
           {tier && tier.state !== "unlimited" && (
             <TierBadge tier={tier} secondsRemaining={secondsRemaining} />
+          )}
+
+          {premiumQuota && (
+            <PremiumVoiceBadge quota={premiumQuota} />
           )}
 
           {progress && (
@@ -428,6 +443,48 @@ function Metric({ label, value }: { label: string; value: string }) {
     <div className="text-center">
       <p className="text-zinc-200 font-bold">{value}</p>
       <p className="text-zinc-500 text-[10px] uppercase tracking-wider">{label}</p>
+    </div>
+  );
+}
+
+function PremiumVoiceBadge({ quota }: { quota: PremiumVoiceQuota }) {
+  const minutesUsed = Math.round(quota.used_seconds / 60);
+  const minutesLimit = Math.round(quota.limit_seconds / 60);
+  const isWarn = quota.used_pct >= 80;
+  const isExceeded = quota.exceeded;
+
+  let bg = "bg-purple-500/10";
+  let text = "text-purple-300";
+  let border = "border-purple-500/30";
+  let label = `🎙️ Voz Sofia premium · ${minutesUsed}/${minutesLimit} min este mes`;
+
+  if (isWarn && !isExceeded) {
+    bg = "bg-amber-500/10";
+    text = "text-amber-300";
+    border = "border-amber-500/30";
+    label = `🎙️ ${minutesUsed}/${minutesLimit} min · queda poco de voz Sofia`;
+  }
+  if (isExceeded) {
+    bg = "bg-zinc-500/10";
+    text = "text-zinc-300";
+    border = "border-zinc-500/30";
+    label = `🎙️ Voz Sofia agotada este mes (${minutesLimit}/${minutesLimit}) · ahora usas voz Nova hasta el próximo mes`;
+  }
+
+  return (
+    <div className={`mb-3 rounded-xl px-3 py-2 ${bg} ${text} border ${border} text-xs`}>
+      <div className="flex items-center justify-between">
+        <span>{label}</span>
+        <span className="font-mono">{quota.used_pct}%</span>
+      </div>
+      <div className="mt-1.5 h-1 bg-[#1A1A1A] rounded-full overflow-hidden">
+        <div
+          className={`h-full transition-all ${
+            isExceeded ? "bg-zinc-500" : isWarn ? "bg-amber-400" : "bg-purple-400"
+          } opacity-70`}
+          style={{ width: `${quota.used_pct}%` }}
+        />
+      </div>
     </div>
   );
 }
