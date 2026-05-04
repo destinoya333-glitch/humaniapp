@@ -1,9 +1,66 @@
 # Miss Sofia — Briefing Maestro del Método Cuna
 
-> **Para la ventana de Claude Code que está construyendo los WhatsApp Flows.**
-> Léeme entero antes de tocar nada relacionado con Miss Sofia. Soy la otra
-> ventana que reescribió el backend completo del Método Cuna el 2026-05-03.
+> **Para la ventana de Claude Code que esté trabajando en Miss Sofia después de mí.**
+> Léeme entero antes de tocar nada relacionado con Miss Sofia. Soy la ventana
+> que reescribió el backend completo del Método Cuna y configuró el sistema
+> de monetización entre 2026-05-03 y 2026-05-04.
 > Si haces algo que contradiga este documento, vas a romper el producto.
+>
+> **Última actualización:** 2026-05-04 (Plan Premium SIN sesión humana decidido).
+
+---
+
+## 🆕 ACTUALIZACIÓN 2026-05-04 (LEE PRIMERO)
+
+Cambios relevantes desde la versión inicial del briefing:
+
+### Sistema de monetización LIVE en producción
+- **Plan Free:** OpenAI Nova @ speed 0.9. Tier Cuna: 3 días ilimitado + 6 min/día × 30 días → bloqueo.
+- **Plan Regular S/39/mes (S/349/año):** OpenAI Nova @ speed 0.9. Ilimitado.
+- **Plan Premium S/89/mes (S/799/año):** ElevenLabs Sofia con cap 45 min/mes (después switch automático a Nova). **NO incluye sesión humana** (decisión Percy 2026-05-04).
+- **Free tier check** está en `lib/.../tier.ts` → `getFreeTierStatus()` y `hasSecondsAvailable()`.
+- **Premium voice cap** está en `lib/.../tier.ts` → `premiumVoiceQuota()` y `getEffectivePlanForVoice()`.
+
+### TTS Router (`lib/.../ai/tts-router.ts`)
+- `synthesizeForPlan({text, plan, context})` decide motor por plan + context.
+- Hero context (`'hero'`) = audio Día 1, capítulos novela, audio-diario inmediato. **SIEMPRE ElevenLabs sin importar el plan.**
+- Chat context (`'chat'`) = ruteo por plan: premium → ElevenLabs (con cap), regular/free → Nova.
+
+### OpenAI TTS configurado
+- API: `lib/.../ai/openai-tts.ts`. Modelo `tts-1`, voz `nova`, speed 0.9 (configurable via `OPENAI_TTS_SPEED` env).
+- Necesita `OPENAI_API_KEY` en Vercel (ya configurada).
+
+### Audio-diario inmediato (Opción B)
+- `/api/missions/diary-translate` recibe audio español → Whisper STT → Claude narrador → ElevenLabs TTS → upload a `sofia-tts/diary/<userId>/<date>.mp3`.
+- UI inline en `/sofia-chat` dentro de MissionCard cuando título matchea "Cuéntame tu día".
+- Reemplaza el comportamiento "te lo devuelvo mañana" por respuesta en segundos.
+
+### Tono Sofia limpiado (sin pet names)
+- `master-prompt.ts` v2.0 prohíbe explícitamente: "mi amor", "mi vida", "linda", "lindo", "campeón", "superstar", "cariño", "amiga", "bro".
+- Personalidad: PROFESSIONAL & WARM (profesora ejecutiva-cercana). Llama por nombre del estudiante. Mantiene mezcla bilingüe.
+
+### Tags `<session_report>` no leakean al chat
+- Master prompt v2 prohíbe explícitamente emitir tags en turnos regulares.
+- Defensa adicional: endpoints `/api/conversation/start` y `/turn` aplican `cleanTextForTTS()` antes de retornar texto al frontend (también strippea tags).
+- Transcript en DB conserva el texto raw para que `/api/conversation/end` lo procese con generateShadowCoachReport + extractPhaseProgress.
+
+### Endpoints debug ELIMINADOS
+- Borrados: `/api/sofia-debug/env`, `/api/sofia-debug/voice-comparison`, `/api/sofia-auth/dev-bypass`.
+- Si necesitas debugging, recreas localmente o crea endpoints temporales con auth.
+
+### Pricing en código (`/sofia-upgrade` + `/api/sofia-flows/payment`)
+- Regular: monthly 39, yearly 349.
+- Premium: monthly 89, yearly 799.
+- Constraint en DB: `mse_users.plan IN ('free', 'regular', 'premium')`. `mse_payments.plan IN ('regular', 'premium')`.
+
+### UI nueva en `/sofia-chat`
+- `TierBadge`: estado del tier free (trial/limited/blocked).
+- `PremiumVoiceBadge`: solo visible para Premium users. Muestra X/45 min usados con barra de progreso. Estados morado → ámbar → gris (agotado).
+- `MissionCard`: incluye recorder inline cuando misión es la del diario.
+
+### Estado actual de la cuenta de Percy
+- `rojas_percy@hotmail.com` está en plan **`premium`** (manual via SQL).
+- Email confirmado, profile creado con Pacto Cuna sellado, Fase 0 día 1.
 
 ---
 
