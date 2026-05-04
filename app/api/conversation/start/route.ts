@@ -13,6 +13,7 @@ import {
   appendToTranscript,
   createSession,
   ensureStudentProfile,
+  getStudentProfile,
   getTodayUsage,
   getUser,
 } from "@/lib/miss-sofia-voice/db";
@@ -22,8 +23,7 @@ import {
 } from "@/lib/miss-sofia-voice/context-builder";
 import { callMissSofia } from "@/lib/miss-sofia-voice/ai/claude";
 import { cleanTextForTTS, elevenLabsTTS } from "@/lib/miss-sofia-voice/ai/elevenlabs";
-
-const FREE_TIER_DAILY_SECONDS = parseInt(process.env.FREE_TIER_DAILY_SECONDS ?? "180", 10);
+import { getFreeTierStatus, hasSecondsAvailable, secondsRemainingToday } from "@/lib/miss-sofia-voice/tier";
 
 export async function POST(req: NextRequest) {
   try {
@@ -35,21 +35,28 @@ export async function POST(req: NextRequest) {
     const user = await getUser(user_id);
     if (!user) return NextResponse.json({ error: "user not found" }, { status: 404 });
 
+    // Ensure profile exists (Cuna defaults set automatically by schema).
+    await ensureStudentProfile(user_id);
+    const profile = await getStudentProfile(user_id);
+
+    const tierStatus = getFreeTierStatus({
+      plan: user.plan,
+      cunaStartedAt: profile?.cuna_started_at ?? null,
+    });
+
     const usage = await getTodayUsage(user_id);
-    if (user.plan === "free" && usage.seconds_used >= FREE_TIER_DAILY_SECONDS) {
+
+    if (!hasSecondsAvailable({ status: tierStatus, secondsUsedToday: usage.seconds_used })) {
       return NextResponse.json(
         {
-          error: "daily_limit_reached",
-          upgradeUrl: "/upgrade",
+          error: tierStatus.state === "blocked" ? "trial_expired" : "daily_limit_reached",
+          tier: tierStatus,
           secondsUsed: usage.seconds_used,
-          dailyLimit: FREE_TIER_DAILY_SECONDS,
+          upgradeUrl: "/sofia-upgrade",
         },
         { status: 402 }
       );
     }
-
-    // Ensure profile exists (Cuna defaults set automatically by schema).
-    await ensureStudentProfile(user_id);
 
     // Build full Cuna context: phase, ritual slot, mission, novel, dictionary,
     // visceral milestones. This is what Sofia will react to.
@@ -84,15 +91,14 @@ export async function POST(req: NextRequest) {
       console.error("TTS error:", e);
     }
 
+    const remaining = secondsRemainingToday({ status: tierStatus, secondsUsedToday: usage.seconds_used });
     return NextResponse.json({
       sessionId: session.id,
       text: cleanOpening,
       audioBase64,
       audioContentType,
-      secondsRemaining:
-        user.plan === "free"
-          ? Math.max(0, FREE_TIER_DAILY_SECONDS - usage.seconds_used)
-          : null,
+      tier: tierStatus,
+      secondsRemaining: Number.isFinite(remaining) ? remaining : null,
       context: {
         phase: ctx.current_phase,
         phase_day: ctx.phase_day,

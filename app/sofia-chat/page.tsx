@@ -45,6 +45,14 @@ type ProgressData = {
   cuna_started_at: string | null;
 };
 
+type TierStatus = {
+  state: "trial" | "limited" | "blocked" | "unlimited";
+  day_of_program: number | null;
+  days_remaining_in_state: number;
+  daily_seconds_limit: number;
+  display_message: string;
+};
+
 type LatestChapter = {
   id: string;
   chapter_number: number;
@@ -78,6 +86,7 @@ export default function SofiaChatPage() {
   const [session, setSession] = useState<SessionInfo | null>(null);
   const [progress, setProgress] = useState<ProgressData | null>(null);
   const [chapter, setChapter] = useState<LatestChapter>(null);
+  const [tier, setTier] = useState<TierStatus | null>(null);
   const [secondsRemaining, setSecondsRemaining] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
@@ -163,12 +172,14 @@ export default function SofiaChatPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        if (data.error === "daily_limit_reached") {
+        if (data.error === "daily_limit_reached" || data.error === "trial_expired") {
+          if (data.tier) setTier(data.tier);
           setUpgradeOpen(true);
           return;
         }
         throw new Error(data.message || data.error || "Error iniciando sesión");
       }
+      if (data.tier) setTier(data.tier);
       setSession({
         sessionId: data.sessionId,
         phase: data.context.phase,
@@ -201,12 +212,14 @@ export default function SofiaChatPage() {
       const res = await fetch("/api/conversation/turn", { method: "POST", body: fd });
       const data = await res.json();
       if (!res.ok) {
-        if (data.error === "daily_limit_reached") {
+        if (data.error === "daily_limit_reached" || data.error === "trial_expired") {
+          if (data.tier) setTier(data.tier);
           setUpgradeOpen(true);
           return;
         }
         throw new Error(data.message || data.error || "Error en el turno");
       }
+      if (data.tier) setTier(data.tier);
       setMessages((prev) => [
         ...prev,
         { role: "user", content: data.userText, timestamp: Date.now() },
@@ -286,13 +299,27 @@ export default function SofiaChatPage() {
               Miss Sofia <span className="text-amber-400">·</span>{" "}
               <span className="text-zinc-400 font-normal">Método Cuna</span>
             </h1>
-            <a
-              href="/sofia-progress"
-              className="text-xs text-zinc-500 hover:text-amber-400 transition-colors"
-            >
-              Ver progreso completo →
-            </a>
+            <div className="flex items-center gap-3 text-xs">
+              <a
+                href="/sofia-progress"
+                className="text-zinc-500 hover:text-amber-400 transition-colors"
+              >
+                Progreso →
+              </a>
+              {tier && tier.state !== "unlimited" && (
+                <a
+                  href="/sofia-upgrade"
+                  className="text-amber-400 hover:text-amber-300 font-semibold border border-amber-500/30 rounded-full px-3 py-1"
+                >
+                  Upgrade
+                </a>
+              )}
+            </div>
           </div>
+
+          {tier && tier.state !== "unlimited" && (
+            <TierBadge tier={tier} secondsRemaining={secondsRemaining} />
+          )}
 
           {progress && (
             <div className={`rounded-2xl p-4 ${phaseVis.bg} border border-[#2A2A2A]`}>
@@ -401,6 +428,40 @@ function Metric({ label, value }: { label: string; value: string }) {
     <div className="text-center">
       <p className="text-zinc-200 font-bold">{value}</p>
       <p className="text-zinc-500 text-[10px] uppercase tracking-wider">{label}</p>
+    </div>
+  );
+}
+
+function TierBadge({
+  tier,
+  secondsRemaining,
+}: {
+  tier: TierStatus;
+  secondsRemaining: number | null;
+}) {
+  const colors: Record<TierStatus["state"], { bg: string; text: string; border: string }> = {
+    trial: { bg: "bg-emerald-500/10", text: "text-emerald-300", border: "border-emerald-500/30" },
+    limited: { bg: "bg-amber-500/10", text: "text-amber-300", border: "border-amber-500/30" },
+    blocked: { bg: "bg-rose-500/10", text: "text-rose-300", border: "border-rose-500/30" },
+    unlimited: { bg: "bg-zinc-500/10", text: "text-zinc-300", border: "border-zinc-500/30" },
+  };
+  const c = colors[tier.state];
+  const minutesRemaining =
+    secondsRemaining !== null && Number.isFinite(secondsRemaining)
+      ? Math.ceil(secondsRemaining / 60)
+      : null;
+
+  return (
+    <div className={`mb-3 rounded-xl px-3 py-2 ${c.bg} ${c.text} border ${c.border} text-xs flex items-center justify-between`}>
+      <span>{tier.display_message}</span>
+      {tier.state === "limited" && minutesRemaining !== null && (
+        <span className="font-mono">{minutesRemaining} min restantes hoy</span>
+      )}
+      {tier.state === "blocked" && (
+        <a href="/sofia-upgrade" className="font-bold underline">
+          Upgrade →
+        </a>
+      )}
     </div>
   );
 }

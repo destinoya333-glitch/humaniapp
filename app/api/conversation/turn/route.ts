@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   appendToTranscript,
+  getStudentProfile,
   getTodayUsage,
   getTranscript,
   getUser,
@@ -16,10 +17,11 @@ import {
 import { callMissSofia } from "@/lib/miss-sofia-voice/ai/claude";
 import { whisperSTT } from "@/lib/miss-sofia-voice/ai/whisper";
 import { cleanTextForTTS, elevenLabsTTS } from "@/lib/miss-sofia-voice/ai/elevenlabs";
+import { getFreeTierStatus, hasSecondsAvailable, secondsRemainingToday } from "@/lib/miss-sofia-voice/tier";
 import { createClient } from "@supabase/supabase-js";
 
-const FREE_TIER_DAILY_SECONDS = parseInt(process.env.FREE_TIER_DAILY_SECONDS ?? "180", 10);
-const FREE_TIER_WARNING_SECONDS = parseInt(process.env.FREE_TIER_WARNING_SECONDS ?? "150", 10);
+// Warn user when 30 seconds remain in their daily limit (limited tier only)
+const WARNING_BUFFER_SECONDS = 30;
 
 export async function POST(req: NextRequest) {
   try {
@@ -43,20 +45,33 @@ export async function POST(req: NextRequest) {
       .single();
     if (!session) return NextResponse.json({ error: "session not found" }, { status: 404 });
 
-    const user = await getUser(session.user_id);
+    const [user, profile] = await Promise.all([
+      getUser(session.user_id),
+      getStudentProfile(session.user_id),
+    ]);
     if (!user) return NextResponse.json({ error: "user not found" }, { status: 404 });
 
-    // Free tier limit check
+    const tierStatus = getFreeTierStatus({
+      plan: user.plan,
+      cunaStartedAt: profile?.cuna_started_at ?? null,
+    });
+
+    // Tier limit check
     const usage = await getTodayUsage(user.id);
     let warningCue: string | null = null;
-    if (user.plan === "free") {
-      if (usage.seconds_used >= FREE_TIER_DAILY_SECONDS) {
-        return NextResponse.json(
-          { error: "daily_limit_reached", upgradeUrl: "/upgrade" },
-          { status: 402 }
-        );
-      }
-      if (usage.seconds_used >= FREE_TIER_WARNING_SECONDS) {
+    if (!hasSecondsAvailable({ status: tierStatus, secondsUsedToday: usage.seconds_used })) {
+      return NextResponse.json(
+        {
+          error: tierStatus.state === "blocked" ? "trial_expired" : "daily_limit_reached",
+          tier: tierStatus,
+          upgradeUrl: "/sofia-upgrade",
+        },
+        { status: 402 }
+      );
+    }
+    if (tierStatus.state === "limited") {
+      const remaining = secondsRemainingToday({ status: tierStatus, secondsUsedToday: usage.seconds_used });
+      if (remaining <= WARNING_BUFFER_SECONDS) {
         warningCue = "freemium_30s_warning";
       }
     }
@@ -108,13 +123,14 @@ export async function POST(req: NextRequest) {
     await incrementUsage(user.id, turnDurationSec);
     const newUsage = usage.seconds_used + turnDurationSec;
 
+    const remaining = secondsRemainingToday({ status: tierStatus, secondsUsedToday: newUsage });
     return NextResponse.json({
       userText,
       text: cleanText,
       audioBase64,
       audioContentType,
-      secondsRemaining:
-        user.plan === "free" ? Math.max(0, FREE_TIER_DAILY_SECONDS - newUsage) : null,
+      tier: tierStatus,
+      secondsRemaining: Number.isFinite(remaining) ? remaining : null,
       warningCue,
     });
   } catch (e) {
