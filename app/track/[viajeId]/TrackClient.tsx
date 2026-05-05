@@ -287,7 +287,7 @@ export default function TrackClient({ viajeId }: { viajeId: string }) {
         const map = L.map(mapDivRef.current, {
           zoomControl: true,
           attributionControl: false,
-        }).setView([-12.05, -77.04], 13);
+        }).setView([-8.115, -79.029], 13);
         L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png", {
           subdomains: "abcd",
           maxZoom: 19,
