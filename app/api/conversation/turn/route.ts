@@ -19,6 +19,7 @@ import { callMissSofia } from "@/lib/miss-sofia-voice/ai/claude";
 import { whisperSTT } from "@/lib/miss-sofia-voice/ai/whisper";
 import { cleanTextForTTS } from "@/lib/miss-sofia-voice/ai/elevenlabs";
 import { synthesizeAsBase64 } from "@/lib/miss-sofia-voice/ai/tts-router";
+import { recordNgslUsage } from "@/lib/miss-sofia-voice/ngsl";
 import {
   getEffectivePlanForVoice,
   getFreeTierStatus,
@@ -102,6 +103,11 @@ export async function POST(req: NextRequest) {
 
     // Append user turn
     await appendToTranscript(sessionId, { role: "user", content: userText });
+
+    // Track NGSL words used by the user (fire-and-forget; never blocks the turn).
+    recordNgslUsage({ userId: user.id, text: userText, context: userText }).catch((err) =>
+      console.error("ngsl tracker:", err)
+    );
 
     // Call Sofia with full transcript
     const transcript = await getTranscript(sessionId);

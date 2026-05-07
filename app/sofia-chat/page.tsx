@@ -61,6 +61,15 @@ type PremiumVoiceQuota = {
   used_pct: number;
 };
 
+type NgslTier = {
+  tier: 1 | 2 | 3;
+  label: string;
+  used: number;
+  total: number;
+  pct: number;
+  coverage_text_pct: number;
+};
+
 type LatestChapter = {
   id: string;
   chapter_number: number;
@@ -96,6 +105,7 @@ export default function SofiaChatPage() {
   const [chapter, setChapter] = useState<LatestChapter>(null);
   const [tier, setTier] = useState<TierStatus | null>(null);
   const [premiumQuota, setPremiumQuota] = useState<PremiumVoiceQuota | null>(null);
+  const [ngsl, setNgsl] = useState<NgslTier[] | null>(null);
   const [secondsRemaining, setSecondsRemaining] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
@@ -127,7 +137,20 @@ export default function SofiaChatPage() {
     if (!userId) return;
     refreshProgress(userId);
     refreshChapter(userId);
+    refreshNgsl(userId);
   }, [userId]);
+
+  async function refreshNgsl(uid: string) {
+    try {
+      const res = await fetch(`/api/sofia/ngsl/progress?user_id=${uid}`);
+      if (res.ok) {
+        const data = await res.json();
+        setNgsl(data.progress);
+      }
+    } catch {
+      /* silent */
+    }
+  }
 
   async function refreshProgress(uid: string) {
     try {
@@ -269,6 +292,7 @@ export default function SofiaChatPage() {
       if (userId) {
         refreshProgress(userId);
         refreshChapter(userId);
+        refreshNgsl(userId);
       }
     } finally {
       setLoading(false);
@@ -334,6 +358,10 @@ export default function SofiaChatPage() {
 
           {premiumQuota && (
             <PremiumVoiceBadge quota={premiumQuota} />
+          )}
+
+          {ngsl && ngsl.some((t) => t.total > 0) && (
+            <NgslBadge tiers={ngsl} />
           )}
 
           {progress && (
@@ -443,6 +471,41 @@ function Metric({ label, value }: { label: string; value: string }) {
     <div className="text-center">
       <p className="text-zinc-200 font-bold">{value}</p>
       <p className="text-zinc-500 text-[10px] uppercase tracking-wider">{label}</p>
+    </div>
+  );
+}
+
+function NgslBadge({ tiers }: { tiers: NgslTier[] }) {
+  // Solo mostramos los tiers con palabras seedeadas (total > 0). Hoy: solo Tier 1.
+  const visible = tiers.filter((t) => t.total > 0);
+  if (visible.length === 0) return null;
+
+  return (
+    <div className="mb-3 rounded-xl px-3 py-2 bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 text-xs">
+      <div className="flex items-center justify-between mb-2">
+        <span className="font-semibold">📚 Tu inglés del mundo real</span>
+        <span className="text-[10px] uppercase tracking-wider text-cyan-400/70">
+          palabras que YA usas
+        </span>
+      </div>
+      <div className="space-y-1.5">
+        {visible.map((t) => (
+          <div key={t.tier}>
+            <div className="flex items-center justify-between text-[11px]">
+              <span>{t.label}</span>
+              <span className="font-mono text-cyan-200">
+                {t.used}/{t.total}
+              </span>
+            </div>
+            <div className="mt-1 h-1 bg-[#1A1A1A] rounded-full overflow-hidden">
+              <div
+                className="h-full bg-cyan-400 opacity-70 transition-all"
+                style={{ width: `${t.pct}%` }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
