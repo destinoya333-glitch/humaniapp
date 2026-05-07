@@ -1,0 +1,115 @@
+{
+  "version": "7.0",
+  "data_api_version": "3.0",
+  "routing_model": {
+    "VIP_INFO": ["VIP_PAGO"],
+    "VIP_PAGO": ["SUCCESS"]
+  },
+  "screens": [
+    {
+      "id": "VIP_INFO",
+      "title": "VIP",
+      "terminal": false,
+      "data": {
+        "linea_titulo": { "type": "string", "__example__": "DestinoYA VIP — Servicios ilimitados" },
+        "linea_mensual": { "type": "string", "__example__": "Mensual S/18 · todos los servicios ilimitados por 30 días" },
+        "linea_anual": { "type": "string", "__example__": "Anual S/63 · todos los servicios ilimitados por 365 días (ahorras S/153)" },
+        "linea_garantia": { "type": "string", "__example__": "Garantía: si no quedas satisfecho, te devuelvo lo pagado." }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          { "type": "TextHeading", "text": "${data.linea_titulo}" },
+          { "type": "TextBody", "text": "${data.linea_mensual}" },
+          { "type": "TextBody", "text": "${data.linea_anual}" },
+          { "type": "TextBody", "text": "${data.linea_garantia}" },
+          {
+            "type": "Footer",
+            "label": "Continuar al pago",
+            "on-click-action": {
+              "name": "data_exchange",
+              "payload": { "step": "to_pago_vip" }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "VIP_PAGO",
+      "title": "Pago VIP",
+      "terminal": false,
+      "data": {
+        "linea_titulo": { "type": "string", "__example__": "Pago VIP por Yape" },
+        "linea_yape": { "type": "string", "__example__": "Yapea a Percy Roj* — 998 102 258" },
+        "linea_instrucciones": { "type": "string", "__example__": "Yapea el monto exacto y pega el código de operación abajo." },
+        "option_mensual": { "type": "string", "__example__": "Mensual · S/18" },
+        "option_anual": { "type": "string", "__example__": "Anual · S/63 (ahorras S/153)" }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          { "type": "TextHeading", "text": "${data.linea_titulo}" },
+          { "type": "TextSubheading", "text": "${data.linea_yape}" },
+          { "type": "TextBody", "text": "${data.linea_instrucciones}" },
+          {
+            "type": "Form",
+            "name": "form_vip",
+            "init-values": {},
+            "children": [
+              {
+                "type": "RadioButtonsGroup",
+                "name": "plan",
+                "label": "Plan VIP",
+                "required": true,
+                "data-source": [
+                  { "id": "vip_mensual", "title": "${data.option_mensual}" },
+                  { "id": "vip_anual", "title": "${data.option_anual}" }
+                ]
+              },
+              {
+                "type": "TextInput",
+                "name": "operacion",
+                "label": "Código de operación Yape",
+                "input-type": "text",
+                "required": true,
+                "min-chars": 4,
+                "max-chars": 30
+              },
+              {
+                "type": "Footer",
+                "label": "Activar VIP",
+                "on-click-action": {
+                  "name": "data_exchange",
+                  "payload": {
+                    "step": "submit_vip",
+                    "plan": "${form.plan}",
+                    "operacion": "${form.operacion}"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "SUCCESS",
+      "title": "VIP en validación",
+      "terminal": true,
+      "success": true,
+      "data": {
+        "extension_message_response": {
+          "type": "object",
+          "__example__": { "params": { "status": "vip_pendiente" } }
+        }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          { "type": "TextHeading", "text": "VIP registrado" },
+          { "type": "TextBody", "text": "Validamos tu pago en minutos y activamos VIP. Recibirás confirmación por chat." }
+        ]
+      }
+    }
+  ]
+}

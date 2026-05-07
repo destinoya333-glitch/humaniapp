@@ -1,0 +1,101 @@
+{
+  "version": "7.0",
+  "data_api_version": "3.0",
+  "routing_model": {
+    "SUBMENU": ["SUCCESS"]
+  },
+  "screens": [
+    {
+      "id": "SUBMENU",
+      "title": "Tu consulta",
+      "terminal": false,
+      "data": {
+        "linea_titulo": { "type": "string", "__example__": "DestinoYA Esotérico" },
+        "linea_intro": { "type": "string", "__example__": "Elige sub-servicio + plan. Tras confirmar, yapeas y validamos automático." },
+        "linea_yape": { "type": "string", "__example__": "Yape: 998 102 258 (Percy Roj*)" },
+        "sub_1": { "type": "string", "__example__": "Lectura de Mano" },
+        "sub_2": { "type": "string", "__example__": "Compatibilidad Amorosa" },
+        "sub_3": { "type": "string", "__example__": "Carta Astral" },
+        "sub_4": { "type": "string", "__example__": "Tu Futuro 30/60/90" },
+        "sub_5": { "type": "string", "__example__": "Feng Shui Express" },
+        "sub_6": { "type": "string", "__example__": "Numerología Personal" },
+        "plan_basico": { "type": "string", "__example__": "Básico · S/3 · 3 secciones" },
+        "plan_intermedio": { "type": "string", "__example__": "Intermedio · S/6 · 4 secciones" },
+        "plan_premium": { "type": "string", "__example__": "Premium · S/9 · 6 secciones" },
+        "plan_pro": { "type": "string", "__example__": "PRO · S/9.90 · profundo" }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          { "type": "TextHeading", "text": "${data.linea_titulo}" },
+          { "type": "TextBody", "text": "${data.linea_intro}" },
+          { "type": "TextSubheading", "text": "${data.linea_yape}" },
+          {
+            "type": "Form",
+            "name": "form_sub",
+            "init-values": {},
+            "children": [
+              {
+                "type": "RadioButtonsGroup",
+                "name": "sub_servicio",
+                "label": "Sub-servicio",
+                "required": true,
+                "data-source": [
+                  { "id": "1", "title": "${data.sub_1}" },
+                  { "id": "2", "title": "${data.sub_2}" },
+                  { "id": "3", "title": "${data.sub_3}" },
+                  { "id": "4", "title": "${data.sub_4}" },
+                  { "id": "5", "title": "${data.sub_5}" },
+                  { "id": "6", "title": "${data.sub_6}" }
+                ]
+              },
+              {
+                "type": "RadioButtonsGroup",
+                "name": "plan",
+                "label": "Plan",
+                "required": true,
+                "data-source": [
+                  { "id": "basico", "title": "${data.plan_basico}" },
+                  { "id": "intermedio", "title": "${data.plan_intermedio}" },
+                  { "id": "premium", "title": "${data.plan_premium}" },
+                  { "id": "pro", "title": "${data.plan_pro}" }
+                ]
+              },
+              {
+                "type": "Footer",
+                "label": "Continuar",
+                "on-click-action": {
+                  "name": "data_exchange",
+                  "payload": {
+                    "step": "submit",
+                    "sub_servicio": "${form.sub_servicio}",
+                    "plan": "${form.plan}"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "SUCCESS",
+      "title": "Listo",
+      "terminal": true,
+      "success": true,
+      "data": {
+        "extension_message_response": {
+          "type": "object",
+          "__example__": { "params": { "status": "submenu_listo" } }
+        }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          { "type": "TextHeading", "text": "¡Listo!" },
+          { "type": "TextBody", "text": "Ahora yapea el monto exacto a 998 102 258 (Percy Roj*). Cuando MadroDroid detecte el SMS Yape, te confirmamos automático y empezamos." }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,95 @@
+{
+  "version": "7.0",
+  "data_api_version": "3.0",
+  "routing_model": {
+    "PAGO": ["SUCCESS"]
+  },
+  "screens": [
+    {
+      "id": "PAGO",
+      "title": "Pago Yape",
+      "terminal": false,
+      "data": {
+        "linea_titulo": { "type": "string", "__example__": "Pago por Yape" },
+        "linea_yape": { "type": "string", "__example__": "Yapea a Percy Roj* — 998 102 258" },
+        "linea_instrucciones": { "type": "string", "__example__": "Selecciona el plan que ya yapeaste y pega el código de operación." },
+        "option_basico": { "type": "string", "__example__": "Básico · S/3" },
+        "option_intermedio": { "type": "string", "__example__": "Intermedio · S/6" },
+        "option_premium": { "type": "string", "__example__": "Premium · S/9" },
+        "option_pro": { "type": "string", "__example__": "PRO · S/9.90" },
+        "option_vip_mensual": { "type": "string", "__example__": "VIP Mensual · S/18" },
+        "option_vip_anual": { "type": "string", "__example__": "VIP Anual · S/63" }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          { "type": "TextHeading", "text": "${data.linea_titulo}" },
+          { "type": "TextSubheading", "text": "${data.linea_yape}" },
+          { "type": "TextBody", "text": "${data.linea_instrucciones}" },
+          {
+            "type": "Form",
+            "name": "form_pago",
+            "init-values": {},
+            "children": [
+              {
+                "type": "RadioButtonsGroup",
+                "name": "plan",
+                "label": "Plan que pagaste",
+                "required": true,
+                "data-source": [
+                  { "id": "basico", "title": "${data.option_basico}" },
+                  { "id": "intermedio", "title": "${data.option_intermedio}" },
+                  { "id": "premium", "title": "${data.option_premium}" },
+                  { "id": "pro", "title": "${data.option_pro}" },
+                  { "id": "vip_mensual", "title": "${data.option_vip_mensual}" },
+                  { "id": "vip_anual", "title": "${data.option_vip_anual}" }
+                ]
+              },
+              {
+                "type": "TextInput",
+                "name": "operacion",
+                "label": "Código de operación Yape",
+                "input-type": "text",
+                "required": true,
+                "min-chars": 4,
+                "max-chars": 30,
+                "helper-text": "Lo encuentras en el comprobante Yape."
+              },
+              {
+                "type": "Footer",
+                "label": "Confirmar pago",
+                "on-click-action": {
+                  "name": "data_exchange",
+                  "payload": {
+                    "step": "submit_pago",
+                    "plan": "${form.plan}",
+                    "operacion": "${form.operacion}"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "SUCCESS",
+      "title": "Pago en validación",
+      "terminal": true,
+      "success": true,
+      "data": {
+        "extension_message_response": {
+          "type": "object",
+          "__example__": { "params": { "status": "pago_registrado" } }
+        }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          { "type": "TextHeading", "text": "Pago registrado" },
+          { "type": "TextBody", "text": "Validamos tu pago en minutos y activamos tu servicio. Mientras te pediré los datos para tu consulta." }
+        ]
+      }
+    }
+  ]
+}

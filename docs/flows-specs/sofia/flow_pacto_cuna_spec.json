@@ -1,0 +1,119 @@
+{
+  "version": "7.0",
+  "data_api_version": "3.0",
+  "routing_model": {
+    "PACTO": ["SUCCESS"]
+  },
+  "screens": [
+    {
+      "id": "PACTO",
+      "title": "Pacto Cuna",
+      "terminal": false,
+      "data": {
+        "linea_intro": {
+          "type": "string",
+          "__example__": "Antes de empezar, necesito conocerte."
+        },
+        "linea_compromiso": {
+          "type": "string",
+          "__example__": "Me comprometo a 30 dias de Fase Cuna (escuchar sin presion)."
+        }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          { "type": "TextHeading", "text": "Pacto Cuna" },
+          { "type": "TextBody", "text": "${data.linea_intro}" },
+          {
+            "type": "Form",
+            "name": "form_pacto",
+            "init-values": {},
+            "children": [
+              {
+                "type": "TextInput",
+                "name": "name",
+                "label": "Tu nombre",
+                "input-type": "text",
+                "required": true,
+                "min-chars": 2,
+                "max-chars": 30
+              },
+              {
+                "type": "TextInput",
+                "name": "city",
+                "label": "Ciudad donde vives",
+                "input-type": "text",
+                "required": true,
+                "min-chars": 2,
+                "max-chars": 50
+              },
+              {
+                "type": "RadioButtonsGroup",
+                "name": "motivation",
+                "label": "Por que quieres aprender ingles",
+                "required": true,
+                "data-source": [
+                  { "id": "Trabajo", "title": "Trabajo" },
+                  { "id": "Viajar al extranjero", "title": "Viajar al extranjero" },
+                  { "id": "Ver series sin subtitulos", "title": "Ver series sin subtitulos" },
+                  { "id": "Hablarle a mi familia o hijos", "title": "Hablarle a mi familia o hijos" },
+                  { "id": "Otro", "title": "Otro" }
+                ]
+              },
+              {
+                "type": "RadioButtonsGroup",
+                "name": "minutes_per_day",
+                "label": "Minutos al dia que vas a dedicar",
+                "required": true,
+                "data-source": [
+                  { "id": "5", "title": "5 minutos" },
+                  { "id": "10", "title": "10 minutos (recomendado)" },
+                  { "id": "20", "title": "20 minutos" }
+                ]
+              },
+              {
+                "type": "OptIn",
+                "name": "committed",
+                "label": "${data.linea_compromiso}",
+                "required": true
+              },
+              {
+                "type": "Footer",
+                "label": "Sellar Pacto",
+                "on-click-action": {
+                  "name": "data_exchange",
+                  "payload": {
+                    "name": "${form.name}",
+                    "city": "${form.city}",
+                    "motivation": "${form.motivation}",
+                    "minutes_per_day": "${form.minutes_per_day}",
+                    "committed": "${form.committed}"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "SUCCESS",
+      "title": "Listo",
+      "terminal": true,
+      "success": true,
+      "data": {
+        "extension_message_response": {
+          "type": "object",
+          "__example__": { "params": { "status": "pacto_sealed" } }
+        }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          { "type": "TextHeading", "text": "Pacto sellado" },
+          { "type": "TextBody", "text": "Vamos a conversar por WhatsApp." }
+        ]
+      }
+    }
+  ]
+}

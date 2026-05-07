@@ -1,0 +1,109 @@
+{
+  "version": "7.0",
+  "data_api_version": "3.0",
+  "routing_model": {
+    "PLAN": ["SUCCESS"]
+  },
+  "screens": [
+    {
+      "id": "PLAN",
+      "title": "Plan de estudio",
+      "terminal": false,
+      "data": {
+        "linea_intro": {
+          "type": "string",
+          "__example__": "Configura tu rutina diaria."
+        }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          { "type": "TextHeading", "text": "Tu rutina diaria" },
+          { "type": "TextBody", "text": "${data.linea_intro}" },
+          {
+            "type": "Form",
+            "name": "form_plan",
+            "init-values": {},
+            "children": [
+              {
+                "type": "Dropdown",
+                "name": "preferred_morning_time",
+                "label": "Hora del audio matutino",
+                "required": true,
+                "data-source": [
+                  { "id": "06:00", "title": "06:00 am" },
+                  { "id": "06:30", "title": "06:30 am" },
+                  { "id": "07:00", "title": "07:00 am" },
+                  { "id": "07:30", "title": "07:30 am" },
+                  { "id": "08:00", "title": "08:00 am" },
+                  { "id": "09:00", "title": "09:00 am" },
+                  { "id": "12:00", "title": "12:00 pm (mediodia)" },
+                  { "id": "18:00", "title": "06:00 pm (tarde)" },
+                  { "id": "21:00", "title": "09:00 pm (noche)" }
+                ]
+              },
+              {
+                "type": "RadioButtonsGroup",
+                "name": "mode",
+                "label": "Modo de practica",
+                "required": true,
+                "data-source": [
+                  { "id": "estricto", "title": "Estricto (te recuerdo si fallas)" },
+                  { "id": "suave", "title": "Suave (sin recordatorios)" }
+                ]
+              },
+              {
+                "type": "CheckboxGroup",
+                "name": "weekdays",
+                "label": "Dias de la semana que practicas",
+                "required": true,
+                "min-selected-items": 1,
+                "max-selected-items": 7,
+                "data-source": [
+                  { "id": "mon", "title": "Lunes" },
+                  { "id": "tue", "title": "Martes" },
+                  { "id": "wed", "title": "Miercoles" },
+                  { "id": "thu", "title": "Jueves" },
+                  { "id": "fri", "title": "Viernes" },
+                  { "id": "sat", "title": "Sabado" },
+                  { "id": "sun", "title": "Domingo" }
+                ]
+              },
+              {
+                "type": "Footer",
+                "label": "Guardar plan",
+                "on-click-action": {
+                  "name": "data_exchange",
+                  "payload": {
+                    "preferred_morning_time": "${form.preferred_morning_time}",
+                    "mode": "${form.mode}",
+                    "weekdays": "${form.weekdays}"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "SUCCESS",
+      "title": "Plan guardado",
+      "terminal": true,
+      "success": true,
+      "data": {
+        "extension_message_response": {
+          "type": "object",
+          "__example__": { "params": { "status": "plan_saved" } }
+        }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          { "type": "TextHeading", "text": "Plan guardado" },
+          { "type": "TextBody", "text": "Te llegara el primer audio en tu horario." }
+        ]
+      }
+    }
+  ]
+}

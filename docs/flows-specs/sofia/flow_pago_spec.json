@@ -1,0 +1,109 @@
+{
+  "version": "7.0",
+  "data_api_version": "3.0",
+  "routing_model": {
+    "COMPARATIVA": ["PAGO"],
+    "PAGO": ["SUCCESS"]
+  },
+  "screens": [
+    {
+      "id": "COMPARATIVA",
+      "title": "Plan",
+      "terminal": false,
+      "data": {
+        "linea_titulo": { "type": "string", "__example__": "Sofia Regular o Sofia Premium" },
+        "linea_cuna": { "type": "string", "__example__": "Regular - S/39/mes o S/349/ano. Voz Nova ilimitada." },
+        "linea_vip": { "type": "string", "__example__": "Premium - S/89/mes o S/799/ano. ElevenLabs 45 min/mes." },
+        "linea_garantia": { "type": "string", "__example__": "Garantia Klaric 6 meses." }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          { "type": "TextHeading", "text": "${data.linea_titulo}" },
+          { "type": "TextBody", "text": "${data.linea_cuna}" },
+          { "type": "TextBody", "text": "${data.linea_vip}" },
+          { "type": "TextBody", "text": "${data.linea_garantia}" },
+          {
+            "type": "Footer",
+            "label": "Continuar al pago",
+            "on-click-action": {
+              "name": "data_exchange",
+              "payload": { "step": "to_pago" }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "PAGO",
+      "title": "Pago Yape",
+      "terminal": false,
+      "data": {
+        "linea_titulo": { "type": "string", "__example__": "Pago por Yape" },
+        "linea_yape": { "type": "string", "__example__": "Yapea a Percy Roj* — 998 102 258" },
+        "linea_instrucciones": { "type": "string", "__example__": "Selecciona tu plan, yapea el monto exacto..." },
+        "option_cuna_monthly": { "type": "string", "__example__": "Regular · S/39/mes" },
+        "option_cuna_yearly": { "type": "string", "__example__": "Regular · S/349/ano" },
+        "option_premium_monthly": { "type": "string", "__example__": "Premium · S/89/mes" },
+        "option_premium_yearly": { "type": "string", "__example__": "Premium · S/799/ano" }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          { "type": "TextHeading", "text": "${data.linea_titulo}" },
+          { "type": "TextSubheading", "text": "${data.linea_yape}" },
+          { "type": "TextBody", "text": "${data.linea_instrucciones}" },
+          {
+            "type": "Form",
+            "name": "form_pago",
+            "init-values": {},
+            "children": [
+              {
+                "type": "RadioButtonsGroup",
+                "name": "plan_billing",
+                "label": "Tu plan",
+                "required": true,
+                "data-source": [
+                  { "id": "cuna_monthly", "title": "${data.option_cuna_monthly}" },
+                  { "id": "cuna_yearly", "title": "${data.option_cuna_yearly}" },
+                  { "id": "premium_monthly", "title": "${data.option_premium_monthly}" },
+                  { "id": "premium_yearly", "title": "${data.option_premium_yearly}" }
+                ]
+              },
+              {
+                "type": "Footer",
+                "label": "Continuar",
+                "on-click-action": {
+                  "name": "data_exchange",
+                  "payload": {
+                    "step": "submit_pago",
+                    "plan_billing": "${form.plan_billing}"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "SUCCESS",
+      "title": "Pago en validacion",
+      "terminal": true,
+      "success": true,
+      "data": {
+        "extension_message_response": {
+          "type": "object",
+          "__example__": { "params": { "status": "payment_pending_validation" } }
+        }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          { "type": "TextHeading", "text": "Plan registrado" },
+          { "type": "TextBody", "text": "Yapea ahora a 998 102 258 (Percy Roj*) por el monto exacto. Cuando detectemos tu Yape, activamos tu plan automático." }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,80 @@
+{
+  "version": "7.0",
+  "data_api_version": "3.0",
+  "routing_model": {
+    "MENU": ["SUCCESS"]
+  },
+  "screens": [
+    {
+      "id": "MENU",
+      "title": "TuDestinoYa",
+      "terminal": false,
+      "data": {
+        "linea_titulo": { "type": "string", "__example__": "¿Qué necesitas hoy?" },
+        "linea_intro": { "type": "string", "__example__": "Selecciona el servicio que más te ayude. Tras tu elección, te muestro planes y precios." },
+        "option_esoterico": { "type": "string", "__example__": "🔮 DestinoYA Esotérico" },
+        "option_profesional": { "type": "string", "__example__": "💼 Área Profesional" },
+        "option_rapidas": { "type": "string", "__example__": "⚡ Soluciones Rápidas" },
+        "option_vip": { "type": "string", "__example__": "✨ DestinoYA VIP" },
+        "option_gratuita": { "type": "string", "__example__": "🎁 Lectura Gratuita (1 vez)" }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          { "type": "TextHeading", "text": "${data.linea_titulo}" },
+          { "type": "TextBody", "text": "${data.linea_intro}" },
+          {
+            "type": "Form",
+            "name": "form_menu",
+            "init-values": {},
+            "children": [
+              {
+                "type": "RadioButtonsGroup",
+                "name": "servicio",
+                "label": "Elige un servicio",
+                "required": true,
+                "data-source": [
+                  { "id": "esoterico", "title": "${data.option_esoterico}" },
+                  { "id": "profesional", "title": "${data.option_profesional}" },
+                  { "id": "rapidas", "title": "${data.option_rapidas}" },
+                  { "id": "vip", "title": "${data.option_vip}" },
+                  { "id": "gratuita", "title": "${data.option_gratuita}" }
+                ]
+              },
+              {
+                "type": "Footer",
+                "label": "Continuar",
+                "on-click-action": {
+                  "name": "data_exchange",
+                  "payload": {
+                    "step": "submit_menu",
+                    "servicio": "${form.servicio}"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "SUCCESS",
+      "title": "Servicio elegido",
+      "terminal": true,
+      "success": true,
+      "data": {
+        "extension_message_response": {
+          "type": "object",
+          "__example__": { "params": { "status": "menu_seleccionado" } }
+        }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          { "type": "TextHeading", "text": "Listo" },
+          { "type": "TextBody", "text": "Continuamos por chat. Te muestro las opciones del servicio que elegiste." }
+        ]
+      }
+    }
+  ]
+}
