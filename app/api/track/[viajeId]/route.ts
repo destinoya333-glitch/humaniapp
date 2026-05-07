@@ -1,205 +1,140 @@
+/**
+ * GET /api/track/[viajeId]
+ *
+ * Endpoint que consume TrackClient.tsx para mostrar el viaje en vivo al pasajero.
+ * Lee de eco_viajes + eco_choferes + eco_viaje_tracking_pings (schema nuevo).
+ * Mantiene compat con la forma de respuesta del cliente original.
+ */
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/ecodrive/db";
+import { createClient } from "@supabase/supabase-js";
+import { decodePolyline, fetchDirections } from "@/lib/ecodrive/directions";
 
-type Params = Promise<{ viajeId: string }>;
-
-type ViajeRow = {
-  id: number | string;
-  estado: string | null;
-  origen_lat: number | null;
-  origen_lng: number | null;
-  destino_lat: number | null;
-  destino_lng: number | null;
-  origen_texto: string | null;
-  destino_texto: string | null;
-  modo: string | null;
-  precio_estimado: number | null;
-  distancia_km: number | null;
-  pasajero_telefono: string | null;
-  tracking_token: string | null;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  metadata: any;
-  created_at: string;
-};
-
-type UsuarioRow = {
-  id: number;
-  telefono: string;
-  nombre: string | null;
-  foto: string | null;
-  calificacion: number | null;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  vehiculo: any;
-};
-
-type ChoferEstadoRow = {
-  chofer_id: number;
-  telefono: string;
-  lat: number | null;
-  lng: number | null;
-  ultimo_ping: string | null;
-};
-
-type TrackingPingRow = {
-  lat: number;
-  lng: number;
-  source: string | null;
-  heading_deg: number | null;
-  speed_kmh: number | null;
-  created_at: string;
-};
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 const noStore = { "Cache-Control": "no-store" };
 
-// UUID v4 / generic UUID matcher (case-insensitive)
-const UUID_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+type Params = Promise<{ viajeId: string }>;
 
-const VIAJE_SELECT =
-  "id, estado, origen_lat, origen_lng, destino_lat, destino_lng, origen_texto, destino_texto, modo, precio_estimado, distancia_km, pasajero_telefono, metadata, created_at, tracking_token";
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function db() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 export async function GET(_req: Request, { params }: { params: Params }) {
   const { viajeId } = await params;
-  const idStr = String(viajeId || "").trim();
-  if (!idStr) {
+  const id = String(viajeId || "").trim();
+  if (!id || !UUID_RE.test(id)) {
     return NextResponse.json({ error: "viaje_not_found" }, { status: 404, headers: noStore });
   }
 
-  // Acepta tanto UUID (tracking_token) como ID numerico legacy
-  let viaje: ViajeRow | null = null;
-  if (UUID_RE.test(idStr)) {
-    const { data } = await supabase
-      .from("viajes")
-      .select(VIAJE_SELECT)
-      .eq("tracking_token", idStr)
-      .maybeSingle();
-    viaje = (data as ViajeRow) || null;
-  } else {
-    const idNum = Number(idStr);
-    if (!Number.isFinite(idNum) || idNum <= 0) {
-      return NextResponse.json({ error: "viaje_not_found" }, { status: 404, headers: noStore });
-    }
-    const { data } = await supabase
-      .from("viajes")
-      .select(VIAJE_SELECT)
-      .eq("id", idNum)
-      .maybeSingle();
-    viaje = (data as ViajeRow) || null;
-  }
+  const sb = db();
+  const { data: viaje } = await sb
+    .from("eco_viajes")
+    .select(
+      "id, estado, origen_lat, origen_lng, destino_lat, destino_lng, origen_direccion, destino_direccion, distancia_km, tarifa_estimada, chofer_id, metadata, solicitado_at"
+    )
+    .eq("id", id)
+    .maybeSingle();
 
   if (!viaje) {
     return NextResponse.json({ error: "viaje_not_found" }, { status: 404, headers: noStore });
   }
-
-  const v = viaje;
+  const v = viaje as {
+    id: string;
+    estado: string;
+    origen_lat: number | null;
+    origen_lng: number | null;
+    destino_lat: number | null;
+    destino_lng: number | null;
+    origen_direccion: string | null;
+    destino_direccion: string | null;
+    distancia_km: number | null;
+    tarifa_estimada: number | null;
+    chofer_id: string | null;
+    metadata: Record<string, unknown> | null;
+    solicitado_at: string;
+  };
   const meta = (v.metadata && typeof v.metadata === "object" ? v.metadata : {}) as Record<
     string,
     unknown
   >;
-
-  const choferTelefono =
-    typeof meta.chofer_telefono === "string" ? (meta.chofer_telefono as string) : null;
-  const choferIdMeta =
-    typeof meta.chofer_id === "number"
-      ? (meta.chofer_id as number)
-      : typeof meta.chofer_id === "string" && Number.isFinite(Number(meta.chofer_id))
-      ? Number(meta.chofer_id)
-      : null;
 
   let chofer: {
     nombre: string | null;
     foto: string | null;
     calificacion: number | null;
     telefono: string | null;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    vehiculo: any;
+    vehiculo: { marca?: string; modelo?: string; color?: string; placas?: string } | null;
   } | null = null;
-  let chofer_pos: {
-    lat: number | null;
-    lng: number | null;
-    ultimo_ping: string | null;
-  } | null = null;
+  let chofer_pos: { lat: number | null; lng: number | null; ultimo_ping: string | null } | null =
+    null;
 
-  if (choferTelefono || choferIdMeta) {
-    // 1) usuarios
-    let userRow: UsuarioRow | null = null;
-    if (choferTelefono) {
-      const { data } = await supabase
-        .from("usuarios")
-        .select("id, telefono, nombre, foto, calificacion, vehiculo")
-        .eq("telefono", choferTelefono)
-        .maybeSingle();
-      userRow = (data as UsuarioRow) || null;
-    }
-    if (!userRow && choferIdMeta) {
-      const { data } = await supabase
-        .from("usuarios")
-        .select("id, telefono, nombre, foto, calificacion, vehiculo")
-        .eq("id", choferIdMeta)
-        .maybeSingle();
-      userRow = (data as UsuarioRow) || null;
-    }
+  if (v.chofer_id) {
+    const { data: c } = await sb
+      .from("eco_choferes")
+      .select(
+        "id, wa_id, nombre, rating, vehiculo_marca, vehiculo_modelo, vehiculo_color, placa, selfie_foto_url, last_lat, last_lng, last_ping"
+      )
+      .eq("id", v.chofer_id)
+      .maybeSingle();
 
-    // 2) chofer_estado
-    let estadoRow: ChoferEstadoRow | null = null;
-    if (choferTelefono) {
-      const { data } = await supabase
-        .from("chofer_estado")
-        .select("chofer_id, telefono, lat, lng, ultimo_ping")
-        .eq("telefono", choferTelefono)
-        .maybeSingle();
-      estadoRow = (data as ChoferEstadoRow) || null;
-    }
-    if (!estadoRow && choferIdMeta) {
-      const { data } = await supabase
-        .from("chofer_estado")
-        .select("chofer_id, telefono, lat, lng, ultimo_ping")
-        .eq("chofer_id", choferIdMeta)
-        .maybeSingle();
-      estadoRow = (data as ChoferEstadoRow) || null;
-    }
-
-    // Vehiculo: prioriza metadata.vehiculo, luego usuarios.vehiculo
-    const vehiculoMeta =
-      meta.vehiculo && typeof meta.vehiculo === "object" ? (meta.vehiculo as object) : null;
-    const vehiculoUser = userRow?.vehiculo && typeof userRow.vehiculo === "object" ? userRow.vehiculo : null;
-    const vehiculo = vehiculoMeta || vehiculoUser || null;
-
-    if (userRow || estadoRow || vehiculo) {
-      chofer = {
-        nombre: userRow?.nombre ?? null,
-        foto: userRow?.foto ?? null,
-        calificacion: userRow?.calificacion ?? null,
-        telefono: choferTelefono ?? userRow?.telefono ?? estadoRow?.telefono ?? null,
-        vehiculo,
+    if (c) {
+      const cc = c as {
+        wa_id: string;
+        nombre: string;
+        rating: number | null;
+        vehiculo_marca: string;
+        vehiculo_modelo: string;
+        vehiculo_color: string;
+        placa: string;
+        selfie_foto_url: string | null;
+        last_lat: number | null;
+        last_lng: number | null;
+        last_ping: string | null;
       };
-    }
-    if (estadoRow) {
+
+      // Generar signed URL de la foto si existe
+      let fotoUrl: string | null = null;
+      if (cc.selfie_foto_url) {
+        const { data: signed } = await sb.storage
+          .from("eco-choferes-docs")
+          .createSignedUrl(cc.selfie_foto_url, 3600);
+        fotoUrl = signed?.signedUrl || null;
+      }
+
+      chofer = {
+        nombre: cc.nombre,
+        foto: fotoUrl,
+        calificacion: cc.rating,
+        telefono: cc.wa_id,
+        vehiculo: {
+          marca: cc.vehiculo_marca,
+          modelo: cc.vehiculo_modelo,
+          color: cc.vehiculo_color,
+          placas: cc.placa,
+        },
+      };
       chofer_pos = {
-        lat: estadoRow.lat ?? null,
-        lng: estadoRow.lng ?? null,
-        ultimo_ping: estadoRow.ultimo_ping ?? null,
+        lat: cc.last_lat,
+        lng: cc.last_lng,
+        ultimo_ping: cc.last_ping,
       };
     }
   }
 
-  // ── Tracking history persistido ─────────────────────────────────────
-  // viajes.id puede ser bigint en BD; lo usamos numerico para FK.
-  const viajeIdNum =
-    typeof v.id === "number"
-      ? v.id
-      : Number.isFinite(Number(v.id))
-      ? Number(v.id)
-      : null;
-
-  // Insertar nuevo ping si la posicion cambio (vs ultimo registrado)
-  if (viajeIdNum != null && chofer_pos?.lat != null && chofer_pos?.lng != null) {
+  // Insertar nuevo ping si la posicion del chofer cambio
+  if (chofer_pos?.lat != null && chofer_pos?.lng != null && v.chofer_id) {
     try {
-      const { data: lastPings } = await supabase
-        .from("viaje_tracking_pings")
+      const { data: lastPings } = await sb
+        .from("eco_viaje_tracking_pings")
         .select("lat, lng")
-        .eq("viaje_id", viajeIdNum)
-        .order("created_at", { ascending: false })
+        .eq("viaje_id", v.id)
+        .order("t", { ascending: false })
         .limit(1);
       const last = Array.isArray(lastPings) && lastPings[0] ? lastPings[0] : null;
       const lat = chofer_pos.lat;
@@ -209,19 +144,18 @@ export async function GET(_req: Request, { params }: { params: Params }) {
         Math.abs(Number(last.lat) - lat) > 1e-6 ||
         Math.abs(Number(last.lng) - lng) > 1e-6;
       if (changed) {
-        await supabase.from("viaje_tracking_pings").insert({
-          viaje_id: viajeIdNum,
+        await sb.from("eco_viaje_tracking_pings").insert({
+          viaje_id: v.id,
+          chofer_id: v.chofer_id,
           lat,
           lng,
-          source: "chofer",
+          source: "auto_track",
         });
       }
-    } catch {
-      /* noop — ping log es best-effort */
-    }
+    } catch {}
   }
 
-  // Recuperar ultimos 60 pings (orden ASC para que el cliente dibuje la ruta)
+  // Recuperar ultimos 60 pings
   let tracking_history: Array<{
     lat: number;
     lng: number;
@@ -230,28 +164,109 @@ export async function GET(_req: Request, { params }: { params: Params }) {
     speed_kmh: number | null;
     t: string;
   }> = [];
-  if (viajeIdNum != null) {
-    try {
-      const { data: pings } = await supabase
-        .from("viaje_tracking_pings")
-        .select("lat, lng, source, heading_deg, speed_kmh, created_at")
-        .eq("viaje_id", viajeIdNum)
-        .order("created_at", { ascending: false })
-        .limit(60);
-      const arr = (pings as TrackingPingRow[] | null) || [];
-      tracking_history = arr
-        .slice()
-        .reverse()
-        .map((p) => ({
-          lat: Number(p.lat),
-          lng: Number(p.lng),
-          source: p.source ?? null,
-          heading_deg: p.heading_deg ?? null,
-          speed_kmh: p.speed_kmh ?? null,
-          t: p.created_at,
-        }));
-    } catch {
-      tracking_history = [];
+  try {
+    const { data: pings } = await sb
+      .from("eco_viaje_tracking_pings")
+      .select("lat, lng, source, heading_deg, speed_kmh, t")
+      .eq("viaje_id", v.id)
+      .order("t", { ascending: false })
+      .limit(60);
+    const arr = (pings || []) as Array<{
+      lat: number;
+      lng: number;
+      source: string | null;
+      heading_deg: number | null;
+      speed_kmh: number | null;
+      t: string;
+    }>;
+    tracking_history = arr
+      .slice()
+      .reverse()
+      .map((p) => ({
+        lat: Number(p.lat),
+        lng: Number(p.lng),
+        source: p.source,
+        heading_deg: p.heading_deg,
+        speed_kmh: p.speed_kmh,
+        t: p.t,
+      }));
+  } catch {}
+
+  // Ruta Google Directions con cache 60s en metadata.directions
+  let route_points: [number, number][] | null = null;
+  let route_distance_m: number | null = null;
+  let route_duration_s: number | null = null;
+
+  const leg: "to_pickup" | "to_dest" | null =
+    v.estado === "asignado" ? "to_pickup" : v.estado === "en_curso" ? "to_dest" : null;
+
+  if (
+    leg &&
+    chofer_pos?.lat != null &&
+    chofer_pos?.lng != null &&
+    ((leg === "to_pickup" && v.origen_lat != null && v.origen_lng != null) ||
+      (leg === "to_dest" && v.destino_lat != null && v.destino_lng != null))
+  ) {
+    const origin = { lat: chofer_pos.lat, lng: chofer_pos.lng };
+    const dest =
+      leg === "to_pickup"
+        ? { lat: v.origen_lat as number, lng: v.origen_lng as number }
+        : { lat: v.destino_lat as number, lng: v.destino_lng as number };
+
+    const cached =
+      meta.directions && typeof meta.directions === "object"
+        ? (meta.directions as {
+            polyline?: string;
+            calculated_at?: string;
+            leg?: string;
+            origin?: { lat: number; lng: number };
+            distance_m?: number;
+            duration_s?: number;
+          })
+        : null;
+
+    const ageMs = cached?.calculated_at
+      ? Date.now() - new Date(cached.calculated_at).getTime()
+      : Infinity;
+    const moved = cached?.origin
+      ? Math.hypot(
+          (cached.origin.lat - origin.lat) * 111_000,
+          (cached.origin.lng - origin.lng) * 111_000 * Math.cos((origin.lat * Math.PI) / 180)
+        )
+      : Infinity;
+
+    const needsRecalc = !cached?.polyline || cached.leg !== leg || ageMs > 60_000 || moved > 120;
+
+    if (needsRecalc) {
+      const dir = await fetchDirections(origin.lat, origin.lng, dest.lat, dest.lng);
+      if (dir) {
+        route_points = dir.points;
+        route_distance_m = dir.distance_m;
+        route_duration_s = dir.duration_s;
+        try {
+          await sb
+            .from("eco_viajes")
+            .update({
+              metadata: {
+                ...meta,
+                directions: {
+                  polyline: dir.polyline,
+                  calculated_at: new Date().toISOString(),
+                  leg,
+                  origin,
+                  dest,
+                  distance_m: dir.distance_m,
+                  duration_s: dir.duration_s,
+                },
+              },
+            })
+            .eq("id", v.id);
+        } catch {}
+      }
+    } else if (cached?.polyline) {
+      route_points = decodePolyline(cached.polyline);
+      route_distance_m = cached.distance_m ?? null;
+      route_duration_s = cached.duration_s ?? null;
     }
   }
 
@@ -264,17 +279,20 @@ export async function GET(_req: Request, { params }: { params: Params }) {
         origen_lng: v.origen_lng,
         destino_lat: v.destino_lat,
         destino_lng: v.destino_lng,
-        origen_texto: v.origen_texto,
-        destino_texto: v.destino_texto,
-        modo: v.modo,
-        precio_estimado: v.precio_estimado,
+        origen_texto: v.origen_direccion,
+        destino_texto: v.destino_direccion,
+        modo: null,
+        precio_estimado: v.tarifa_estimada,
         distancia_km: v.distancia_km,
         metadata: v.metadata,
-        tracking_token: v.tracking_token,
+        tracking_token: null,
       },
       chofer,
       chofer_pos,
       tracking_history,
+      route: route_points
+        ? { points: route_points, leg, distance_m: route_distance_m, duration_s: route_duration_s }
+        : null,
     },
     { headers: noStore }
   );

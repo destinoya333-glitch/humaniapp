@@ -410,3 +410,181 @@ export async function processWhatsAppMessage(
   await appendMessage(phone, "assistant", reply.text ?? "[media]");
   return reply;
 }
+
+// =====================================================================
+// Voice message handler — captura audios entrantes (Twilio MediaUrl0).
+// Caso de uso #1: el Flow #5 (pronunciacion) deja flag
+// `personal_facts.cuna_pronunciation_pending` con la frase target. Cuando
+// llega el siguiente voice message, descargamos audio Twilio (Basic Auth con
+// TWILIO_SOFIA_*), llamamos POST /api/sofia-flows/pronunciation, respondemos
+// con score + feedback, limpiamos el flag.
+//
+// Si no hay flag pendiente, retornamos null para que el webhook caiga al
+// flujo conversacional normal (texto vacio o transcripcion en otra iteracion).
+// =====================================================================
+
+const SOFIA_FLOWS_BASE = (
+  process.env.NEXT_PUBLIC_BASE_URL ?? "https://activosya.com"
+).replace(/\/$/, "");
+
+const TWILIO_SOFIA_SID = (process.env.TWILIO_SOFIA_ACCOUNT_SID ?? "").trim();
+const TWILIO_SOFIA_TOK = (process.env.TWILIO_SOFIA_AUTH_TOKEN ?? "").trim();
+
+async function findUserIdByPhone(phone: string): Promise<string | null> {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+  const { data } = await supabase
+    .from("mse_users")
+    .select("id")
+    .eq("phone", phone)
+    .maybeSingle();
+  return (data as { id?: string } | null)?.id ?? null;
+}
+
+async function getPronunciationPending(
+  userId: string
+): Promise<{ target_phrase: string; started_at: string } | null> {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+  const { data } = await supabase
+    .from("mse_student_profiles")
+    .select("personal_facts")
+    .eq("user_id", userId)
+    .maybeSingle();
+  const facts = (data as { personal_facts?: Record<string, unknown> } | null)
+    ?.personal_facts as Record<string, unknown> | undefined;
+  const flag = facts?.cuna_pronunciation_pending as
+    | { target_phrase?: string; started_at?: string }
+    | undefined;
+  if (!flag?.target_phrase || !flag?.started_at) return null;
+  return { target_phrase: flag.target_phrase, started_at: flag.started_at };
+}
+
+async function clearPronunciationPending(userId: string): Promise<void> {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+  const { data } = await supabase
+    .from("mse_student_profiles")
+    .select("personal_facts")
+    .eq("user_id", userId)
+    .maybeSingle();
+  const facts = ((data as { personal_facts?: Record<string, unknown> } | null)
+    ?.personal_facts ?? {}) as Record<string, unknown>;
+  delete facts.cuna_pronunciation_pending;
+  await supabase
+    .from("mse_student_profiles")
+    .update({ personal_facts: facts })
+    .eq("user_id", userId);
+}
+
+async function downloadTwilioMedia(
+  mediaUrl: string
+): Promise<{ buffer: Buffer; mime: string } | null> {
+  if (!TWILIO_SOFIA_SID || !TWILIO_SOFIA_TOK) return null;
+  try {
+    const auth = Buffer.from(`${TWILIO_SOFIA_SID}:${TWILIO_SOFIA_TOK}`).toString("base64");
+    const r = await fetch(mediaUrl, {
+      headers: { Authorization: `Basic ${auth}` },
+      redirect: "follow",
+      cache: "no-store",
+    });
+    if (!r.ok) return null;
+    const buf = Buffer.from(await r.arrayBuffer());
+    const mime = r.headers.get("content-type") ?? "audio/ogg";
+    return { buffer: buf, mime };
+  } catch (e) {
+    console.error("[downloadTwilioMedia]", (e as Error).message);
+    return null;
+  }
+}
+
+/**
+ * Procesa un voice message entrante. Retorna AgentReply si manejamos el caso
+ * (ej: pronunciation pending), o null si el caller debe caer al flujo normal.
+ *
+ * `audioInput` admite dos formas:
+ *  - Twilio (legacy): pasar el `mediaUrl` y `_mediaContentType` (descargara
+ *    via Basic Auth Twilio).
+ *  - Meta Cloud: pasar `{ buffer, mime }` con el audio ya descargado por el
+ *    webhook (porque Meta Cloud entrega media via media_id + URL temporal).
+ */
+export async function processVoiceMessage(
+  phone: string,
+  mediaUrlOrBuffer: string | { buffer: Buffer; mime: string },
+  _mediaContentType?: string
+): Promise<AgentReply | null> {
+  await getOrCreateLead(phone); // asegura row existe
+
+  const userId = await findUserIdByPhone(phone);
+  if (!userId) return null;
+
+  const pending = await getPronunciationPending(userId);
+  if (!pending) return null;
+
+  let audio: { buffer: Buffer; mime: string } | null = null;
+  if (typeof mediaUrlOrBuffer === "string") {
+    audio = await downloadTwilioMedia(mediaUrlOrBuffer);
+  } else {
+    audio = mediaUrlOrBuffer;
+  }
+  if (!audio) {
+    return plain(
+      "No pude descargar tu audio. Vuelve a intentarlo en unos segundos."
+    );
+  }
+
+  await appendMessage(phone, "user", "[voice message para pronunciacion]");
+
+  try {
+    const r = await fetch(`${SOFIA_FLOWS_BASE}/api/sofia-flows/pronunciation`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        user_id: userId,
+        target_phrase: pending.target_phrase,
+        audio_base64: audio.buffer.toString("base64"),
+        audio_mime: audio.mime,
+      }),
+      cache: "no-store",
+    });
+    const body = (await r.json()) as {
+      score?: number;
+      transcription?: string;
+      target_phrase?: string;
+      feedback_es?: string;
+      error?: string;
+    };
+
+    await clearPronunciationPending(userId);
+
+    if (!r.ok || typeof body.score !== "number") {
+      const reply = plain(
+        body.error
+          ? `No pude evaluar el audio (${body.error}). Intenta de nuevo abriendo el test.`
+          : "No pude evaluar el audio. Intenta de nuevo abriendo el test."
+      );
+      await appendMessage(phone, "assistant", reply.text ?? "");
+      return reply;
+    }
+
+    const text =
+      `📊 Score: *${body.score}/100*\n\n` +
+      `Tu audio: "${body.transcription || "(no audible)"}"\n` +
+      `Frase target: "${body.target_phrase}"\n\n` +
+      `${body.feedback_es ?? ""}`;
+    const reply = plain(text);
+    await appendMessage(phone, "assistant", reply.text ?? "");
+    return reply;
+  } catch (e) {
+    console.error("[processVoiceMessage pronunciation]", (e as Error).message);
+    const reply = plain("Error al evaluar el audio. Intenta de nuevo.");
+    await appendMessage(phone, "assistant", reply.text ?? "");
+    return reply;
+  }
+}

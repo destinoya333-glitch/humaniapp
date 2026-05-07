@@ -8,7 +8,10 @@
  */
 import { NextRequest, NextResponse, after } from "next/server";
 import twilio from "twilio";
-import { processWhatsAppMessage } from "@/lib/miss-sofia-voice/whatsapp-agent";
+import {
+  processVoiceMessage,
+  processWhatsAppMessage,
+} from "@/lib/miss-sofia-voice/whatsapp-agent";
 import {
   isTwilioConfigured,
   sendContentTemplate,
@@ -21,6 +24,9 @@ export async function POST(req: NextRequest) {
   const formData = await req.formData();
   const from = (formData.get("From") as string) || "";
   const body = (formData.get("Body") as string) || "";
+  const numMedia = parseInt((formData.get("NumMedia") as string) || "0", 10) || 0;
+  const mediaUrl0 = (formData.get("MediaUrl0") as string) || "";
+  const mediaType0 = (formData.get("MediaContentType0") as string) || "";
   const phone = from.replace(/^whatsapp:/, "");
 
   const emptyTwiml = new twilio.twiml.MessagingResponse().toString();
@@ -33,7 +39,15 @@ export async function POST(req: NextRequest) {
   // Process and reply asynchronously after responding to Twilio webhook
   after(async () => {
     try {
-      const reply = await processWhatsAppMessage(phone, body);
+      // Voice message + posible flag de pronunciation pending del Flow #5.
+      // Si el handler maneja el caso retorna reply; si no, caemos al flujo texto.
+      let reply: Awaited<ReturnType<typeof processWhatsAppMessage>> | null = null;
+      if (numMedia > 0 && mediaUrl0 && mediaType0.startsWith("audio/")) {
+        reply = await processVoiceMessage(phone, mediaUrl0, mediaType0);
+      }
+      if (!reply) {
+        reply = await processWhatsAppMessage(phone, body);
+      }
       if (!isTwilioConfigured()) {
         console.warn("Twilio Sofia subaccount not configured");
         return;

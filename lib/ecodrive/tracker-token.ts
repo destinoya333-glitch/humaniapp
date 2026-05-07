@@ -1,11 +1,11 @@
-// HMAC-signed tokens for the chofer PWA tracker.
-// Format: base64url(payload).base64url(signature)
-//   payload = `${chofer_id}.${expires_at_ms}`
-//   signature = HMAC-SHA256(payload, ECODRIVE_TRACKER_SECRET)
-//
-// The endpoint validates: signature OK + not expired + chofer_estado.en_turno = true.
-// No DB table needed for tokens.
-
+/**
+ * HMAC-signed tokens para el PWA tracker del chofer.
+ * Format: base64url(payload).base64url(signature)
+ *   payload = `${chofer_uuid}.${expires_at_ms}`
+ *
+ * Soporta backward-compat: si choferId viene como bigint legacy, se acepta tambien
+ * (issueChoferTrackerToken acepta string o number).
+ */
 import { createHmac, timingSafeEqual } from "node:crypto";
 
 const SECRET =
@@ -29,15 +29,18 @@ function sign(payload: string): string {
   return b64url(createHmac("sha256", SECRET).update(payload).digest());
 }
 
-export function issueChoferTrackerToken(choferId: number, ttlHours = DEFAULT_TTL_HOURS): string {
+export function issueChoferTrackerToken(
+  choferId: string | number,
+  ttlHours = DEFAULT_TTL_HOURS
+): string {
   const expiresAtMs = Date.now() + ttlHours * 3600_000;
-  const payload = `${choferId}.${expiresAtMs}`;
+  const payload = `${String(choferId)}.${expiresAtMs}`;
   const sig = sign(payload);
   return `${b64url(Buffer.from(payload, "utf8"))}.${sig}`;
 }
 
 export type VerifyResult =
-  | { ok: true; choferId: number; expiresAtMs: number }
+  | { ok: true; choferId: string; expiresAtMs: number }
   | { ok: false; reason: "format" | "signature" | "expired" };
 
 export function verifyChoferTrackerToken(token: string): VerifyResult {
@@ -53,11 +56,13 @@ export function verifyChoferTrackerToken(token: string): VerifyResult {
     return { ok: false, reason: "format" };
   }
 
-  const sub = payloadStr.split(".");
-  if (sub.length !== 2) return { ok: false, reason: "format" };
-  const choferId = Number(sub[0]);
-  const expiresAtMs = Number(sub[1]);
-  if (!Number.isFinite(choferId) || !Number.isFinite(expiresAtMs)) {
+  // payload = `<id>.<expires_ms>` — id puede tener '.' ? UUIDs no, pero por seguridad
+  // partimos por el ULTIMO '.'
+  const lastDot = payloadStr.lastIndexOf(".");
+  if (lastDot < 1) return { ok: false, reason: "format" };
+  const idStr = payloadStr.slice(0, lastDot);
+  const expiresAtMs = Number(payloadStr.slice(lastDot + 1));
+  if (!idStr || !Number.isFinite(expiresAtMs)) {
     return { ok: false, reason: "format" };
   }
 
@@ -69,5 +74,5 @@ export function verifyChoferTrackerToken(token: string): VerifyResult {
   }
 
   if (Date.now() > expiresAtMs) return { ok: false, reason: "expired" };
-  return { ok: true, choferId, expiresAtMs };
+  return { ok: true, choferId: idStr, expiresAtMs };
 }

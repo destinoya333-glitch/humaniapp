@@ -55,20 +55,32 @@ export async function POST(req: NextRequest) {
         data?: Record<string, unknown>;
       };
 
-      // Routing: identificamos el flow por screen + flow_token contexto
-      // Si data tiene flow_key explícito (lo pasamos cuando enviamos el flow), usarlo.
-      // Sino caemos a tracking-viaje (el flow productivo principal).
+      // Routing multi-tenant: flow_token codifica {tenant}:{flow_key}:{context}
+      // Ej: "ecodrive:tracking-viaje:viaje123", "miss-sofia:pacto-cuna:+51964304268"
+      // Fallback a screen hint + tenant ecodrive para backwards compat con templates antiguos.
+      const explicitTenant = (payload.data as Record<string, unknown> | undefined)?.tenant as string | undefined;
       const explicitKey = (payload.data as Record<string, unknown> | undefined)?.flow_key as string | undefined;
       const screenHint = payload.screen?.toUpperCase();
+      const tokenParts = (payload.flow_token || "").split(":");
 
+      let tenant = "ecodrive"; // default backwards compat
       let flowKey = "tracking-viaje"; // default
+      if (tokenParts.length >= 2) {
+        tenant = tokenParts[0];
+        flowKey = tokenParts[1];
+      }
+      if (explicitTenant) tenant = explicitTenant;
       if (explicitKey) flowKey = explicitKey;
-      else if (screenHint === "WELCOME" || screenHint === "SUCCESS") flowKey = "hello-test";
+      // Backwards compat: token sin tenant + screen hello-test
+      if (tokenParts.length < 2 && (screenHint === "WELCOME" || screenHint === "SUCCESS")) {
+        tenant = "ecodrive";
+        flowKey = "hello-test";
+      }
 
-      const flow = getFlow("ecodrive", flowKey);
+      const flow = getFlow(tenant, flowKey);
       if (!flow) {
         statusCode = 404;
-        errorMsg = `Flow ecodrive:${flowKey} no encontrado`;
+        errorMsg = `Flow ${tenant}:${flowKey} no encontrado`;
         return new NextResponse("Flow not found", { status: 404 });
       }
 

@@ -1,14 +1,26 @@
+/**
+ * POST: chofer envia ping de ubicacion (lat/lng/accuracy)
+ * GET: health check del PWA antes de empezar a postear
+ *
+ * Schema nuevo: usa eco_choferes (uuid) y eco_viajes (uuid).
+ */
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/ecodrive/db";
+import { createClient } from "@supabase/supabase-js";
 import { verifyChoferTrackerToken } from "@/lib/ecodrive/tracker-token";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 const noStore = { "Cache-Control": "no-store" };
 
-// Distancia en metros (haversine)
-function distanceMeters(
-  a: { lat: number; lng: number },
-  b: { lat: number; lng: number }
-): number {
+function db() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
+
+function distanceMeters(a: { lat: number; lng: number }, b: { lat: number; lng: number }): number {
   const R = 6371000;
   const dLat = ((b.lat - a.lat) * Math.PI) / 180;
   const dLng = ((b.lng - a.lng) * Math.PI) / 180;
@@ -19,19 +31,16 @@ function distanceMeters(
   return 2 * R * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
 }
 
-const PROXIMIDAD_M = 800; // dispara link destino si chofer está a ≤800m del origen del pasajero
+const PROXIMIDAD_M = 800;
 
 async function sendWAText(to: string, body: string): Promise<void> {
-  const token = process.env.ECODRIVE_META_ACCESS_TOKEN || process.env.META_WA_TOKEN || "";
-  const phoneId = process.env.ECODRIVE_META_PHONE_ID || process.env.META_PHONE_ID || "";
-  if (!token || !phoneId) return; // silently skip si no hay credenciales
+  const token = process.env.ECODRIVE_META_ACCESS_TOKEN || "";
+  const phoneId = process.env.ECODRIVE_META_PHONE_ID || "";
+  if (!token || !phoneId) return;
   try {
     await fetch(`https://graph.facebook.com/v22.0/${phoneId}/messages`, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         messaging_product: "whatsapp",
         to,
@@ -39,26 +48,31 @@ async function sendWAText(to: string, body: string): Promise<void> {
         text: { body },
       }),
     });
-  } catch {
-    /* ignore network errors */
-  }
+  } catch {}
 }
 
-// Verifica si el chofer está cerca del origen de su viaje activo y dispara link al destino
-async function checkProximityAndNotify(choferId: number, lat: number, lng: number): Promise<void> {
-  const { data: viajes } = await supabase
-    .from("viajes")
-    .select("id, origen_lat, origen_lng, destino_lat, destino_lng, destino_texto, metadata")
+async function checkProximityAndNotify(
+  choferId: string,
+  choferWaId: string,
+  lat: number,
+  lng: number
+): Promise<void> {
+  const sb = db();
+  const { data: viajes } = await sb
+    .from("eco_viajes")
+    .select("id, origen_lat, origen_lng, destino_lat, destino_lng, destino_direccion, notas")
     .eq("chofer_id", choferId)
     .in("estado", ["asignado", "en_curso"])
-    .order("created_at", { ascending: false })
+    .order("solicitado_at", { ascending: false })
     .limit(1);
 
   const v = (Array.isArray(viajes) && viajes[0]) || null;
   if (!v) return;
-  const meta = (v.metadata && typeof v.metadata === "object" ? v.metadata : {}) as Record<string, unknown>;
-  if (meta.link_destino_enviado === true) return; // ya se mandó
   if (!v.origen_lat || !v.origen_lng) return;
+
+  // Track flag para no enviar dos veces (lo guardamos en notas o usamos columna nueva)
+  // Por simplicidad: marcar con prefijo "[link_destino_enviado] " en notas
+  if (v.notas && v.notas.includes("[link_destino_enviado]")) return;
 
   const dist = distanceMeters(
     { lat, lng },
@@ -66,40 +80,22 @@ async function checkProximityAndNotify(choferId: number, lat: number, lng: numbe
   );
   if (dist > PROXIMIDAD_M) return;
 
-  // Marcar como enviado ANTES de notificar para evitar dobles envíos
-  await supabase
-    .from("viajes")
-    .update({
-      metadata: {
-        ...(meta || {}),
-        link_destino_enviado: true,
-        link_destino_enviado_at: new Date().toISOString(),
-      },
-    })
+  await sb
+    .from("eco_viajes")
+    .update({ notas: `[link_destino_enviado] ${v.notas || ""}`.trim() })
     .eq("id", v.id);
-
-  // Buscar teléfono del chofer
-  const { data: chofer } = await supabase
-    .from("usuarios")
-    .select("telefono")
-    .eq("id", choferId)
-    .maybeSingle();
-  const tel = chofer?.telefono || null;
-  if (!tel) return;
 
   if (v.destino_lat && v.destino_lng) {
     const linkDest = `https://www.google.com/maps/dir/?api=1&destination=${v.destino_lat},${v.destino_lng}&travelmode=driving`;
     const msg =
       `📍 *Estás a ${Math.round(dist)}m del pasajero*\n\n` +
-      `Apenas suba al carro y arranquen, ya tienes el link al destino:\n\n` +
-      `🎯 *${v.destino_texto || "Destino"}*\n${linkDest}\n\n` +
-      `Cuando termines el viaje escribe *viaje completado* para cobrar.`;
-    await sendWAText(tel, msg);
+      `Cuando suba al carro y arranquen, sigue al destino:\n\n` +
+      `🎯 *${v.destino_direccion || "Destino"}*\n${linkDest}\n\n` +
+      `Cuando termines escribe *viaje completado*.`;
+    await sendWAText(choferWaId, msg);
   }
 }
 
-// POST body:
-//   { token: string, lat: number, lng: number, accuracy?: number, heading?: number, speed?: number }
 export async function POST(req: Request) {
   let body: Record<string, unknown> = {};
   try {
@@ -111,6 +107,8 @@ export async function POST(req: Request) {
   const token = typeof body.token === "string" ? body.token : "";
   const lat = typeof body.lat === "number" ? body.lat : Number(body.lat);
   const lng = typeof body.lng === "number" ? body.lng : Number(body.lng);
+  const accuracy =
+    typeof body.accuracy === "number" ? body.accuracy : Number(body.accuracy) || null;
 
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
     return NextResponse.json({ error: "bad_coords" }, { status: 400, headers: noStore });
@@ -124,40 +122,71 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: `token_${v.reason}` }, { status: 401, headers: noStore });
   }
 
-  // Solo actualiza si el chofer aún está en turno
-  const { data: estado } = await supabase
-    .from("chofer_estado")
-    .select("id, chofer_id, en_turno")
-    .eq("chofer_id", v.choferId)
+  const sb = db();
+  const { data: chofer } = await sb
+    .from("eco_choferes")
+    .select("id, wa_id, en_turno, status")
+    .eq("id", v.choferId)
     .maybeSingle();
 
-  if (!estado) {
-    return NextResponse.json({ error: "chofer_estado_missing" }, { status: 404, headers: noStore });
+  if (!chofer) {
+    return NextResponse.json({ error: "chofer_not_found" }, { status: 404, headers: noStore });
   }
-  if (!estado.en_turno) {
+  const c = chofer as {
+    id: string;
+    wa_id: string;
+    en_turno: boolean;
+    status: string;
+  };
+  if (c.status !== "approved") {
+    return NextResponse.json({ error: "chofer_not_approved" }, { status: 403, headers: noStore });
+  }
+  if (!c.en_turno) {
     return NextResponse.json({ error: "chofer_off_turno" }, { status: 409, headers: noStore });
   }
 
   const nowIso = new Date().toISOString();
-  const { error: upErr } = await supabase
-    .from("chofer_estado")
-    .update({ lat, lng, ultimo_ping: nowIso, updated_at: nowIso })
-    .eq("id", estado.id);
+  await sb
+    .from("eco_choferes")
+    .update({
+      last_lat: lat,
+      last_lng: lng,
+      last_ping: nowIso,
+      last_accuracy_m: accuracy ? Math.round(accuracy) : null,
+      updated_at: nowIso,
+    })
+    .eq("id", c.id);
 
-  if (upErr) {
-    return NextResponse.json({ error: "update_failed", detail: upErr.message }, { status: 500, headers: noStore });
+  // Insertar ping en historial si hay viaje activo
+  const { data: viajeActivo } = await sb
+    .from("eco_viajes")
+    .select("id")
+    .eq("chofer_id", c.id)
+    .in("estado", ["asignado", "en_curso"])
+    .order("solicitado_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (viajeActivo) {
+    await sb.from("eco_viaje_tracking_pings").insert({
+      viaje_id: (viajeActivo as { id: string }).id,
+      chofer_id: c.id,
+      lat,
+      lng,
+      accuracy_m: accuracy ? Math.round(accuracy) : null,
+      source: "pwa",
+    });
   }
 
-  // Proximidad → link destino automatico (no bloquea respuesta)
-  checkProximityAndNotify(v.choferId, lat, lng).catch(() => {});
+  // Proximidad → link destino (no bloquea)
+  checkProximityAndNotify(c.id, c.wa_id, lat, lng).catch(() => {});
 
   return NextResponse.json(
-    { ok: true, chofer_id: v.choferId, ts: nowIso, expires_at_ms: v.expiresAtMs },
+    { ok: true, chofer_id: c.id, ts: nowIso, expires_at_ms: v.expiresAtMs },
     { headers: noStore }
   );
 }
 
-// GET para health check del PWA antes de empezar a postear
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const token = url.searchParams.get("token") || "";

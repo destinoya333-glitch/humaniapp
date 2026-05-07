@@ -51,6 +51,12 @@ type ApiResponse = {
     ultimo_ping: string | null;
   } | null;
   tracking_history?: TrackingHistoryPoint[];
+  route?: {
+    points: [number, number][];
+    leg: "to_pickup" | "to_dest" | null;
+    distance_m: number | null;
+    duration_s: number | null;
+  } | null;
   error?: string;
 };
 
@@ -104,7 +110,7 @@ function resolveCarColor(c?: string | null): string {
   if (map[v]) return map[v];
   // si parece hex valido
   if (/^#?[0-9a-f]{6}$/i.test(v)) return v.startsWith("#") ? v : `#${v}`;
-  return "#f59e0b";
+  return "#E1811B"; // naranja EcoDrive default
 }
 
 // Haversine en km
@@ -133,40 +139,39 @@ function bearing(lat1: number, lng1: number, lat2: number, lng2: number): number
 }
 
 function carSvg(color: string, heading: number): string {
-  // Auto visto desde arriba, simple. headingDeg → rota el SVG.
-  const stroke = "#0b0b0b";
-  const accent = "#111827";
+  // Auto visto desde arriba, alargado tipo inDrive — rectangular vertical.
+  // Trompa arriba (faros), trasera abajo. headingDeg → rota.
+  const stroke = "#1f2937";
+  const dark = "#0f172a";
   return `
-<div style="transform: rotate(${heading}deg); transform-origin: 50% 50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.5));">
-  <svg viewBox="0 0 64 64" width="36" height="36" xmlns="http://www.w3.org/2000/svg">
-    <!-- cuerpo -->
-    <rect x="16" y="6" width="32" height="52" rx="8" ry="10" fill="${color}" stroke="${stroke}" stroke-width="2"/>
-    <!-- parabrisas frontal -->
-    <path d="M19 14 L45 14 L41 24 L23 24 Z" fill="${accent}" opacity="0.85"/>
-    <!-- parabrisas trasero -->
-    <path d="M23 44 L41 44 L45 54 L19 54 Z" fill="${accent}" opacity="0.85"/>
-    <!-- techo -->
-    <rect x="22" y="26" width="20" height="16" rx="2" fill="${color}" stroke="${stroke}" stroke-width="1" opacity="0.85"/>
-    <!-- ruedas -->
-    <rect x="13" y="18" width="4" height="8" rx="1.5" fill="${stroke}"/>
-    <rect x="47" y="18" width="4" height="8" rx="1.5" fill="${stroke}"/>
-    <rect x="13" y="40" width="4" height="8" rx="1.5" fill="${stroke}"/>
-    <rect x="47" y="40" width="4" height="8" rx="1.5" fill="${stroke}"/>
-    <!-- faro frontal -->
-    <circle cx="24" cy="9" r="1.5" fill="#fef3c7"/>
-    <circle cx="40" cy="9" r="1.5" fill="#fef3c7"/>
+<div style="transform: rotate(${heading}deg); transform-origin: 50% 50%; width:24px; height:42px;">
+  <svg viewBox="0 0 32 56" width="24" height="42" xmlns="http://www.w3.org/2000/svg">
+    <!-- cuerpo principal alargado -->
+    <rect x="6" y="3" width="20" height="50" rx="5" ry="6" fill="${color}" stroke="${stroke}" stroke-width="1.2"/>
+    <!-- parabrisas frontal (trompa) -->
+    <path d="M9 8 L23 8 L21 17 L11 17 Z" fill="${dark}" opacity="0.9"/>
+    <!-- parabrisas trasero (cola) -->
+    <path d="M11 39 L21 39 L23 48 L9 48 Z" fill="${dark}" opacity="0.9"/>
+    <!-- techo cabina -->
+    <rect x="10" y="19" width="12" height="18" rx="2" fill="${color}" stroke="${stroke}" stroke-width="0.6"/>
+    <!-- faros delanteros -->
+    <circle cx="11" cy="5.5" r="1.2" fill="#fef9c3"/>
+    <circle cx="21" cy="5.5" r="1.2" fill="#fef9c3"/>
+    <!-- luces traseras -->
+    <rect x="9" y="50" width="3" height="2" rx="0.5" fill="#dc2626"/>
+    <rect x="20" y="50" width="3" height="2" rx="0.5" fill="#dc2626"/>
   </svg>
 </div>`;
 }
 
-function pinSvg(color: string, label: string): string {
+function pinSvg(color: string, _label: string): string {
+  // Pin esbelto sin label — tipo inDrive
   return `
-<div style="transform: translate(-50%, -100%); display:flex; flex-direction:column; align-items:center;">
-  <svg viewBox="0 0 32 40" width="28" height="36" xmlns="http://www.w3.org/2000/svg">
-    <path d="M16 1 C7 1 1 8 1 16 C1 26 16 39 16 39 C16 39 31 26 31 16 C31 8 25 1 16 1 Z" fill="${color}" stroke="#0b0b0b" stroke-width="1.5"/>
-    <circle cx="16" cy="15" r="5" fill="#fff"/>
+<div style="transform: translate(-50%, -100%);">
+  <svg viewBox="0 0 24 32" width="22" height="30" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 1 C6 1 2 5 2 11 C2 18 12 31 12 31 C12 31 22 18 22 11 C22 5 18 1 12 1 Z" fill="${color}" stroke="#0b0b0b" stroke-width="1"/>
+    <circle cx="12" cy="11" r="4" fill="#fff"/>
   </svg>
-  <span style="font-size:9px; color:#fff; background:${color}; padding:1px 4px; border-radius:3px; margin-top:-6px; white-space:nowrap;">${label}</span>
 </div>`;
 }
 
@@ -223,6 +228,9 @@ export default function TrackClient({ viajeId }: { viajeId: string }) {
   const [history, setHistory] = useState<Array<{ lat: number; lng: number; t: number }>>([]);
   const [shareMsg, setShareMsg] = useState<string | null>(null);
   const [sosState, setSosState] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [nearbyChoferes, setNearbyChoferes] = useState<Array<{ id: string; lat: number; lng: number; en_turno: boolean; distancia_km: number }>>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const nearbyMarkersRef = useRef<Map<string, any>>(new Map());
 
   // Fetch periódico
   const fetchData = useCallback(async () => {
@@ -276,6 +284,63 @@ export default function TrackClient({ viajeId }: { viajeId: string }) {
     return () => clearInterval(id);
   }, [fetchData]);
 
+  // Polling de choferes cercanos (cuando estado=buscando o asignado, mostrar autitos rondando)
+  useEffect(() => {
+    if (!data?.viaje?.origen_lat || !data?.viaje?.origen_lng) return;
+    const lat = data.viaje.origen_lat;
+    const lng = data.viaje.origen_lng;
+    const fetchNearby = async () => {
+      try {
+        const r = await fetch(
+          `/api/ecodrive/nearby-choferes?lat=${lat}&lng=${lng}&km=5`,
+          { cache: "no-store" }
+        );
+        if (!r.ok) return;
+        const j = (await r.json()) as { choferes?: Array<{ id: string; lat: number; lng: number; en_turno: boolean; distancia_km: number }> };
+        setNearbyChoferes(j.choferes || []);
+      } catch {}
+    };
+    fetchNearby();
+    const id = setInterval(fetchNearby, 8000);
+    return () => clearInterval(id);
+  }, [data?.viaje?.origen_lat, data?.viaje?.origen_lng]);
+
+  // Render markers de choferes cercanos (gris pequeño, excluye al chofer asignado)
+  useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const w = window as any;
+    const L = w.L;
+    if (!L || !mapRef.current) return;
+    const map = mapRef.current;
+    const choferAsignadoId = data?.chofer ? String((data.chofer as { id?: unknown }).id || "") : "";
+    const visibles = nearbyChoferes.filter((c) => c.id !== choferAsignadoId);
+    const visibleIds = new Set(visibles.map((c) => c.id));
+
+    // Quitar markers obsoletos
+    for (const [id, mk] of nearbyMarkersRef.current.entries()) {
+      if (!visibleIds.has(id)) {
+        try { mk.remove(); } catch {}
+        nearbyMarkersRef.current.delete(id);
+      }
+    }
+    // Agregar/actualizar
+    visibles.forEach((c) => {
+      const existing = nearbyMarkersRef.current.get(c.id);
+      if (existing) {
+        existing.setLatLng([c.lat, c.lng]);
+      } else {
+        const icon = L.divIcon({
+          html: carSvg(c.en_turno ? "#9ca3af" : "#cbd5e1", 0),
+          className: "",
+          iconSize: [20, 36],
+          iconAnchor: [10, 18],
+        });
+        const m = L.marker([c.lat, c.lng], { icon, opacity: 0.7, interactive: false }).addTo(map);
+        nearbyMarkersRef.current.set(c.id, m);
+      }
+    });
+  }, [nearbyChoferes, data?.chofer]);
+
   // Init mapa
   useEffect(() => {
     let alive = true;
@@ -288,9 +353,11 @@ export default function TrackClient({ viajeId }: { viajeId: string }) {
           zoomControl: true,
           attributionControl: false,
         }).setView([-8.115, -79.029], 13);
-        L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png", {
+        // Tiles Carto Positron — light/clean tipo inDrive
+        L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
           subdomains: "abcd",
           maxZoom: 19,
+          attribution: "© CARTO © OSM",
         }).addTo(map);
         mapRef.current = map;
       } catch {
@@ -315,15 +382,15 @@ export default function TrackClient({ viajeId }: { viajeId: string }) {
       data.chofer?.vehiculo?.color || data.viaje?.metadata?.vehiculo?.color || null
     );
 
-    // Origen marker (verde)
+    // Origen marker (verde, sin label)
     if (v.origen_lat && v.origen_lng) {
       if (!origenMarkerRef.current) {
         origenMarkerRef.current = L.marker([v.origen_lat, v.origen_lng], {
           icon: L.divIcon({
-            html: pinSvg("#10b981", "Origen"),
+            html: pinSvg("#10b981", ""),
             className: "",
-            iconSize: [28, 36],
-            iconAnchor: [14, 36],
+            iconSize: [22, 30],
+            iconAnchor: [11, 30],
           }),
         }).addTo(map);
       } else {
@@ -331,15 +398,15 @@ export default function TrackClient({ viajeId }: { viajeId: string }) {
       }
     }
 
-    // Destino marker (rojo)
+    // Destino marker (rojo, sin label)
     if (v.destino_lat && v.destino_lng) {
       if (!destinoMarkerRef.current) {
         destinoMarkerRef.current = L.marker([v.destino_lat, v.destino_lng], {
           icon: L.divIcon({
-            html: pinSvg("#ef4444", "Destino"),
+            html: pinSvg("#ef4444", ""),
             className: "",
-            iconSize: [28, 36],
-            iconAnchor: [14, 36],
+            iconSize: [22, 30],
+            iconAnchor: [11, 30],
           }),
         }).addTo(map);
       } else {
@@ -364,8 +431,8 @@ export default function TrackClient({ viajeId }: { viajeId: string }) {
           icon: L.divIcon({
             html,
             className: "",
-            iconSize: [36, 36],
-            iconAnchor: [18, 18],
+            iconSize: [24, 42],
+            iconAnchor: [12, 21],
           }),
           zIndexOffset: 1000,
         }).addTo(map);
@@ -375,41 +442,67 @@ export default function TrackClient({ viajeId }: { viajeId: string }) {
           L.divIcon({
             html,
             className: "",
-            iconSize: [36, 36],
-            iconAnchor: [18, 18],
+            iconSize: [24, 42],
+            iconAnchor: [12, 21],
           })
         );
       }
     }
 
-    // Polyline ruta histórica (azul)
+    // Polyline ruta histórica (gris claro como inDrive)
     if (history.length >= 2) {
       const latlngs = history.map((h) => [h.lat, h.lng]);
       if (!historyLineRef.current) {
         historyLineRef.current = L.polyline(latlngs, {
-          color: "#3b82f6",
-          weight: 4,
-          opacity: 0.85,
+          color: "#9ca3af",
+          weight: 3,
+          opacity: 0.6,
         }).addTo(map);
       } else {
         historyLineRef.current.setLatLngs(latlngs);
       }
     }
 
-    // Línea punteada gris desde chofer → destino (ruta restante)
-    if (cp?.lat != null && cp?.lng != null && v.destino_lat && v.destino_lng) {
+    // Ruta proyectada (chofer → recojo o chofer → destino) — NARANJA EcoDrive
+    const routePts = data?.route?.points;
+    if (routePts && routePts.length >= 2) {
+      const latlngs = routePts as unknown as [number, number][];
+      if (!remainingLineRef.current) {
+        remainingLineRef.current = L.polyline(latlngs, {
+          color: "#E1811B",
+          weight: 6,
+          opacity: 0.95,
+          lineCap: "round",
+          lineJoin: "round",
+        }).addTo(map);
+      } else {
+        remainingLineRef.current.setStyle({
+          color: "#E1811B",
+          weight: 6,
+          opacity: 0.95,
+          dashArray: undefined,
+        });
+        remainingLineRef.current.setLatLngs(latlngs);
+      }
+    } else if (cp?.lat != null && cp?.lng != null && v.destino_lat && v.destino_lng) {
       const latlngs = [
         [cp.lat, cp.lng],
         [v.destino_lat, v.destino_lng],
       ];
       if (!remainingLineRef.current) {
         remainingLineRef.current = L.polyline(latlngs, {
-          color: "#9ca3af",
-          weight: 2,
+          color: "#E1811B",
+          weight: 3,
           opacity: 0.7,
           dashArray: "6, 8",
         }).addTo(map);
       } else {
+        remainingLineRef.current.setStyle({
+          color: "#E1811B",
+          weight: 3,
+          opacity: 0.7,
+          dashArray: "6, 8",
+        });
         remainingLineRef.current.setLatLngs(latlngs);
       }
     }
@@ -599,12 +692,32 @@ export default function TrackClient({ viajeId }: { viajeId: string }) {
         <div className="relative">
           <div
             ref={mapDivRef}
-            className="w-full bg-zinc-900"
+            className="w-full bg-zinc-100"
             style={{ height: "60vh", minHeight: 320 }}
           />
           {loading && (
             <div className="absolute inset-0 flex items-center justify-center bg-zinc-950/70 pointer-events-none">
               <div className="text-zinc-300 text-sm animate-pulse">Cargando viaje…</div>
+            </div>
+          )}
+          {/* Banner inferior tipo inDrive: conductores cercanos */}
+          {data?.viaje?.estado === "buscando" && nearbyChoferes.length > 0 && (
+            <div className="absolute left-3 right-3 bottom-3 z-[1000] bg-white/95 backdrop-blur rounded-xl shadow-lg px-4 py-3 flex items-center gap-3">
+              <div className="text-2xl">🚖</div>
+              <div className="flex-1">
+                <div className="font-semibold text-zinc-800 text-sm">
+                  {nearbyChoferes.length} {nearbyChoferes.length === 1 ? "conductor cerca" : "conductores cerca"}
+                </div>
+                <div className="text-xs text-zinc-500">Buscando el más cercano para ti</div>
+              </div>
+              <div className="text-xs text-[#E1811B] font-bold animate-pulse">●</div>
+            </div>
+          )}
+          {data?.viaje?.estado === "asignado" && nearbyChoferes.length > 0 && (
+            <div className="absolute left-3 right-3 bottom-3 z-[1000] bg-white/95 backdrop-blur rounded-xl shadow-lg px-4 py-2">
+              <div className="text-xs text-zinc-500">
+                {nearbyChoferes.length} {nearbyChoferes.length === 1 ? "conductor" : "conductores"} en tu zona
+              </div>
             </div>
           )}
         </div>
@@ -793,31 +906,7 @@ export default function TrackClient({ viajeId }: { viajeId: string }) {
         </aside>
       </div>
 
-      {/* SOS FAB — fijo abajo derecha */}
-      {!isCompletado && !isCancelado && (
-        <button
-          type="button"
-          onClick={handleSos}
-          disabled={sosState === "sending"}
-          aria-label="SOS - emergencia"
-          className={`fixed bottom-5 right-5 z-[2000] rounded-full shadow-lg shadow-red-900/40 font-bold text-white text-sm px-5 py-4 transition active:scale-95 ${
-            sosState === "sent"
-              ? "bg-emerald-600"
-              : sosState === "error"
-              ? "bg-amber-600"
-              : "bg-red-600 hover:bg-red-500"
-          }`}
-          style={{ minWidth: 92 }}
-        >
-          {sosState === "sending"
-            ? "Enviando…"
-            : sosState === "sent"
-            ? "✅ Enviado"
-            : sosState === "error"
-            ? "⚠️ Error"
-            : "🚨 SOS"}
-        </button>
-      )}
+      {/* SOS FAB — temporalmente oculto. Reactivar agregando el botón aquí cuando se requiera. */}
     </main>
   );
 }

@@ -24,7 +24,7 @@ type Stats = {
 type PendingOffer = {
   has_offer: boolean;
   kind?: "asignado" | "oferta_pendiente";
-  viaje_id?: number;
+  viaje_id?: string;
   offer_id?: number;
   origen?: string;
   destino?: string;
@@ -34,6 +34,216 @@ type PendingOffer = {
   estado_viaje?: string;
   created_at?: string;
 };
+
+function urlBase64ToUint8Array(base64String: string): Uint8Array {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const raw = typeof window !== "undefined" ? window.atob(base64) : Buffer.from(base64, "base64").toString("binary");
+  const out = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; ++i) out[i] = raw.charCodeAt(i);
+  return out;
+}
+
+function PushSubscriptionPanel({ token }: { token: string }) {
+  const [status, setStatus] = useState<"unknown" | "unsupported" | "denied" | "default" | "subscribed" | "error">("unknown");
+  const [busy, setBusy] = useState(false);
+  const [errMsg, setErrMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) {
+      setStatus("unsupported");
+      return;
+    }
+    if (Notification.permission === "denied") {
+      setStatus("denied");
+      return;
+    }
+    // Verificar si ya está suscrito
+    navigator.serviceWorker.ready
+      .then((reg) => reg.pushManager.getSubscription())
+      .then((sub) => {
+        setStatus(sub ? "subscribed" : Notification.permission === "granted" ? "default" : "default");
+      })
+      .catch(() => setStatus("default"));
+  }, []);
+
+  const subscribe = async () => {
+    setBusy(true);
+    setErrMsg(null);
+    try {
+      // 1. Pedir permiso
+      const perm = await Notification.requestPermission();
+      if (perm !== "granted") {
+        setStatus(perm === "denied" ? "denied" : "default");
+        setBusy(false);
+        return;
+      }
+      // 2. Registrar service worker
+      const reg = await navigator.serviceWorker.register("/sw-eco.js", { scope: "/" });
+      await navigator.serviceWorker.ready;
+      // 3. Suscribirse
+      const vapidPub = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || "";
+      if (!vapidPub) throw new Error("VAPID key missing");
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(vapidPub).buffer as ArrayBuffer,
+      });
+      // 4. Mandar al backend
+      const r = await fetch("/api/ecodrive/push/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, subscription: sub.toJSON() }),
+      });
+      if (!r.ok) {
+        const j = await r.json().catch(() => ({}));
+        throw new Error((j as { error?: string }).error || `HTTP ${r.status}`);
+      }
+      setStatus("subscribed");
+    } catch (e) {
+      setErrMsg(e instanceof Error ? e.message : String(e));
+      setStatus("error");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (status === "unsupported") {
+    return (
+      <section className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-3 mb-4 text-xs text-zinc-400">
+        🔔 Tu navegador no soporta notificaciones push. Usa Chrome o Firefox.
+      </section>
+    );
+  }
+  if (status === "denied") {
+    return (
+      <section className="rounded-xl border border-amber-700 bg-amber-900/20 p-3 mb-4 text-xs text-amber-300">
+        🔕 Bloqueaste las notificaciones. Activalas en la configuración del sitio del navegador y vuelve a entrar.
+      </section>
+    );
+  }
+  if (status === "subscribed") {
+    return (
+      <section className="rounded-xl border border-emerald-700 bg-emerald-900/20 p-3 mb-4 text-xs text-emerald-300 flex items-center gap-2">
+        <span>🔔</span>
+        <span>Alertas activas. Recibirás aviso superpuesto cuando entre un viaje.</span>
+      </section>
+    );
+  }
+  return (
+    <section className="rounded-xl border-2 border-[#E1811B] bg-[#E1811B]/10 p-4 mb-4">
+      <div className="flex items-start gap-3">
+        <div className="text-3xl">🔔</div>
+        <div className="flex-1">
+          <div className="font-bold text-zinc-100">Activa las alertas</div>
+          <div className="text-xs text-zinc-300 mt-1">
+            Recibe aviso aunque tengas otra app abierta o el navegador minimizado.
+          </div>
+          <button
+            onClick={subscribe}
+            disabled={busy}
+            className="mt-3 bg-[#E1811B] hover:bg-[#c46b0e] disabled:opacity-50 text-white font-bold px-4 py-2 rounded-lg text-sm"
+          >
+            {busy ? "Activando..." : "Activar alertas"}
+          </button>
+          {errMsg && <div className="text-xs text-red-400 mt-2">⚠️ {errMsg}</div>}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function OfertaModal({
+  offer,
+  token,
+  onResolved,
+}: {
+  offer: PendingOffer;
+  token: string;
+  onResolved: () => void;
+}) {
+  const [submitting, setSubmitting] = useState<"accept" | "reject" | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const respond = async (action: "accept" | "reject") => {
+    if (submitting) return;
+    setSubmitting(action);
+    setError(null);
+    try {
+      const r = await fetch("/api/ecodrive/tracker/accept-viaje", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, viaje_id: String(offer.viaje_id), action }),
+      });
+      const j = (await r.json()) as { ok?: boolean; error?: string };
+      if (!r.ok || !j.ok) {
+        setError(j.error || `HTTP ${r.status}`);
+        setSubmitting(null);
+        return;
+      }
+      onResolved();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+      setSubmitting(null);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/70 z-[2000] flex items-end sm:items-center justify-center p-4">
+      <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden">
+        <div className="bg-[#E1811B] text-white px-5 py-3 flex items-center gap-2">
+          <span className="text-2xl">🔔</span>
+          <span className="font-bold text-lg">Nuevo viaje</span>
+        </div>
+        <div className="p-5 space-y-3 text-zinc-900">
+          <div className="text-3xl font-bold text-[#E1811B]">
+            S/ {Number(offer.precio || 0).toFixed(2)}
+          </div>
+          <div className="space-y-1.5 text-sm">
+            <div className="flex items-start gap-2">
+              <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 mt-1.5 flex-shrink-0" />
+              <div>
+                <div className="text-xs text-zinc-500">Recoge en</div>
+                <div className="font-medium">{offer.origen?.split(",")[0] || "—"}</div>
+              </div>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="inline-block w-2 h-2 rounded-full bg-red-500 mt-1.5 flex-shrink-0" />
+              <div>
+                <div className="text-xs text-zinc-500">Va a</div>
+                <div className="font-medium">{offer.destino?.split(",")[0] || "—"}</div>
+              </div>
+            </div>
+            {offer.distancia_km && (
+              <div className="text-xs text-zinc-500 pt-1">📏 {offer.distancia_km} km</div>
+            )}
+          </div>
+
+          {error && (
+            <div className="bg-red-50 text-red-700 text-xs p-2 rounded">{error}</div>
+          )}
+
+          <div className="flex gap-3 pt-2">
+            <button
+              onClick={() => respond("reject")}
+              disabled={!!submitting}
+              className="flex-1 bg-zinc-100 hover:bg-zinc-200 disabled:opacity-50 text-zinc-800 font-semibold py-3 rounded-xl"
+            >
+              {submitting === "reject" ? "..." : "Rechazar"}
+            </button>
+            <button
+              onClick={() => respond("accept")}
+              disabled={!!submitting}
+              className="flex-1 bg-[#E1811B] hover:bg-[#c46b0e] disabled:opacity-50 text-white font-bold py-3 rounded-xl"
+            >
+              {submitting === "accept" ? "..." : "Aceptar"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const POST_INTERVAL_MS = 8000;
 const MIN_DISTANCE_M = 15;
@@ -391,14 +601,23 @@ export default function TrackChoferClient({ token }: { token: string }) {
         </p>
       </header>
 
-      {/* Banner de pedido entrante */}
-      {pendingOffer && pendingOffer.has_offer && (
-        <section className="rounded-xl border-2 border-emerald-400 bg-emerald-500/10 p-4 mb-4 animate-pulse">
+      <PushSubscriptionPanel token={token} />
+
+
+      {/* MODAL OVERLAY de oferta tipo inDrive — botones aceptar/rechazar directos */}
+      {pendingOffer && pendingOffer.has_offer && pendingOffer.kind === "oferta_pendiente" && (
+        <OfertaModal
+          offer={pendingOffer}
+          token={token}
+          onResolved={() => setPendingOffer(null)}
+        />
+      )}
+
+      {/* Banner asignado (cuando ya aceptó, recordatorio del pedido en curso) */}
+      {pendingOffer && pendingOffer.has_offer && pendingOffer.kind === "asignado" && (
+        <section className="rounded-xl border-2 border-emerald-400 bg-emerald-500/10 p-4 mb-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-emerald-300 font-bold text-lg">
-              {pendingOffer.kind === "asignado" ? "🎯 Pedido asignado" : "🔔 Pedido pendiente"}
-            </span>
-            <span className="text-xs text-zinc-300">#{pendingOffer.viaje_id}</span>
+            <span className="text-emerald-300 font-bold text-lg">🎯 Pedido en curso</span>
           </div>
           <div className="text-sm space-y-1 text-zinc-100">
             <div>
@@ -406,21 +625,13 @@ export default function TrackChoferClient({ token }: { token: string }) {
               <span className="font-semibold">{pendingOffer.origen?.split(",")[0] || "—"}</span>
             </div>
             <div>
-              🎯 <span className="text-zinc-300">Vas a:</span>{" "}
+              🎯 <span className="text-zinc-300">Destino:</span>{" "}
               <span className="font-semibold">{pendingOffer.destino?.split(",")[0] || "—"}</span>
             </div>
-            <div className="flex gap-4 mt-2">
-              <span className="text-emerald-300 font-bold text-xl">
-                S/.{Number(pendingOffer.precio || 0).toFixed(2)}
-              </span>
-              {pendingOffer.distancia_km && (
-                <span className="text-zinc-400">📏 {pendingOffer.distancia_km} km</span>
-              )}
+            <div className="text-emerald-300 font-bold text-xl mt-2">
+              S/.{Number(pendingOffer.precio || 0).toFixed(2)}
             </div>
           </div>
-          <p className="text-[11px] text-zinc-400 mt-3">
-            Responde al bot por WhatsApp para aceptar/rechazar.
-          </p>
         </section>
       )}
 
