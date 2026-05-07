@@ -26,7 +26,7 @@ export default function UpgradeModal({ open, onClose }: Props) {
               Pro
             </div>
             <div className="text-2xl font-bold text-gray-900">
-              S/49<span className="text-sm font-normal text-gray-500">/mes</span>
+              S/39<span className="text-sm font-normal text-gray-500">/mes</span>
             </div>
             <ul className="text-xs text-gray-600 mt-2 space-y-1">
               <li>✅ Conversaciones ilimitadas</li>
@@ -41,7 +41,7 @@ export default function UpgradeModal({ open, onClose }: Props) {
               Elite
             </div>
             <div className="text-2xl font-bold text-gray-900">
-              S/99<span className="text-sm font-normal text-gray-500">/mes</span>
+              S/89<span className="text-sm font-normal text-gray-500">/mes</span>
             </div>
             <ul className="text-xs text-gray-600 mt-2 space-y-1">
               <li>✅ Todo lo de Pro</li>

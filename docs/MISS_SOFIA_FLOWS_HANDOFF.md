@@ -125,7 +125,7 @@ Lee primero `docs/MISS_SOFIA_CUNA_BRIEFING.md` (tú lo escribiste) que tiene la 
 |---|---|---|---|
 | 1 | **Pacto Cuna** ("Quién eres") | nombre + ciudad + motivación + minutos/día + checkbox compromiso 30 días Fase Cuna | `POST /api/sofia-flows/pacto` |
 | 2 | **Plan de estudio** | hora preferida audio matutino + modo (estricto/suave) + días semana | `POST /api/sofia-flows/study-plan` |
-| 3 | **Pago Cuna/Cuna VIP** | comparativa S/49 vs S/89 + selección + Yape (998 102 258) + código operación | `POST /api/sofia-flows/payment` |
+| 3 | **Pago Cuna/Cuna VIP** | comparativa S/39 vs S/89 + selección + Yape (998 102 258) + código operación | `POST /api/sofia-flows/payment` |
 | 4 | **Progreso semanal** | read-only: fase actual badge, tiempo de boca, palabras dictionary, hitos viscerales, capítulo novela | `GET /api/sofia-flows/progress?user_id=` |
 | 5 | **Test pronunciación** | 3 screens: target phrase → grabar audio → score + feedback | `POST /api/sofia-flows/pronunciation` |
 
@@ -187,7 +187,7 @@ Sigue el patrón de EcoDrive+:
 ## 8. Web principal — agregar Sofia
 
 La home `app/page.tsx` o landing `activosya.com/` ya tiene el catálogo de productos. Agrega Sofia con:
-- CTA "Aprende inglés con Sofia, S/49/mes" → link a `https://sofia.activosya.com/` (subdomain ya configurado en `proxy.ts`, redirige a `/miss-sofia`)
+- CTA "Aprende inglés con Sofia, S/39/mes" → link a `https://sofia.activosya.com/` (subdomain ya configurado en `proxy.ts`, redirige a `/miss-sofia`)
 - Subdomain `sofia.activosya.com` → ruta interna `/miss-sofia` (ya en proxy.ts)
 
 Tu ventana ya tiene la página landing en `app/miss-sofia/` (probablemente). Si falta integrar el botón "Inscríbete" que dispare el flow Pacto Cuna, ese es el último paso.

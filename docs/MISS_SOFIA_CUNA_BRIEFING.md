@@ -84,7 +84,7 @@ niños la lengua materna. Disruptivo, único en LATAM, pricing único, garantía
 | 4 | 🌊 Tu Mundo | 151-240 | Series con subs en inglés. Misiones reales. | NO baby-talk. | Cuenta trama serie favorita 5 min sin prepararlo |
 | 5 | 🔥 Tu Yo en Inglés | 241-365 | Debates. Inglés industria. Sello Cuna. | NO paternalismo. | Nativo USA no detecta hispanohablante |
 
-**Total: 12 meses. Pricing: S/49/mes (Sofia Cuna) o S/89/mes (Sofia Cuna VIP).**
+**Total: 12 meses. Pricing: S/39/mes (Sofia Cuna) o S/89/mes (Sofia Cuna VIP).**
 
 ---
 
@@ -224,7 +224,7 @@ Tiramos CEFR. El Flow #1 es **"Quién eres" (Pacto Cuna)**.
 **2 pantallas:**
 
 P1 — Comparativa visual:
-- Card "Sofia Cuna" S/49/mes · S/449/año
+- Card "Sofia Cuna" S/39/mes · S/349/año
 - Card "Sofia Cuna VIP" S/89/mes · S/799/año (todo lo del Cuna + 2 sesiones video con Sofia humana real + Sello Cuna nativo USA)
 
 P2 — Selección + Yape:
