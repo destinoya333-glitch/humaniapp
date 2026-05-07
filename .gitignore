@@ -42,3 +42,17 @@ next-env.d.ts
 
 .vercel
 n8n/
+
+# Scripts ad-hoc en root (debug, migration one-off, backups locales).
+# NO recursivo (slash inicial limita a la raiz del repo).
+/_*.py
+/_*.json
+/check_*.py
+/fix_*.py
+/test_*.py
+/mse_*.py
+/reservaya_*.py
+/generate_*.py
+/build_*.py
+/create_*.py
+/activosya_*.py
