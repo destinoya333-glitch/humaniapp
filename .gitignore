@@ -47,6 +47,7 @@ n8n/
 # NO recursivo (slash inicial limita a la raiz del repo).
 /_*.py
 /_*.json
+/_*.mp3
 /check_*.py
 /fix_*.py
 /test_*.py
@@ -56,3 +57,15 @@ n8n/
 /build_*.py
 /create_*.py
 /activosya_*.py
+
+# Vercel env vars exportadas (contienen secretos)
+.vercel-env-prod
+.vercel-env-development
+.vercel-env-preview
+
+# Backups locales de BD (contienen PII de clientes — nunca commitear)
+/backups/
+
+# Sandboxes experimentales (no deployan a producción)
+/heygen-bot/
+/kokoro-server/
