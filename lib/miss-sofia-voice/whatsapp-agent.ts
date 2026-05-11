@@ -97,7 +97,13 @@ Vamos a arrancar tu *Método Cuna* — aprende inglés como aprendiste español.
 // =====================================================================
 
 function isYes(msg: string): boolean {
-  return /\b(s[ií]|yes|ok|okey|dale|listo|empecemos|empezar|claro|por\s+supuesto|of\s+course|vamos|adelante|arranquemos)\b/i.test(
+  return /\b(s[ií]|yes|ok|okey|dale|listo|empecemos|empezar|claro|por\s+supuesto|of\s+course|vamos|adelante|arranquemos|obvio|seguro|perfecto|excelente|por\s+favor|please|me\s+interesa|quiero|deseo|necesito|ay[uú]dame|enseña|enseñame|comencemos|continua|sigue)\b/i.test(
+    msg.trim()
+  );
+}
+
+function isLearningIntent(msg: string): boolean {
+  return /\b(ingl[eé]s|english|aprender|estudiar|clase|lecci[oó]n|profesor|profesora|maestra|método|cuna|hablar|conversar|practicar)\b/i.test(
     msg.trim()
   );
 }
@@ -152,7 +158,7 @@ Eso es todo por hoy. Mañana sigue tu historia. Hasta mañana.`;
  *
  * Returns null if ElevenLabs is not configured AND the file isn't cached.
  */
-async function getDiaUnoAudioUrl(): Promise<string | null> {
+export async function getDiaUnoAudioUrl(): Promise<string | null> {
   // Optimistic public URL — if file exists, this just works.
   const candidateUrl = `${SUPABASE_URL}/storage/v1/object/public/${CUNA_BUCKET}/${CUNA_DIA_UNO_PATH}`;
 
@@ -198,9 +204,10 @@ async function getDiaUnoAudioUrl(): Promise<string | null> {
 // =====================================================================
 
 async function handleGreeting(lead: WhatsAppLead, msg: string): Promise<AgentReply> {
-  if (isYes(msg)) {
+  // Sí explícito O intent claro ("quiero aprender inglés", "ayúdame con inglés", etc)
+  if (isYes(msg) || isLearningIntent(msg)) {
     await updateLead(lead.phone, { chat_state: "pacto_name" });
-    return plain(`Excelente.\n\n*1/4* — ¿Cómo te llamo? Solo tu primer nombre.`);
+    return plain(`Excelente. Vamos a armar tu Pacto Cuna en 4 pasos rápidos.\n\n*1/4* — ¿Cómo te llamo? Solo tu primer nombre.`);
   }
   if (isNo(msg)) {
     return plain(
@@ -297,17 +304,77 @@ async function handlePactoCommit(lead: WhatsAppLead, msg: string): Promise<Agent
   return plain(intro, audioUrl);
 }
 
+function isSaludoRecurrente(msg: string): boolean {
+  const t = msg.trim().toLowerCase();
+  return /^(hola|buenas|buenos d[ií]as|buen d[ií]a|menu|menú|hey|qu[eé] tal|como vas|sof[ií]a|hello|hi)$/i.test(t);
+}
+
+function hasPaidPlan(lead: WhatsAppLead): boolean {
+  const status = String(lead.status || "");
+  if (status === "paid_regular" || status === "paid_premium") return true;
+  const cd = (lead.chat_data as Record<string, unknown>) || {};
+  if (cd.plan === "regular" || cd.plan === "premium") {
+    const until = cd.plan_active_until as string | undefined;
+    if (until && new Date(until) > new Date()) return true;
+  }
+  return false;
+}
+
+function planLabel(lead: WhatsAppLead): string {
+  const cd = (lead.chat_data as Record<string, unknown>) || {};
+  const plan = cd.plan as string | undefined;
+  const billing = cd.billing as string | undefined;
+  const p = plan === "premium" ? "Premium" : plan === "regular" ? "Regular" : "Free";
+  const b = billing === "yearly" ? "Anual" : billing === "monthly" ? "Mensual" : "";
+  return `${p} ${b}`.trim();
+}
+
+function bienvenidaPagado(lead: WhatsAppLead): string {
+  const name = (lead.name as string)?.split(/\s+/)[0] || "";
+  const label = planLabel(lead);
+  return (
+    `¡Hola${name ? " " + name : ""}! 👋\n\n` +
+    `💎 *Plan ${label} activo* — tienes acceso a todas las clases.\n\n` +
+    `🎯 *¿Qué quieres hacer ahora?*\n` +
+    `• Escribe *practica* — empezamos sesión live de inglés\n` +
+    `• Escribe *audio* — tu siguiente lección Cuna\n` +
+    `• Escribe *progreso* — ver cómo vas\n` +
+    `• Escribe *pronunciacion* — test de pronunciación\n\n` +
+    `O escríbeme cualquier cosa en *inglés o español* y conversamos. Cada conversación es tu lección. ✨`
+  );
+}
+
+function bienvenidaRecurrente(name: string | undefined): string {
+  const n = name ? `, ${name}` : "";
+  return (
+    `¡Hola${n}! 👋 Qué bueno tenerte de vuelta.\n\n` +
+    `¿Qué quieres hacer hoy?\n\n` +
+    `🎧 Escribe *continuar* — siguiente lección de tu Fase Cuna\n` +
+    `💎 Escribe *pago* — activa tu plan completo (Regular S/39 o Premium S/89)\n` +
+    `📊 Escribe *progreso* — ver cómo vas\n` +
+    `🎤 Escribe *pronunciacion* — practicar tu pronunciación\n` +
+    `⚙️ Escribe *plan* — configurar tu rutina diaria\n\n` +
+    `O hazme cualquier pregunta sobre el método ✨`
+  );
+}
+
 async function handleDiaUnoSent(lead: WhatsAppLead, msg: string): Promise<AgentReply> {
   const trimmed = msg.trim();
+  const name = pactoFromLead(lead).name;
+
+  // Cliente recurrente: si dice "hola"/"menu" en lugar de 👍/👎, dar bienvenida
+  if (isSaludoRecurrente(trimmed)) {
+    return plain(bienvenidaRecurrente(name));
+  }
+
   const isPositive = /👍|listo|ok|s[ií]|entend[ií]|me\s+gust[oó]/i.test(trimmed);
   const isNegative = /👎|no\s+entend[ií]|nada|complicado|dif[ií]cil/i.test(trimmed);
-
-  const name = pactoFromLead(lead).name;
   const link = `${SIGNUP_LINK_BASE}?phone=${encodeURIComponent(lead.phone)}`;
 
   if (!isPositive && !isNegative) {
     return plain(
-      `Solo *👍* o *👎*. Cualquiera vale — es tu primer día.`
+      `Solo *👍* o *👎*. Cualquiera vale — es tu primer día.\n\n` +
+      `Si quieres ver opciones, escribe *menu*.`
     );
   }
 
@@ -318,14 +385,53 @@ async function handleDiaUnoSent(lead: WhatsAppLead, msg: string): Promise<AgentR
   await updateLead(lead.phone, { chat_state: "done" });
 
   return plain(
-    `${reaction}\n\nPara seguir tu Fase Cuna y desbloquear tu novela personal (donde TÚ eres el protagonista), crea tu cuenta acá:\n\n${link}\n\nLa primera semana es 100% gratis.`
+    `${reaction}\n\n💎 Para seguir y desbloquear tu novela personal (donde TÚ eres el protagonista), tienes 2 caminos:\n\n` +
+    `1️⃣ Activa tu plan por WhatsApp — escribe *pago* y eliges plan (S/39 mensual)\n` +
+    `2️⃣ Crea cuenta web (opcional) para ver dashboard:\n${link}\n\n` +
+    `Escribe *menu* para volver al comienzo.`
   );
 }
 
-async function handleDone(lead: WhatsAppLead, _msg: string): Promise<AgentReply> {
+async function handleDone(lead: WhatsAppLead, msg: string): Promise<AgentReply> {
+  const trimmed = msg.trim();
+  const name = pactoFromLead(lead).name;
   const link = `${SIGNUP_LINK_BASE}?phone=${encodeURIComponent(lead.phone)}`;
+
+  // Cliente recurrente: si dice hola/menu, dar bienvenida con opciones
+  if (isSaludoRecurrente(trimmed)) {
+    return plain(bienvenidaRecurrente(name));
+  }
+
+  // "practica", "empezar", "ahora", "audio", "leccion" → arrancar sesión live
+  if (/^(practica|practicar|empezar|empezamos|ahora|audio|lecci[oó]n|sesi[oó]n|arrancar|comenzar|listo|si|s[ií]\b)$/i.test(trimmed)) {
+    return plain(
+      `🎧 ${name ? "*" + name + "*, " : ""}vamos con tu sesión live de hoy.\n\n` +
+      `Escríbeme *cualquier cosa en inglés* — una frase, una pregunta, lo que se te ocurra. Yo te corrijo y conversamos.\n\n` +
+      `Ejemplo:\n_"Hi Sofia, today I went to the supermarket"_\n\n` +
+      `O en español si te trabas. Yo te ayudo a traducirlo. ✨`
+    );
+  }
+
+  // "continuar" → siguiente día
+  if (/^continuar$/i.test(trimmed)) {
+    return plain(
+      `🎧 Tu próximo audio llega mañana en tu horario.\n\n` +
+      `Si quieres practicar AHORA, escribe *practica* o solo escríbeme algo en inglés y conversamos.`
+    );
+  }
+
+  // "reiniciar"
+  if (/^reiniciar$/i.test(trimmed)) {
+    await updateLead(lead.phone, { chat_state: "greeting", chat_data: {} });
+    return plain(`Listo, empezamos de nuevo. Escribe *hola* para arrancar tu Pacto Cuna.`);
+  }
+
+  // Default: si lead tiene nombre, dar bienvenida; si no, ofrecer link
+  if (name) {
+    return plain(bienvenidaRecurrente(name));
+  }
   return plain(
-    `Tu Fase Cuna está lista.\n\nCrea tu cuenta acá para seguir:\n${link}\n\nO escríbeme *reiniciar* si quieres empezar de nuevo el Pacto.`
+    `Tu Fase Cuna está lista.\n\nEscribe *menu* para ver opciones, *pago* para activar tu plan, o crea cuenta web acá:\n${link}`
   );
 }
 
@@ -335,18 +441,94 @@ async function handleConverted(lead: WhatsAppLead, _msg: string): Promise<AgentR
   );
 }
 
+/**
+ * Handler para clientes con plan Regular o Premium activo.
+ * No los pasa por el funnel gratis.
+ */
+async function handlePaidUser(lead: WhatsAppLead, msg: string): Promise<AgentReply> {
+  const trimmed = msg.trim();
+  const name = (lead.name as string)?.split(/\s+/)[0] || "";
+
+  // Saludo / menu — bienvenida con opciones
+  if (isSaludoRecurrente(trimmed)) {
+    return plain(bienvenidaPagado(lead));
+  }
+
+  // Comandos rápidos
+  if (/^(practica|practicar|empezar|empezamos|ahora|arrancar|comenzar)$/i.test(trimmed)) {
+    return plain(
+      `🎧 ${name ? "*" + name + "*, " : ""}vamos con tu sesión live de inglés.\n\n` +
+      `Escríbeme *cualquier cosa en inglés* — una frase, una pregunta, una historia. Yo te respondo en inglés (más despacio si necesitas), te corrijo y conversamos.\n\n` +
+      `Ejemplo:\n_"Hi Sofia, today I went to the supermarket"_\n\n` +
+      `O en español si te trabas. Te ayudo a traducirlo. ✨`
+    );
+  }
+
+  if (/^audio$/i.test(trimmed)) {
+    return plain(
+      `🎧 Tu próximo audio Cuna llega *mañana en tu horario configurado*.\n\n` +
+      `Si quieres practicar AHORA, escribe *practica* o solo escríbeme algo en inglés.`
+    );
+  }
+
+  if (/^progreso$/i.test(trimmed)) {
+    return plain(
+      `📊 *Tu progreso* — voy a mostrar el dashboard.\n\n` +
+      `(Próximamente: panel completo en activosya.com/sofia-chat)`
+    );
+  }
+
+  if (/^pronunciaci[oó]n$/i.test(trimmed)) {
+    return plain(
+      `🎤 *Test de pronunciación*\n\n` +
+      `Repite esta frase en inglés grabándola como audio:\n\n` +
+      `_"Hello, my name is ${name || "Sofia"}, and I want to practice English every day."_\n\n` +
+      `Envíame el audio cuando estés listo. Te puntúo 0-100.`
+    );
+  }
+
+  // Default: pasar al modelo Claude para conversación libre con corrección
+  // (el master-prompt ya tiene reglas de Sofia)
+  try {
+    const conv = await fetchConversationMessages(lead.phone, 10);
+    conv.push({ role: "user", content: msg });
+    const { callMissSofia } = await import("./ai/claude");
+    const reply = await callMissSofia(conv);
+    return plain(reply || "Cuéntame más, te escucho 👂✨");
+  } catch (e) {
+    console.error("[handlePaidUser claude err]", e);
+    return plain(
+      `${name ? name + ", " : ""}escríbeme algo en inglés y te respondo. O escribe *menu* para ver opciones.`
+    );
+  }
+}
+
+async function fetchConversationMessages(
+  phone: string,
+  limit: number,
+): Promise<Array<{ role: "user" | "assistant"; content: string }>> {
+  const lead = await getOrCreateLead(phone);
+  const msgs = Array.isArray(lead.chat_messages) ? lead.chat_messages : [];
+  return msgs
+    .slice(-limit)
+    .filter((m): m is { role: "user" | "assistant"; content: string } =>
+      typeof m === "object" && m !== null && (m.role === "user" || m.role === "assistant") && typeof m.content === "string"
+    );
+}
+
 // =====================================================================
 // Main entry — process one WhatsApp message and return reply
 // =====================================================================
 
 export async function processWhatsAppMessage(
   phone: string,
-  userMessage: string
+  userMessage: string,
+  tenantId: string | null = null
 ): Promise<AgentReply> {
-  const lead = await getOrCreateLead(phone);
+  const lead = await getOrCreateLead(phone, tenantId);
 
-  // Hard reset
-  if (isResetCommand(userMessage) && lead.status !== "converted") {
+  // Hard reset — pero NUNCA si el cliente tiene plan pagado activo
+  if (isResetCommand(userMessage) && lead.status !== "converted" && !hasPaidPlan(lead)) {
     await updateLead(phone, {
       status: "new",
       chat_state: "greeting",
@@ -364,6 +546,14 @@ export async function processWhatsAppMessage(
     await appendMessage(phone, "user", userMessage);
     const reply = await handleConverted(lead, userMessage);
     await appendMessage(phone, "assistant", reply.text ?? "");
+    return reply;
+  }
+
+  // ⭐ Cliente con plan pagado activo: NO entrar al funnel free
+  if (hasPaidPlan(lead)) {
+    await appendMessage(phone, "user", userMessage);
+    const reply = await handlePaidUser(lead, userMessage);
+    await appendMessage(phone, "assistant", reply.text ?? "[media]");
     return reply;
   }
 
@@ -427,9 +617,6 @@ const SOFIA_FLOWS_BASE = (
   process.env.NEXT_PUBLIC_BASE_URL ?? "https://activosya.com"
 ).replace(/\/$/, "");
 
-const TWILIO_SOFIA_SID = (process.env.TWILIO_SOFIA_ACCOUNT_SID ?? "").trim();
-const TWILIO_SOFIA_TOK = (process.env.TWILIO_SOFIA_AUTH_TOKEN ?? "").trim();
-
 async function findUserIdByPhone(phone: string): Promise<string | null> {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -483,25 +670,13 @@ async function clearPronunciationPending(userId: string): Promise<void> {
     .eq("user_id", userId);
 }
 
+// Twilio eliminado 2026-05-10. Cuando processVoiceMessage recibe un mediaUrl
+// (path legacy), ya NO hay Auth Twilio para descargarlo. Retornamos null y el
+// caller debe pasar buffer directo (Meta Cloud webhook ya lo descarga).
 async function downloadTwilioMedia(
-  mediaUrl: string
+  _mediaUrl: string,
 ): Promise<{ buffer: Buffer; mime: string } | null> {
-  if (!TWILIO_SOFIA_SID || !TWILIO_SOFIA_TOK) return null;
-  try {
-    const auth = Buffer.from(`${TWILIO_SOFIA_SID}:${TWILIO_SOFIA_TOK}`).toString("base64");
-    const r = await fetch(mediaUrl, {
-      headers: { Authorization: `Basic ${auth}` },
-      redirect: "follow",
-      cache: "no-store",
-    });
-    if (!r.ok) return null;
-    const buf = Buffer.from(await r.arrayBuffer());
-    const mime = r.headers.get("content-type") ?? "audio/ogg";
-    return { buffer: buf, mime };
-  } catch (e) {
-    console.error("[downloadTwilioMedia]", (e as Error).message);
-    return null;
-  }
+  return null;
 }
 
 /**
@@ -517,9 +692,10 @@ async function downloadTwilioMedia(
 export async function processVoiceMessage(
   phone: string,
   mediaUrlOrBuffer: string | { buffer: Buffer; mime: string },
-  _mediaContentType?: string
+  _mediaContentType?: string,
+  tenantId: string | null = null
 ): Promise<AgentReply | null> {
-  await getOrCreateLead(phone); // asegura row existe
+  await getOrCreateLead(phone, tenantId); // asegura row existe + atribuye a operador si llega de uno
 
   const userId = await findUserIdByPhone(phone);
   if (!userId) return null;

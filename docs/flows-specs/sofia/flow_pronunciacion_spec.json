@@ -1,14 +1,11 @@
 {
   "version": "7.0",
-  "data_api_version": "3.0",
-  "routing_model": {
-    "FRASE": ["SUCCESS"]
-  },
   "screens": [
     {
       "id": "FRASE",
       "title": "Pronunciacion",
-      "terminal": false,
+      "terminal": true,
+      "success": true,
       "data": {
         "target_phrase": { "type": "string", "__example__": "I would like a coffee, please." },
         "linea_titulo": { "type": "string", "__example__": "Test de pronunciacion" },
@@ -26,31 +23,13 @@
             "type": "Footer",
             "label": "Estoy listo",
             "on-click-action": {
-              "name": "data_exchange",
+              "name": "complete",
               "payload": {
+                "status": "awaiting_audio",
                 "target_phrase": "${data.target_phrase}"
               }
             }
           }
-        ]
-      }
-    },
-    {
-      "id": "SUCCESS",
-      "title": "Esperando audio",
-      "terminal": true,
-      "success": true,
-      "data": {
-        "extension_message_response": {
-          "type": "object",
-          "__example__": { "params": { "status": "awaiting_audio" } }
-        }
-      },
-      "layout": {
-        "type": "SingleColumnLayout",
-        "children": [
-          { "type": "TextHeading", "text": "Listo" },
-          { "type": "TextBody", "text": "Envia ahora un audio en WhatsApp diciendo la frase." }
         ]
       }
     }

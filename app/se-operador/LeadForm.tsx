@@ -1,7 +1,9 @@
 "use client";
 import { useState } from "react";
 
-export default function LeadForm() {
+type ActivoSlug = "miss-sofia" | "tudestinoya";
+
+export default function LeadForm({ defaultActivo = "miss-sofia" as ActivoSlug }: { defaultActivo?: ActivoSlug }) {
   const [step, setStep] = useState<"form" | "ok">("form");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -10,7 +12,7 @@ export default function LeadForm() {
     telefono: "",
     email: "",
     ciudad: "",
-    activo_interes: "miss-sofia",
+    activo_interes: defaultActivo,
     plan_interes: "no-decidido",
     comentario: "",
   });
@@ -43,13 +45,15 @@ export default function LeadForm() {
   }
 
   if (step === "ok") {
+    const activoLabel = data.activo_interes === "tudestinoya" ? "TuDestinoYa" : "Miss Sofia";
     return (
       <div className="rounded-3xl border border-amber-500/40 bg-gradient-to-br from-amber-500/15 to-orange-500/5 p-8 text-center">
         <div className="text-5xl mb-4">🎉</div>
-        <div className="text-2xl font-bold mb-2">¡Recibimos tu interés!</div>
+        <div className="text-2xl font-bold mb-2">¡Recibimos tu interés en {activoLabel}!</div>
         <div className="text-zinc-300 mb-6">
-          Te enviamos un mensaje de bienvenida a tu WhatsApp. Te contactaremos en menos de 24
-          horas para resolver tus dudas y empezar.
+          Te enviamos un mensaje de bienvenida a tu WhatsApp con las instrucciones para pagar tu
+          primera renta. En cuanto detectemos tu Yape (1-2 minutos), tu cuenta queda activada
+          automáticamente y recibes tu kit de operador.
         </div>
         <div className="text-sm text-zinc-500">
           Mientras tanto, revisa tu WhatsApp 📲
@@ -58,8 +62,27 @@ export default function LeadForm() {
     );
   }
 
+  const activoLabel = data.activo_interes === "tudestinoya" ? "TuDestinoYa" : "Miss Sofia";
+
   return (
     <form onSubmit={submit} className="rounded-3xl border border-white/10 bg-white/[0.02] backdrop-blur-xl p-8 space-y-5">
+      {/* Activo seleccionado (info visual) */}
+      <div className="flex items-center justify-between p-3 rounded-xl bg-amber-500/10 border border-amber-500/30">
+        <div>
+          <div className="text-[10px] text-amber-300 uppercase tracking-widest font-bold">Te registras como operador</div>
+          <div className="text-lg font-bold text-amber-400">
+            {data.activo_interes === "tudestinoya" ? "✨ " : "◎ "}
+            {activoLabel}
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => setData({ ...data, activo_interes: data.activo_interes === "tudestinoya" ? "miss-sofia" : "tudestinoya" })}
+          className="text-xs px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition"
+        >
+          Cambiar
+        </button>
+      </div>
       <div>
         <label className="block text-xs text-zinc-400 uppercase tracking-widest font-semibold mb-2">
           Tu nombre completo *

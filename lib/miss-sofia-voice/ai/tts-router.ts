@@ -17,6 +17,8 @@
  */
 import { cleanTextForTTS, elevenLabsTTS } from "./elevenlabs";
 import { isOpenAIConfigured, openaiTTS } from "./openai-tts";
+import { isKokoroConfigured, kokoroTTS } from "./kokoro-tts";
+import { canUseEleven, addElevenUsedChars } from "../eleven-cap";
 
 export type TTSContext = "chat" | "hero"; // 'hero' = momentos especiales (Día 1, capítulos, audio-diario)
 export type UserPlan = "free" | "regular" | "premium" | string | null | undefined;
@@ -24,7 +26,7 @@ export type UserPlan = "free" | "regular" | "premium" | string | null | undefine
 export type TTSResult = {
   audioBuffer: Buffer;
   contentType: string;
-  engine: "elevenlabs" | "openai" | "none";
+  engine: "elevenlabs" | "openai" | "kokoro" | "none";
 };
 
 /**
@@ -40,30 +42,69 @@ export async function synthesizeForPlan(opts: {
   text: string;
   plan: UserPlan;
   context?: TTSContext;
+  phone?: string; // E.164 — para cap ElevenLabs por cliente
 }): Promise<TTSResult | null> {
   const cleaned = cleanTextForTTS(opts.text);
   if (!cleaned.trim()) return null;
 
   const context = opts.context ?? "chat";
+  const phone = opts.phone || "";
 
-  // Hero moments → always ElevenLabs (la magia central del producto)
+  // Hero moments → ElevenLabs preferido (con cap). Si exceed cap → Kokoro → OpenAI
   if (context === "hero") {
-    return tryElevenLabs(cleaned);
+    if (phone) {
+      const { allowed } = await canUseEleven(phone, cleaned.length);
+      if (allowed) {
+        const eleven = await tryElevenLabs(cleaned);
+        if (eleven) {
+          await addElevenUsedChars(phone, cleaned.length).catch(() => {});
+          return eleven;
+        }
+      }
+    } else {
+      const eleven = await tryElevenLabs(cleaned);
+      if (eleven) return eleven;
+    }
+    const kokoro = await tryKokoro(cleaned);
+    if (kokoro) return kokoro;
+    return tryOpenAI(cleaned);
   }
 
   // Chat: route by plan
   const plan = (opts.plan ?? "free").toLowerCase();
   if (plan === "premium") {
-    // Premium plan → ElevenLabs always; if it fails, try OpenAI as backup
-    const result = await tryElevenLabs(cleaned);
-    if (result) return result;
+    // Premium chat: Kokoro principal (margen alto), ElevenLabs backup con cap, OpenAI último
+    const kokoro = await tryKokoro(cleaned);
+    if (kokoro) return kokoro;
+    if (phone) {
+      const { allowed } = await canUseEleven(phone, cleaned.length);
+      if (allowed) {
+        const eleven = await tryElevenLabs(cleaned);
+        if (eleven) {
+          await addElevenUsedChars(phone, cleaned.length).catch(() => {});
+          return eleven;
+        }
+      }
+    }
     return tryOpenAI(cleaned);
   }
 
-  // Free, regular, anything else → OpenAI Nova; ElevenLabs as backup
-  const result = await tryOpenAI(cleaned);
-  if (result) return result;
-  return tryElevenLabs(cleaned);
+  // Free + Regular: Kokoro principal (gratis), OpenAI Nova fallback, ElevenLabs último (con cap)
+  const kokoro = await tryKokoro(cleaned);
+  if (kokoro) return kokoro;
+  const oa = await tryOpenAI(cleaned);
+  if (oa) return oa;
+  if (phone) {
+    const { allowed } = await canUseEleven(phone, cleaned.length);
+    if (allowed) {
+      const eleven = await tryElevenLabs(cleaned);
+      if (eleven) {
+        await addElevenUsedChars(phone, cleaned.length).catch(() => {});
+        return eleven;
+      }
+    }
+  }
+  return null;
 }
 
 async function tryElevenLabs(text: string): Promise<TTSResult | null> {
@@ -86,6 +127,17 @@ async function tryOpenAI(text: string): Promise<TTSResult | null> {
     return { ...tts, engine: "openai" };
   } catch (e) {
     console.error("tts-router: OpenAI failed:", e);
+    return null;
+  }
+}
+
+async function tryKokoro(text: string): Promise<TTSResult | null> {
+  if (!isKokoroConfigured()) return null;
+  try {
+    const tts = await kokoroTTS(text);
+    return { ...tts, engine: "kokoro" };
+  } catch (e) {
+    console.error("tts-router: Kokoro failed:", (e as Error).message);
     return null;
   }
 }

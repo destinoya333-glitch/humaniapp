@@ -38,7 +38,8 @@ const PRICING: Record<string, Record<string, number>> = {
   cuna_vip: { monthly: 89, yearly: 799 },
 };
 
-const YAPE_DESTINATION = {
+// Default Yape (Percy master) — usado solo si el alumno NO viene de un operador franquicia
+const YAPE_DEFAULT = {
   number: "998 102 258",
   name: "Percy Roj*",
 };
@@ -48,6 +49,65 @@ function normalizePhone(raw: string): string | null {
   const cleaned = raw.trim().replace(/[^\d+]/g, "");
   if (!cleaned) return null;
   return cleaned.startsWith("+") ? cleaned : `+${cleaned}`;
+}
+
+/**
+ * Multi-tenant: dado el phone del alumno, busca a qué operador pertenece y
+ * devuelve SU Yape personal. Si el alumno no viene de un operador franquicia,
+ * devuelve el Yape default de Percy (legacy/master).
+ *
+ * Source of truth: mse_whatsapp_leads.tenant_id (lead) o mse_users.tenant_id (registrado).
+ */
+async function resolveYapeForAlumno(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabase: any,
+  phone: string,
+): Promise<{ number: string; name: string; tenant_id: string | null }> {
+  // 1) Intentar por mse_whatsapp_leads (que ya se etiquetó con tenant_id en F3 cuando llegó el msg)
+  const { data: lead } = await supabase
+    .from("mse_whatsapp_leads")
+    .select("tenant_id")
+    .eq("phone", phone)
+    .maybeSingle();
+
+  let tenantId: string | null = (lead as { tenant_id?: string | null } | null)?.tenant_id ?? null;
+
+  // 2) Fallback: por mse_users si el alumno ya está registrado
+  if (!tenantId) {
+    const { data: user } = await supabase
+      .from("mse_users")
+      .select("tenant_id")
+      .eq("whatsapp_phone", phone)
+      .maybeSingle();
+    tenantId = (user as { tenant_id?: string | null } | null)?.tenant_id ?? null;
+  }
+
+  if (!tenantId) {
+    return { ...YAPE_DEFAULT, tenant_id: null };
+  }
+
+  // Resolver Yape del operador
+  const { data: tenant } = await supabase
+    .from("ay_tenants")
+    .select("name, yape_numero, status")
+    .eq("id", tenantId)
+    .maybeSingle();
+
+  const t = tenant as { name?: string; yape_numero?: string | null; status?: string } | null;
+  if (!t || !t.yape_numero || t.status !== "active") {
+    // Operador no activo o sin Yape configurado → fallback a default Percy
+    return { ...YAPE_DEFAULT, tenant_id: null };
+  }
+
+  // Formato bonito: 51999111111 → "999 111 111"
+  const last9 = t.yape_numero.startsWith("51") ? t.yape_numero.slice(2) : t.yape_numero;
+  const display = `${last9.slice(0, 3)} ${last9.slice(3, 6)} ${last9.slice(6, 9)}`;
+
+  return {
+    number: display,
+    name: t.name ?? "Tu operador",
+    tenant_id: tenantId,
+  };
 }
 
 export async function POST(req: NextRequest) {
@@ -83,6 +143,9 @@ export async function POST(req: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
+    // Multi-tenant: resolver el Yape del operador correcto (o default Percy)
+    const yape = await resolveYapeForAlumno(supabase, phone);
+
     const { data: payment, error } = await supabase
       .from("mse_payments")
       .insert({
@@ -93,6 +156,7 @@ export async function POST(req: NextRequest) {
         amount_pen: amount,
         yape_operation_code: yapeOperationCode?.trim() || null,
         status: "pending_validation",
+        tenant_id: yape.tenant_id, // F3b: atribuye el pago al operador franquicia
         metadata: { source: "whatsapp_flow" },
       })
       .select("id")
@@ -104,8 +168,8 @@ export async function POST(req: NextRequest) {
       payment_id: payment.id,
       amount_pen: amount,
       currency: "PEN",
-      yape_destination: YAPE_DESTINATION,
-      message: `Yapea S/${amount} a ${YAPE_DESTINATION.name} (${YAPE_DESTINATION.number}). Tu plan se activa en minutos cuando confirmemos el pago.`,
+      yape_destination: { number: yape.number, name: yape.name },
+      message: `Yapea S/${amount} a ${yape.name} (${yape.number}). Tu plan se activa en minutos cuando confirmemos el pago.`,
     });
   } catch (e) {
     console.error("sofia-flows/payment error:", e);

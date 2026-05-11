@@ -7,7 +7,9 @@ export const supabase: any = createClient(
 );
 
 // ─── Cliente ─────────────────────────────────────────────
-export async function getOrCreateCliente(celular: string, nombre?: string) {
+// Multi-tenant: tenantId opcional atribuye el cliente al operador franquicia.
+// NULL = cliente directo Percy (legacy / master).
+export async function getOrCreateCliente(celular: string, tenantId?: string | null, nombre?: string) {
   const { data: existing } = await supabase
     .from("destinoya_clientes")
     .select("*")
@@ -15,16 +17,16 @@ export async function getOrCreateCliente(celular: string, nombre?: string) {
     .maybeSingle();
 
   if (existing) {
-    await supabase
-      .from("destinoya_clientes")
-      .update({ last_seen: new Date().toISOString() })
-      .eq("id", existing.id);
-    return existing;
+    const update: Record<string, unknown> = { last_seen: new Date().toISOString() };
+    // Si llegó por un operador y aún no tenía tenant_id asignado, atribuirlo ahora
+    if (tenantId && !existing.tenant_id) update.tenant_id = tenantId;
+    await supabase.from("destinoya_clientes").update(update).eq("id", existing.id);
+    return { ...existing, ...update };
   }
 
   const { data: nuevo } = await supabase
     .from("destinoya_clientes")
-    .insert({ celular, nombre: nombre || null })
+    .insert({ celular, nombre: nombre || null, tenant_id: tenantId ?? null })
     .select()
     .single();
   return nuevo;
@@ -104,6 +106,10 @@ export async function marcarGratuitaUsada(celular: string) {
 }
 
 // ─── Pagos ──────────────────────────────────────────────
+// Multi-tenant: tenant_id opcional atribuye el pago al operador franquicia.
+// NULL = pago directo Percy (legacy/master). Cuando hay operador, también
+// se va a registrar el ingreso en ay_operador_pagos cuando MacroDroid del
+// operador detecte el Yape (ver F4: /api/yape-detect/{token}).
 export async function registrarPagoPendiente(pago: {
   celular: string;
   monto: number;
@@ -113,6 +119,7 @@ export async function registrarPagoPendiente(pago: {
   fecha1?: string;
   nombre2?: string;
   fecha2?: string;
+  tenant_id?: string | null;
 }) {
   const { data } = await supabase
     .from("destinoya_pagos")

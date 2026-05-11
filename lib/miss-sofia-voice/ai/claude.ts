@@ -19,7 +19,9 @@ export async function callMissSofia(messages: ConversationMessage[]): Promise<st
   const response = await getClient().messages.create({
     model: CLAUDE_MODEL,
     max_tokens: 600,
-    system: MISS_SOFIA_MASTER_PROMPT,
+    system: [
+      { type: "text", text: MISS_SOFIA_MASTER_PROMPT, cache_control: { type: "ephemeral" } },
+    ],
     messages: messages.map((m) => ({ role: m.role, content: m.content })),
   });
   const text = response.content.find((b) => b.type === "text");

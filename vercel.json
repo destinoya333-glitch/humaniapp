@@ -1,12 +1,16 @@
 {
   "crons": [
     {
-      "path": "/api/sofia-daily-cron",
-      "schedule": "0 11 * * *"
-    },
-    {
       "path": "/api/cron/cuna-daily-tick",
       "schedule": "0 10 * * *"
+    },
+    {
+      "path": "/api/cron/operadores-renta",
+      "schedule": "0 14 * * *"
+    },
+    {
+      "path": "/api/cron/cuento-reset-vip",
+      "schedule": "0 10 1 * *"
     }
   ]
 }

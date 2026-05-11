@@ -79,6 +79,72 @@ export async function sendAudio(to: string, audioUrl: string) {
   });
 }
 
+/**
+ * Sube un archivo a Meta /media y envía al cliente como mensaje document.
+ * `filename` debe incluir extensión (ej. "CV-Percy.docx" o "CV-Percy.pdf").
+ */
+export async function sendDocument(opts: {
+  to: string;
+  buffer: Buffer;
+  filename: string;
+  mimeType: string;
+  caption?: string;
+}): Promise<{ ok: boolean; error?: string; messageId?: string }> {
+  const m = meta();
+  if (!m) return { ok: false, error: "META_DESTINOYA_* no configuradas" };
+  // Step 1: upload media
+  const boundary = "----DocBoundary" + Date.now();
+  const crlf = "\r\n";
+  const partsHeader = [
+    `--${boundary}`,
+    `Content-Disposition: form-data; name="messaging_product"`,
+    "",
+    "whatsapp",
+    `--${boundary}`,
+    `Content-Disposition: form-data; name="type"`,
+    "",
+    opts.mimeType,
+    `--${boundary}`,
+    `Content-Disposition: form-data; name="file"; filename="${opts.filename}"`,
+    `Content-Type: ${opts.mimeType}`,
+    "",
+    "",
+  ].join(crlf);
+  const partsFooter = `${crlf}--${boundary}--${crlf}`;
+  const payload = Buffer.concat([
+    Buffer.from(partsHeader),
+    opts.buffer,
+    Buffer.from(partsFooter),
+  ]);
+  let mediaId: string | null = null;
+  try {
+    const r = await fetch(`${GRAPH}/${m.phoneId}/media`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${m.token}`,
+        "Content-Type": `multipart/form-data; boundary=${boundary}`,
+      },
+      body: payload,
+    });
+    const j = (await r.json()) as { id?: string; error?: { message?: string } };
+    if (!r.ok || !j.id) return { ok: false, error: j.error?.message || `upload HTTP ${r.status}` };
+    mediaId = j.id;
+  } catch (e) {
+    return { ok: false, error: (e as Error).message };
+  }
+  // Step 2: send message with media id
+  return rawSend({
+    messaging_product: "whatsapp",
+    to: normalizeTo(opts.to),
+    type: "document",
+    document: {
+      id: mediaId,
+      filename: opts.filename,
+      ...(opts.caption ? { caption: opts.caption } : {}),
+    },
+  });
+}
+
 export async function sendTemplate(opts: {
   to: string;
   templateName: string;

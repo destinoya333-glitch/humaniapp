@@ -1,0 +1,43 @@
+{
+  "version": "7.0",
+  "screens": [
+    {
+      "id": "DATOS",
+      "title": "Carta Astral",
+      "terminal": true,
+      "success": true,
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          { "type": "TextHeading", "text": "Tus datos de nacimiento" },
+          { "type": "TextBody", "text": "Con estos datos trazo tu mapa estelar. La hora aproximada está bien." },
+          {
+            "type": "Form",
+            "name": "form_carta",
+            "init-values": {},
+            "children": [
+              { "type": "TextInput", "name": "nombre", "label": "Nombre completo", "input-type": "text", "required": true, "min-chars": 2, "max-chars": 80 },
+              { "type": "TextInput", "name": "fecha", "label": "Fecha de nacimiento (DD/MM/AAAA)", "input-type": "text", "required": true, "min-chars": 6, "max-chars": 20 },
+              { "type": "TextInput", "name": "hora", "label": "Hora de nacimiento (aprox. HH:MM)", "input-type": "text", "required": true, "min-chars": 3, "max-chars": 20 },
+              { "type": "TextInput", "name": "ciudad", "label": "Ciudad de nacimiento", "input-type": "text", "required": true, "min-chars": 2, "max-chars": 80 },
+              {
+                "type": "Footer",
+                "label": "Enviar datos",
+                "on-click-action": {
+                  "name": "complete",
+                  "payload": {
+                    "status": "datos_carta_astral",
+                    "nombre": "${form.nombre}",
+                    "fecha": "${form.fecha}",
+                    "hora": "${form.hora}",
+                    "ciudad": "${form.ciudad}"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

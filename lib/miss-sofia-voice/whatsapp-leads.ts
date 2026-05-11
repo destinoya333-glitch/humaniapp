@@ -29,17 +29,31 @@ export type WhatsAppLead = {
   chat_data: Record<string, unknown>;
 };
 
-export async function getOrCreateLead(phone: string): Promise<WhatsAppLead> {
+// Multi-tenant: tenantId opcional. Si el lead llegó por un operador franquicia,
+// se persiste el tenant_id. NULL = lead directo Percy (legacy/master).
+export async function getOrCreateLead(phone: string, tenantId?: string | null): Promise<WhatsAppLead> {
   const existing = await db()
     .from("mse_whatsapp_leads")
     .select("*")
     .eq("phone", phone)
     .maybeSingle();
-  if (existing.data) return existing.data as unknown as WhatsAppLead;
+  if (existing.data) {
+    // Si el lead ya existía sin tenant_id pero ahora llega por un operador,
+    // atribuirlo retroactivamente.
+    const existingTenant = (existing.data as { tenant_id?: string | null }).tenant_id;
+    if (tenantId && !existingTenant) {
+      await db()
+        .from("mse_whatsapp_leads")
+        .update({ tenant_id: tenantId })
+        .eq("phone", phone);
+      (existing.data as { tenant_id?: string | null }).tenant_id = tenantId;
+    }
+    return existing.data as unknown as WhatsAppLead;
+  }
 
   const created = await db()
     .from("mse_whatsapp_leads")
-    .insert({ phone, status: "new", chat_state: "greeting" })
+    .insert({ phone, status: "new", chat_state: "greeting", tenant_id: tenantId ?? null })
     .select()
     .single();
   if (created.error) throw created.error;

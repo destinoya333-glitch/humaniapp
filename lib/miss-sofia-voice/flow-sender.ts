@@ -92,6 +92,15 @@ export async function sendSofiaFlow(opts: {
   const token = (process.env.META_SOFIA_ACCESS_TOKEN ?? "").trim();
   const to = opts.phone.startsWith("+") ? opts.phone : `+${opts.phone}`;
 
+  const FIRST_SCREEN: Record<string, string> = {
+    "pacto-cuna": "PACTO",
+    "plan-estudio": "PLAN",
+    pago: "COMPARATIVA",
+    progreso: "PROGRESO",
+    pronunciacion: "FRASE",
+  };
+  const firstScreen = FIRST_SCREEN[opts.flowKey] || "PACTO";
+
   const body = {
     messaging_product: "whatsapp",
     to,
@@ -109,7 +118,8 @@ export async function sendSofiaFlow(opts: {
           flow_token: `miss-sofia:${opts.flowKey}:${opts.userIdOrPhone}`,
           flow_id: flowId,
           flow_cta: copy.cta,
-          flow_action: "data_exchange",
+          flow_action: "navigate",
+          flow_action_payload: { screen: firstScreen },
         },
       },
     },

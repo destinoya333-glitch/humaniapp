@@ -26,20 +26,30 @@ function SignupForm() {
     e.preventDefault();
     setLoading(true);
     setErr(null);
-    const supabase = createClient();
     try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/sofia-auth/callback`,
-          data: phone ? { whatsapp_phone: phone } : undefined,
-        },
+      // Direct signup endpoint con auto-confirm (sin SMTP rate limit)
+      const r = await fetch("/api/sofia-auth/signup-direct", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, phone }),
       });
-      if (error) throw error;
-      setMsg(
-        "Cuenta creada. Revisa tu correo para confirmar y luego completar tu perfil."
-      );
+      const body = await r.json();
+      if (!r.ok || !body.ok) {
+        setErr(body.error || "Error creando la cuenta");
+        return;
+      }
+      // Set session en client para que el dashboard lo reconozca
+      if (body.access_token && body.refresh_token) {
+        const supabase = createClient();
+        await supabase.auth.setSession({
+          access_token: body.access_token,
+          refresh_token: body.refresh_token,
+        });
+      }
+      setMsg("¡Cuenta creada! Redirigiendo...");
+      setTimeout(() => {
+        window.location.href = "/sofia-onboarding" + (phone ? `?phone=${encodeURIComponent(phone)}` : "");
+      }, 800);
     } catch (e) {
       setErr((e as Error).message);
     } finally {
@@ -65,24 +75,34 @@ function SignupForm() {
           )}
         </div>
 
-        <form onSubmit={submit} className="space-y-3">
-          <input
-            type="email"
-            placeholder="tu@correo.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <input
-            type="password"
-            placeholder="crea una contraseña (8+ caracteres)"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            minLength={8}
-            required
-            className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+        <form onSubmit={submit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Tu correo electrónico
+            </label>
+            <input
+              type="email"
+              placeholder="tu@correo.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Crea una contraseña
+            </label>
+            <input
+              type="password"
+              placeholder="mínimo 8 caracteres"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              minLength={8}
+              required
+              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
           <button
             type="submit"
             disabled={loading}

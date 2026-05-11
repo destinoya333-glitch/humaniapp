@@ -1,0 +1,41 @@
+{
+  "version": "7.0",
+  "screens": [
+    {
+      "id": "DATOS",
+      "title": "Feng Shui Express",
+      "terminal": true,
+      "success": true,
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          { "type": "TextHeading", "text": "Tus datos para Feng Shui" },
+          { "type": "TextBody", "text": "Con esto preparo tu lectura de Feng Shui personalizada." },
+          {
+            "type": "Form",
+            "name": "form_feng",
+            "init-values": {},
+            "children": [
+              { "type": "TextInput", "name": "nombre", "label": "Nombre completo", "input-type": "text", "required": true, "min-chars": 2, "max-chars": 80 },
+              { "type": "TextInput", "name": "fecha", "label": "Fecha de nacimiento (DD/MM/AAAA)", "input-type": "text", "required": true, "min-chars": 6, "max-chars": 20 },
+              { "type": "TextInput", "name": "ciudad", "label": "Ciudad donde vives", "input-type": "text", "required": true, "min-chars": 2, "max-chars": 80 },
+              {
+                "type": "Footer",
+                "label": "Enviar datos",
+                "on-click-action": {
+                  "name": "complete",
+                  "payload": {
+                    "status": "datos_feng_shui",
+                    "nombre": "${form.nombre}",
+                    "fecha": "${form.fecha}",
+                    "ciudad": "${form.ciudad}"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

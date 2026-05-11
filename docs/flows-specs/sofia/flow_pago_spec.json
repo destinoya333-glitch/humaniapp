@@ -1,34 +1,58 @@
 {
   "version": "7.0",
-  "data_api_version": "3.0",
   "routing_model": {
-    "COMPARATIVA": ["PAGO"],
-    "PAGO": ["SUCCESS"]
+    "COMPARATIVA": ["DETALLES", "PAGO"],
+    "DETALLES": ["PAGO"]
   },
   "screens": [
     {
       "id": "COMPARATIVA",
-      "title": "Plan",
+      "title": "Plan Sofia",
       "terminal": false,
-      "data": {
-        "linea_titulo": { "type": "string", "__example__": "Sofia Regular o Sofia Premium" },
-        "linea_cuna": { "type": "string", "__example__": "Regular - S/39/mes o S/349/ano. Voz Nova ilimitada." },
-        "linea_vip": { "type": "string", "__example__": "Premium - S/89/mes o S/799/ano. ElevenLabs 45 min/mes." },
-        "linea_garantia": { "type": "string", "__example__": "Garantia Klaric 6 meses." }
-      },
       "layout": {
         "type": "SingleColumnLayout",
         "children": [
-          { "type": "TextHeading", "text": "${data.linea_titulo}" },
-          { "type": "TextBody", "text": "${data.linea_cuna}" },
-          { "type": "TextBody", "text": "${data.linea_vip}" },
-          { "type": "TextBody", "text": "${data.linea_garantia}" },
+          { "type": "TextHeading", "text": "Sofia Regular o Sofia Premium" },
+          { "type": "TextBody", "text": "✨ Regular — S/39/mes o S/349/año (ahorras S/119)\nAudios diarios ilimitados con voz Nova, novela personal, chat con Sofia." },
+          { "type": "TextBody", "text": "🌟 Premium — S/89/mes o S/799/año (ahorras S/269)\nTodo lo de Regular + Voz ElevenLabs (45 min/mes), capítulos novela acelerados, sello Cuna nativo USA." },
+          { "type": "TextBody", "text": "🛡️ Garantía Klaric 6 meses: si en 6 meses no progresas, te devolvemos cada centavo." },
+          {
+            "type": "Footer",
+            "label": "¿Qué significa todo esto?",
+            "on-click-action": {
+              "name": "navigate",
+              "next": { "type": "screen", "name": "DETALLES" },
+              "payload": {}
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "DETALLES",
+      "title": "Detalles del método",
+      "terminal": false,
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          { "type": "TextHeading", "text": "Conceptos clave" },
+          { "type": "TextSubheading", "text": "🍼 Método Cuna" },
+          { "type": "TextBody", "text": "Aprendes inglés como aprendiste español de bebé: escuchando primero, sin traducir, sin presión. 30 días de Fase Cuna + audios diarios." },
+          { "type": "TextSubheading", "text": "📖 Novela personal" },
+          { "type": "TextBody", "text": "TÚ eres el protagonista. Cada capítulo se genera con tu nombre, ciudad y motivación. Aprendes inglés viviendo TU historia, no la de un libro." },
+          { "type": "TextSubheading", "text": "🇺🇸 Sello Cuna nativo USA (solo Premium)" },
+          { "type": "TextBody", "text": "Audios con voz humana de hablantes nativos USA, no IA. Te entrena el oído al acento real que escucharás en películas, trabajo, viajes." },
+          { "type": "TextSubheading", "text": "🎙️ Voz Nova vs ElevenLabs" },
+          { "type": "TextBody", "text": "Nova (OpenAI): voz IA fluida, en TODOS los planes ilimitada.\nElevenLabs (Premium): voz IA premium con entonación humana, 45 min/mes para tus momentos hero." },
+          { "type": "TextSubheading", "text": "🛡️ Garantía Klaric 6 meses" },
+          { "type": "TextBody", "text": "Si en 6 meses cumpliendo tu Pacto Cuna no progresas, te devolvemos el 100% de lo pagado. Sin preguntas. Inspirada en la filosofía de Jürgen Klaric: 'vendele a la mente, no a la gente'." },
           {
             "type": "Footer",
             "label": "Continuar al pago",
             "on-click-action": {
-              "name": "data_exchange",
-              "payload": { "step": "to_pago" }
+              "name": "navigate",
+              "next": { "type": "screen", "name": "PAGO" },
+              "payload": {}
             }
           }
         ]
@@ -37,22 +61,14 @@
     {
       "id": "PAGO",
       "title": "Pago Yape",
-      "terminal": false,
-      "data": {
-        "linea_titulo": { "type": "string", "__example__": "Pago por Yape" },
-        "linea_yape": { "type": "string", "__example__": "Yapea a Percy Roj* — 998 102 258" },
-        "linea_instrucciones": { "type": "string", "__example__": "Selecciona tu plan, yapea el monto exacto..." },
-        "option_cuna_monthly": { "type": "string", "__example__": "Regular · S/39/mes" },
-        "option_cuna_yearly": { "type": "string", "__example__": "Regular · S/349/ano" },
-        "option_premium_monthly": { "type": "string", "__example__": "Premium · S/89/mes" },
-        "option_premium_yearly": { "type": "string", "__example__": "Premium · S/799/ano" }
-      },
+      "terminal": true,
+      "success": true,
       "layout": {
         "type": "SingleColumnLayout",
         "children": [
-          { "type": "TextHeading", "text": "${data.linea_titulo}" },
-          { "type": "TextSubheading", "text": "${data.linea_yape}" },
-          { "type": "TextBody", "text": "${data.linea_instrucciones}" },
+          { "type": "TextHeading", "text": "Pago por Yape" },
+          { "type": "TextSubheading", "text": "Yapea a Percy Roj* — 998 102 258" },
+          { "type": "TextBody", "text": "Selecciona tu plan y yapea el monto exacto. Detectamos tu pago automáticamente." },
           {
             "type": "Form",
             "name": "form_pago",
@@ -64,44 +80,25 @@
                 "label": "Tu plan",
                 "required": true,
                 "data-source": [
-                  { "id": "cuna_monthly", "title": "${data.option_cuna_monthly}" },
-                  { "id": "cuna_yearly", "title": "${data.option_cuna_yearly}" },
-                  { "id": "premium_monthly", "title": "${data.option_premium_monthly}" },
-                  { "id": "premium_yearly", "title": "${data.option_premium_yearly}" }
+                  { "id": "cuna_monthly", "title": "Regular Mensual · S/39" },
+                  { "id": "cuna_yearly", "title": "Regular Anual · S/349 (ahorras S/119)" },
+                  { "id": "premium_monthly", "title": "Premium Mensual · S/89" },
+                  { "id": "premium_yearly", "title": "Premium Anual · S/799 (ahorras S/269)" }
                 ]
               },
               {
                 "type": "Footer",
-                "label": "Continuar",
+                "label": "Confirmar plan",
                 "on-click-action": {
-                  "name": "data_exchange",
+                  "name": "complete",
                   "payload": {
-                    "step": "submit_pago",
+                    "status": "payment_pending_validation",
                     "plan_billing": "${form.plan_billing}"
                   }
                 }
               }
             ]
           }
-        ]
-      }
-    },
-    {
-      "id": "SUCCESS",
-      "title": "Pago en validacion",
-      "terminal": true,
-      "success": true,
-      "data": {
-        "extension_message_response": {
-          "type": "object",
-          "__example__": { "params": { "status": "payment_pending_validation" } }
-        }
-      },
-      "layout": {
-        "type": "SingleColumnLayout",
-        "children": [
-          { "type": "TextHeading", "text": "Plan registrado" },
-          { "type": "TextBody", "text": "Yapea ahora a 998 102 258 (Percy Roj*) por el monto exacto. Cuando detectemos tu Yape, activamos tu plan automático." }
         ]
       }
     }

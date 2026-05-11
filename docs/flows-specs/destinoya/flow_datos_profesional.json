@@ -1,0 +1,48 @@
+{
+  "version": "7.0",
+  "screens": [
+    {
+      "id": "DATOS",
+      "title": "Tu consulta",
+      "terminal": true,
+      "success": true,
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          { "type": "TextHeading", "text": "Cuéntame tu consulta" },
+          { "type": "TextBody", "text": "Detállame tu situación. Después podrás adjuntar documentos si los tienes." },
+          {
+            "type": "Form",
+            "name": "form_pro",
+            "init-values": {},
+            "children": [
+              { "type": "TextArea", "name": "consulta", "label": "Tu consulta detallada", "required": true, "max-length": 600, "helper-text": "Mientras más contexto, mejor mi respuesta" },
+              {
+                "type": "RadioButtonsGroup",
+                "name": "sustento",
+                "label": "¿Tienes documentos de sustento (foto/PDF)?",
+                "required": true,
+                "data-source": [
+                  { "id": "no", "title": "No, procede con mi consulta" },
+                  { "id": "si", "title": "Sí, voy a enviar archivos" }
+                ]
+              },
+              {
+                "type": "Footer",
+                "label": "Enviar",
+                "on-click-action": {
+                  "name": "complete",
+                  "payload": {
+                    "status": "datos_profesional",
+                    "consulta": "${form.consulta}",
+                    "sustento": "${form.sustento}"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

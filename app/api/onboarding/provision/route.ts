@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
         .eq("id", body.lead_id);
     }
 
-    // 4. Notificar admin via Twilio TuDestinoYa (canal correcto para messaging interno)
+    // 4. Notificar admin via Meta Cloud (Twilio eliminado 2026-05-10)
     try {
       const adminMsg =
         `🎉 *Nuevo tenant aprovisionado*\n\n` +
@@ -88,27 +88,19 @@ export async function POST(req: NextRequest) {
         `Email: ${body.contact_email}\n` +
         (body.mode === "rent" ? `Renta: S/.${body.monthly_fee_pen}/mes\n` : `Compra: S/.${body.purchase_amount_pen}\n`) +
         (expiryDate ? `Vence: ${expiryDate.slice(0, 10)}\n` : "") +
-        `\nPróximo paso: setup técnico (dominio + Twilio + branding)`;
-      const TWILIO_SID = process.env.TWILIO_DESTINOYA_SID || "";
-      const TWILIO_TOKEN = process.env.TWILIO_DESTINOYA_AUTH_TOKEN || "";
-      if (TWILIO_TOKEN) {
-        const auth = Buffer.from(`${TWILIO_SID}:${TWILIO_TOKEN}`).toString("base64");
-        const params = new URLSearchParams({
-          From: "whatsapp:+51961347233",
-          To: "whatsapp:+51998102258",
-          Body: adminMsg,
+        `\nPróximo paso: setup técnico (dominio + chip Meta + branding)`;
+      const META_TOKEN = process.env.ECODRIVE_META_ACCESS_TOKEN || "";
+      if (META_TOKEN) {
+        await fetch(`https://graph.facebook.com/v22.0/1044803088721236/messages`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${META_TOKEN}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            messaging_product: "whatsapp",
+            to: "51998102258",
+            type: "text",
+            text: { body: adminMsg },
+          }),
         });
-        await fetch(
-          `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_SID}/Messages.json`,
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Basic ${auth}`,
-              "Content-Type": "application/x-www-form-urlencoded",
-            },
-            body: params.toString(),
-          },
-        );
       }
     } catch (e) {
       console.warn("notify admin failed:", e);

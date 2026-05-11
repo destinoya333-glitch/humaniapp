@@ -1,0 +1,37 @@
+{
+  "version": "7.0",
+  "screens": [
+    {
+      "id": "DATOS",
+      "title": "Tu situación",
+      "terminal": true,
+      "success": true,
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          { "type": "TextHeading", "text": "Cuéntame tu situación" },
+          { "type": "TextBody", "text": "Mientras más detalle, más útil será mi respuesta." },
+          {
+            "type": "Form",
+            "name": "form_rap",
+            "init-values": {},
+            "children": [
+              { "type": "TextArea", "name": "consulta", "label": "Tu situación o pregunta", "required": true, "max-length": 600 },
+              {
+                "type": "Footer",
+                "label": "Enviar",
+                "on-click-action": {
+                  "name": "complete",
+                  "payload": {
+                    "status": "datos_rapidas",
+                    "consulta": "${form.consulta}"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,14 +1,11 @@
 {
   "version": "7.0",
-  "data_api_version": "3.0",
-  "routing_model": {
-    "SUBMENU": ["SUCCESS"]
-  },
   "screens": [
     {
       "id": "SUBMENU",
       "title": "Tu consulta",
-      "terminal": false,
+      "terminal": true,
+      "success": true,
       "data": {
         "linea_titulo": { "type": "string", "__example__": "DestinoYA Esotérico" },
         "linea_intro": { "type": "string", "__example__": "Elige sub-servicio + plan. Tras confirmar, yapeas y validamos automático." },
@@ -22,7 +19,8 @@
         "plan_basico": { "type": "string", "__example__": "Básico · S/3 · 3 secciones" },
         "plan_intermedio": { "type": "string", "__example__": "Intermedio · S/6 · 4 secciones" },
         "plan_premium": { "type": "string", "__example__": "Premium · S/9 · 6 secciones" },
-        "plan_pro": { "type": "string", "__example__": "PRO · S/9.90 · profundo" }
+        "plan_pro": { "type": "string", "__example__": "PRO · S/9.90 · profundo" },
+        "categoria": { "type": "string", "__example__": "esoterico" }
       },
       "layout": {
         "type": "SingleColumnLayout",
@@ -65,9 +63,10 @@
                 "type": "Footer",
                 "label": "Continuar",
                 "on-click-action": {
-                  "name": "data_exchange",
+                  "name": "complete",
                   "payload": {
-                    "step": "submit",
+                    "status": "submenu_listo",
+                    "categoria": "${data.categoria}",
                     "sub_servicio": "${form.sub_servicio}",
                     "plan": "${form.plan}"
                   }
@@ -75,25 +74,6 @@
               }
             ]
           }
-        ]
-      }
-    },
-    {
-      "id": "SUCCESS",
-      "title": "Listo",
-      "terminal": true,
-      "success": true,
-      "data": {
-        "extension_message_response": {
-          "type": "object",
-          "__example__": { "params": { "status": "submenu_listo" } }
-        }
-      },
-      "layout": {
-        "type": "SingleColumnLayout",
-        "children": [
-          { "type": "TextHeading", "text": "¡Listo!" },
-          { "type": "TextBody", "text": "Ahora yapea el monto exacto a 998 102 258 (Percy Roj*). Cuando MadroDroid detecte el SMS Yape, te confirmamos automático y empezamos." }
         ]
       }
     }

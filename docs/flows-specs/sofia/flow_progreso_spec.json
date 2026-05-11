@@ -1,14 +1,11 @@
 {
   "version": "7.0",
-  "data_api_version": "3.0",
-  "routing_model": {
-    "PROGRESO": ["SUCCESS"]
-  },
   "screens": [
     {
       "id": "PROGRESO",
       "title": "Tu progreso",
-      "terminal": false,
+      "terminal": true,
+      "success": true,
       "data": {
         "linea_fase": { "type": "string", "__example__": "Fase 0 - Cuna - dia 12 de 30 (40%)" },
         "linea_tiempo": { "type": "string", "__example__": "Tiempo de boca: 35 min acumulados" },
@@ -31,28 +28,10 @@
             "type": "Footer",
             "label": "Cerrar",
             "on-click-action": {
-              "name": "data_exchange",
-              "payload": {}
+              "name": "complete",
+              "payload": { "status": "progress_closed" }
             }
           }
-        ]
-      }
-    },
-    {
-      "id": "SUCCESS",
-      "title": "Cerrado",
-      "terminal": true,
-      "success": true,
-      "data": {
-        "extension_message_response": {
-          "type": "object",
-          "__example__": { "params": { "status": "progress_closed" } }
-        }
-      },
-      "layout": {
-        "type": "SingleColumnLayout",
-        "children": [
-          { "type": "TextBody", "text": "Sigue asi." }
         ]
       }
     }

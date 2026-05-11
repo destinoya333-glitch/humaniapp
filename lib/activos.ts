@@ -327,6 +327,73 @@ export const ACTIVOS: Activo[] = [
     b2cLabel: "Ver landing B2C",
     subdomain: "reserva.activosya.com",
   },
+  {
+    slug: "tucuentoya",
+    status: "Próximamente",
+    icon: "🦊",
+    name: "TuCuentoYa",
+    tagline: "Cuentos infantiles personalizados · Audio IA · WhatsApp",
+    shortDescription:
+      "Tu hijo es el héroe del cuento. Cliente pide por WhatsApp (texto o audio), el bot Coqui 🦊 crea el cuento personalizado y entrega audio MP3 en menos de 60 segundos. Voces peruanas neurales (Camila + Alex). 2, 3 o 5 minutos.",
+    overview:
+      "TuCuentoYa es una plataforma de cuentos infantiles 100% personalizados. El papá/mamá/abuelo escribe o manda audio diciendo el nombre de su peque, escenario, y duración. El sistema genera un cuento donde el niño es el protagonista, con su familia real como acompañantes, narrado en voz peruana neural. Entrega en MP3 por WhatsApp. Modelo wallet recargable + VIP mensual.",
+    problem:
+      "Los padres modernos no tienen tiempo de inventar cuentos cada noche. Los cuentos comerciales son genéricos y no involucran al niño. YouTube/podcasts infantiles no son personales ni educativos. Cuentacuentos humanos cuestan S/200+ por sesión.",
+    solution:
+      "IA + voz neural peruana genera cuentos únicos en 60 segundos. Cada cuento es protagonizado por TU peque, con TU familia, en el escenario que TÚ quieras. Wallet recargable elimina la fricción del Yape por cuento. VIP mensual para familias frecuentes.",
+    metrics: [
+      { label: "Cuento 2 min", value: "S/ 2" },
+      { label: "Cuento 3 min", value: "S/ 3 (más popular)" },
+      { label: "Cuento 5 min", value: "S/ 5" },
+      { label: "VIP Estrella", value: "S/ 18/mes (20 cuentos)" },
+      { label: "VIP Mágico", value: "S/ 30/mes (50 cuentos)" },
+      { label: "Margen bruto", value: "68-92%" },
+      { label: "Costo por cuento", value: "S/ 0.23 - 0.40" },
+      { label: "Tiempo entrega", value: "< 60 segundos" },
+      { label: "Estado plataforma", value: "EN BUILD" },
+    ],
+    businessModel:
+      "Wallet recargable como pago principal (Yape) — 4 packs (S/15/30/50/100) con bonus de cuentos extra para reducir fricción. VIP mensual recurrente: Estrella S/18 (20 cuentos) y Mágico S/30 (50 cuentos + música ambient). VIP anual con 2 meses gratis (S/180 / S/300). Add-ons: PDF ilustrado (S/4.90), capítulo continuación (S/4.90), hermanito segundo niño (+S/9/mes en VIP). Promo lanzamiento: primer cuento 2 min gratis + S/5 bonus en primera recarga.",
+    stack: [
+      "Next.js 16",
+      "Claude Sonnet 4.6",
+      "Azure Neural TTS (es-PE Camila + Alex)",
+      "Groq Whisper STT",
+      "Supabase",
+      "WhatsApp Meta Cloud API",
+      "Yape (Claude Vision verify)",
+      "Vercel Fluid",
+    ],
+    competitors: [
+      { name: "Storybooks IA genéricos", weakness: "No personalizan con nombre/familia real, no en español peruano, sin entrega WhatsApp" },
+      { name: "Cuentacuentos humanos", weakness: "S/200+ por sesión, horarios fijos, no escalable" },
+      { name: "Apps tipo Loora/Speakable", weakness: "Foco en idiomas, no en cuentos personalizados, suscripción cara" },
+      { name: "YouTube cuentos", weakness: "Genéricos, no involucran al niño, ads, sin personalización" },
+    ],
+    pnlProjection: [
+      { month: "M1", revenue: "S/ 1,500", cost: "S/ 430", profit: "S/ 1,070" },
+      { month: "M3", revenue: "S/ 5,200", cost: "S/ 950", profit: "S/ 4,250" },
+      { month: "M6", revenue: "S/ 13,200", cost: "S/ 2,200", profit: "S/ 11,000" },
+      { month: "M12", revenue: "S/ 34,200", cost: "S/ 5,300", profit: "S/ 28,900" },
+    ],
+    includes: [
+      "Código fuente completo + repositorio Git",
+      "Pipeline Claude + Azure Neural TTS multivoz (SSML)",
+      "Wallet recargable + VIP mensual + add-ons",
+      "Verificación Yape automática (Claude Vision)",
+      "Safety filter contenido infantil (2-10 años)",
+      "Multi-tenant listo para franquicia",
+      "Schema Supabase con métricas de costo por cuento",
+      "Landing cuento.activosya.com",
+      "Templates Meta WhatsApp aprobados",
+      "Onboarding técnico 7-14 días + Slack 90 días",
+    ],
+    rent: "Desde S/ 1,200/mes",
+    buy: "Compra a consultar",
+    b2cHref: "https://cuento.activosya.com",
+    b2cLabel: "Probar gratis",
+    subdomain: "cuento.activosya.com",
+  },
 ];
 
 export function getActivo(slug: string): Activo | undefined {

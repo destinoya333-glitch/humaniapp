@@ -1,0 +1,39 @@
+{
+  "version": "7.0",
+  "screens": [
+    {
+      "id": "DATOS",
+      "title": "Tus datos",
+      "terminal": true,
+      "success": true,
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          { "type": "TextHeading", "text": "Tus datos personales" },
+          { "type": "TextBody", "text": "Necesito tu nombre completo y fecha de nacimiento." },
+          {
+            "type": "Form",
+            "name": "form_num",
+            "init-values": {},
+            "children": [
+              { "type": "TextInput", "name": "nombre", "label": "Nombre completo", "input-type": "text", "required": true, "min-chars": 2, "max-chars": 80 },
+              { "type": "TextInput", "name": "fecha", "label": "Fecha de nacimiento (DD/MM/AAAA)", "input-type": "text", "required": true, "min-chars": 6, "max-chars": 20 },
+              {
+                "type": "Footer",
+                "label": "Enviar datos",
+                "on-click-action": {
+                  "name": "complete",
+                  "payload": {
+                    "status": "datos_numerologia",
+                    "nombre": "${form.nombre}",
+                    "fecha": "${form.fecha}"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

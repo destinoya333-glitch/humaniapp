@@ -2,17 +2,72 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import LeadForm from "./LeadForm";
 
-export const metadata: Metadata = {
-  title: "Sé operador Miss Sofia · Gana S/. 1,800-4,500/mes con IA · ActivosYA",
-  description:
-    "Vende cursos de inglés con IA en tu ciudad. Sin tecnología, sin programar. Renta mensual desde S/. 500. Rentabilidad típica S/. 1,800-4,500/mes. Empieza con 5 alumnos.",
-  alternates: { canonical: "https://activosya.com/se-operador" },
+export const dynamic = "force-dynamic";
+
+type ActivoSlug = "miss-sofia" | "tudestinoya";
+
+const ACTIVO_COPY: Record<ActivoSlug, {
+  display: string;
+  shortDesc: string;
+  pitchHero: string;
+  bullets: string[];
+  rentaTipica: string;
+  comoCobra: string;
+}> = {
+  "miss-sofia": {
+    display: "Miss Sofia",
+    shortDesc: "curso de inglés con IA",
+    pitchHero: "Vende cursos de inglés con IA",
+    bullets: [
+      "Curso de inglés con método neurolingüístico Cuna 6 fases",
+      "Sofia (la IA) atiende y enseña 24/7 por WhatsApp",
+      "Suscripción mensual recurrente — ingresos predecibles",
+      "Garantía Klaric 6 meses (alumno → operador)",
+    ],
+    rentaTipica: "S/. 1,800 — 4,500",
+    comoCobra: "S/. 39 a 89/mes por alumno suscriptor",
+  },
+  tudestinoya: {
+    display: "TuDestinoYa",
+    shortDesc: "consultas espirituales y profesionales por WhatsApp",
+    pitchHero: "Vende consultas IA: tarot, astral, legal, salud y más",
+    bullets: [
+      "5 categorías: esotérico, profesional, soluciones rápidas, VIP, gratis",
+      "El bot atiende 24/7 con Claude IA — lectura, análisis legal, salud, etc",
+      "Pago por consulta (S/. 3 a S/. 9.90) o suscripción VIP S/. 18/mes",
+      "Demanda alta en LATAM — mercado validado",
+    ],
+    rentaTipica: "S/. 2,500 — 8,500 MRR",
+    comoCobra: "S/. 3 a 9.90 por consulta + S/. 18/mes VIP",
+  },
 };
 
-export default function SeOperadorPage() {
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ activo?: string }>;
+}): Promise<Metadata> {
+  const { activo: activoParam } = await searchParams;
+  const slug: ActivoSlug = activoParam === "tudestinoya" ? "tudestinoya" : "miss-sofia";
+  const c = ACTIVO_COPY[slug];
+  return {
+    title: `Sé operador ${c.display} · Gana ${c.rentaTipica}/mes con IA · ActivosYA`,
+    description: `Vende ${c.shortDesc} en tu ciudad. Sin tecnología, sin programar. Renta mensual desde S/. 500. Rentabilidad típica ${c.rentaTipica}/mes.`,
+    alternates: { canonical: `https://activosya.com/se-operador?activo=${slug}` },
+  };
+}
+
+export default async function SeOperadorPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ activo?: string }>;
+}) {
+  const { activo: activoParam } = await searchParams;
+  const slug: ActivoSlug = activoParam === "tudestinoya" ? "tudestinoya" : "miss-sofia";
+  const c = ACTIVO_COPY[slug];
+
   return (
     <main className="min-h-screen bg-[#0A0A0A] text-white relative overflow-hidden">
-      {/* Background mesh */}
       <div aria-hidden className="fixed inset-0 pointer-events-none">
         <div className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-amber-500/15 blur-[120px]" />
         <div className="absolute top-1/2 -right-40 w-[500px] h-[500px] rounded-full bg-orange-500/10 blur-[100px]" />
@@ -53,17 +108,56 @@ export default function SeOperadorPage() {
           <h1 className="mt-6 text-5xl md:text-7xl font-bold leading-[0.95] tracking-tight">
             Gana{" "}
             <span className="bg-gradient-to-r from-amber-300 via-amber-400 to-orange-500 bg-clip-text text-transparent">
-              S/. 1,800 a 4,500
+              {c.rentaTipica}
             </span>
             <br />
             al mes con IA
           </h1>
 
           <p className="mt-6 text-lg md:text-xl text-zinc-300 max-w-2xl mx-auto leading-relaxed">
-            Vende <strong className="text-white">Miss Sofia</strong> — un curso de inglés con
-            IA — en tu ciudad. Sin programar, sin tecnología, sin equipo. Solo necesitas captar
-            alumnos. Nosotros entregamos el servicio.
+            {c.pitchHero === "Vende cursos de inglés con IA" ? (
+              <>
+                Vende <strong className="text-white">{c.display}</strong> — {c.shortDesc} — en tu ciudad. Sin programar, sin tecnología, sin equipo. Solo necesitas captar alumnos. Nosotros entregamos el servicio.
+              </>
+            ) : (
+              <>
+                Vende <strong className="text-white">{c.display}</strong> — {c.shortDesc} — en tu ciudad. Sin programar, sin tecnología, sin equipo. Solo necesitas captar clientes. Nosotros entregamos el servicio.
+              </>
+            )}
           </p>
+
+          {/* Selector de activo */}
+          <div className="mt-8 inline-flex items-center gap-1 p-1 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl">
+            <Link
+              href="/se-operador?activo=miss-sofia"
+              className={`px-5 py-2.5 rounded-xl text-sm font-bold transition ${
+                slug === "miss-sofia"
+                  ? "bg-amber-500 text-black"
+                  : "text-zinc-400 hover:text-white"
+              }`}
+            >
+              ◎ Miss Sofia
+            </Link>
+            <Link
+              href="/se-operador?activo=tudestinoya"
+              className={`px-5 py-2.5 rounded-xl text-sm font-bold transition ${
+                slug === "tudestinoya"
+                  ? "bg-amber-500 text-black"
+                  : "text-zinc-400 hover:text-white"
+              }`}
+            >
+              ✨ TuDestinoYa
+            </Link>
+          </div>
+
+          <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl mx-auto text-left">
+            {c.bullets.map((b, i) => (
+              <div key={i} className="flex items-start gap-2 p-3 rounded-lg bg-white/5 border border-white/10">
+                <span className="text-amber-400 mt-0.5 flex-shrink-0">✓</span>
+                <span className="text-sm text-zinc-300">{b}</span>
+              </div>
+            ))}
+          </div>
 
           <a
             href="#registro"
@@ -71,7 +165,9 @@ export default function SeOperadorPage() {
           >
             Quiero saber más →
           </a>
-          <div className="mt-4 text-sm text-zinc-500">Te respondemos por WhatsApp en menos de 24h</div>
+          <div className="mt-4 text-sm text-zinc-500">
+            Activación auto en 1-2 minutos tras yapear · Cancela cuando quieras
+          </div>
         </div>
       </section>
 
@@ -81,19 +177,19 @@ export default function SeOperadorPage() {
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight">¿Por qué ActivosYA?</h2>
             <p className="mt-3 text-zinc-400 max-w-2xl mx-auto">
-              Compara abrir una academia tradicional vs operar Miss Sofia con IA.
+              Compara abrir un negocio tradicional vs operar {c.display} con IA.
             </p>
           </div>
           <div className="grid md:grid-cols-2 gap-6">
             <div className="rounded-2xl border border-zinc-800 bg-zinc-900/30 p-7">
               <div className="text-zinc-500 text-xs uppercase tracking-widest font-bold">Negocio tradicional</div>
-              <div className="mt-2 text-2xl font-bold">Academia de inglés</div>
+              <div className="mt-2 text-2xl font-bold">{slug === "miss-sofia" ? "Academia de inglés" : "Consultorio espiritual / asesoría"}</div>
               <ul className="mt-6 space-y-3 text-sm text-zinc-400">
                 <li>❌ Inversión inicial: S/. 50,000+</li>
                 <li>❌ Alquiler local: S/. 3,000/mes</li>
-                <li>❌ Profesores: S/. 8,000/mes</li>
-                <li>❌ Punto de equilibrio: 100+ alumnos</li>
-                <li>❌ Manejas: clases, profesores, infraestructura, soporte</li>
+                <li>❌ {slug === "miss-sofia" ? "Profesores" : "Especialistas"}: S/. 8,000/mes</li>
+                <li>❌ Punto de equilibrio: 100+ {slug === "miss-sofia" ? "alumnos" : "consultas"}</li>
+                <li>❌ Manejas: equipo, infraestructura, soporte</li>
                 <li>❌ Riesgo: alto, capital inmovilizado</li>
               </ul>
               <div className="mt-6 pt-4 border-t border-zinc-800">
@@ -104,12 +200,12 @@ export default function SeOperadorPage() {
 
             <div className="rounded-2xl border border-amber-500/40 bg-gradient-to-br from-amber-500/10 to-orange-500/5 p-7 shadow-2xl shadow-amber-500/20">
               <div className="text-amber-400 text-xs uppercase tracking-widest font-bold">ActivosYA</div>
-              <div className="mt-2 text-2xl font-bold">Miss Sofia operador</div>
+              <div className="mt-2 text-2xl font-bold">{c.display} operador</div>
               <ul className="mt-6 space-y-3 text-sm text-zinc-200">
                 <li>✅ Inversión inicial: S/. 0</li>
                 <li>✅ Renta plataforma: S/. 500-2,500/mes</li>
-                <li>✅ Sin profesores (la IA enseña)</li>
-                <li>✅ Punto de equilibrio: 17-40 alumnos</li>
+                <li>✅ Sin {slug === "miss-sofia" ? "profesores" : "especialistas"} (la IA atiende)</li>
+                <li>✅ Punto de equilibrio: 17-40 {slug === "miss-sofia" ? "alumnos" : "consultas"}</li>
                 <li>✅ Solo tú: marketing y captación</li>
                 <li>✅ Riesgo: bajo, sin contratos largos</li>
               </ul>
@@ -132,10 +228,10 @@ export default function SeOperadorPage() {
             </p>
           </div>
           <div className="grid md:grid-cols-4 gap-6">
-            <Step n={1} title="Te registras" desc="Eliges tu plan. Firmas contrato digital. Pagas tu primera renta por Yape." />
-            <Step n={2} title="Recibes tu kit" desc="Link único de captación, flyers Canva, scripts ads, comunidad de operadores." />
-            <Step n={3} title="Captas alumnos" desc="Marketing local en tu ciudad: Facebook ads, redes, networking, boca a boca." />
-            <Step n={4} title="Cobras" desc="Tus alumnos pagan a TU Yape directo. La IA hace todo. Tú solo vendes." />
+            <Step n={1} title="Te registras" desc="Eliges tu plan. Llenas tus datos. Yapeas tu primera renta a Percy." />
+            <Step n={2} title="Cuenta activa" desc="MacroDroid detecta tu Yape en segundos. Recibes WhatsApp con tu kit completo." />
+            <Step n={3} title="Captas clientes" desc="Marketing local: Facebook ads, redes, networking, tu link de referido." />
+            <Step n={4} title="Cobras directo" desc={`Tus ${slug === "miss-sofia" ? "alumnos" : "clientes"} pagan a TU Yape. La IA hace todo. Tú solo vendes.`} />
           </div>
         </div>
       </section>
@@ -150,9 +246,9 @@ export default function SeOperadorPage() {
             </p>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
-            <PlanCard name="Local" precio="500" cupo="30 alumnos" rentabilidad="S/. 400 — 1,400" extras={["Ideal para empezar", "Marketing local", "Soporte estándar"]} />
-            <PlanCard name="Comunidad" precio="1,200" cupo="100 alumnos" rentabilidad="S/. 1,800 — 4,500" extras={["Mejor relación precio/cupo", "Material premium", "Comunidad VIP", "Reportes mensuales"]} highlight />
-            <PlanCard name="Líder" precio="2,500" cupo="300 alumnos" rentabilidad="S/. 6,500 — 15,000" extras={["Tagline custom", "Prioridad soporte", "Gestor de cuenta", "Acceso a betas"]} />
+            <PlanCard name="Local" precio="500" cupo={`30 ${slug === "miss-sofia" ? "alumnos" : "clientes"}`} rentabilidad="S/. 400 — 1,400" extras={["Ideal para empezar", "Marketing local", "Soporte estándar"]} />
+            <PlanCard name="Comunidad" precio="1,200" cupo={`100 ${slug === "miss-sofia" ? "alumnos" : "clientes"}`} rentabilidad="S/. 1,800 — 4,500" extras={["Mejor relación precio/cupo", "Material premium", "Comunidad VIP", "Reportes mensuales"]} highlight />
+            <PlanCard name="Líder" precio="2,500" cupo={`300 ${slug === "miss-sofia" ? "alumnos" : "clientes"}`} rentabilidad="S/. 6,500 — 15,000" extras={["Tagline custom", "Prioridad soporte", "Gestor de cuenta", "Acceso a betas"]} />
           </div>
         </div>
       </section>
@@ -163,22 +259,24 @@ export default function SeOperadorPage() {
           <h2 className="text-3xl md:text-4xl font-bold text-center tracking-tight mb-10">Preguntas frecuentes</h2>
           <div className="space-y-3">
             <Faq q="¿Necesito saber tecnología?">
-              No. Tú solo te encargas de captar alumnos. Nosotros entregamos la plataforma, la IA, los pagos. Cero programación.
+              No. Tú solo te encargas de captar {slug === "miss-sofia" ? "alumnos" : "clientes"}. Nosotros entregamos la plataforma, la IA, los pagos. Cero programación.
             </Faq>
-            <Faq q="¿Quién atiende a los alumnos?">
-              Sofia (la IA) atiende 24/7 por WhatsApp. Da las clases, evalúa, motiva. Tú solo respondes dudas comerciales si llegan.
+            <Faq q="¿Quién atiende a mis clientes?">
+              {slug === "miss-sofia"
+                ? "Sofia (la IA) atiende 24/7 por WhatsApp. Da las clases, evalúa, motiva. Tú solo respondes dudas comerciales si llegan."
+                : "El bot TuDestinoYa atiende 24/7 por WhatsApp con Claude IA. Procesa lecturas esotéricas, asesorías profesionales, soluciones rápidas. Tú solo captas y respondes dudas si llegan."}
             </Faq>
-            <Faq q="¿Cómo cobro a mis alumnos?">
-              Cada alumno paga directo a tu número de Yape personal. La plataforma detecta el pago automáticamente y le activa su acceso.
+            <Faq q="¿Cómo cobro a mis clientes?">
+              Cada cliente paga directo a tu número de Yape personal. La plataforma detecta el pago automáticamente vía MacroDroid en tu celular y le activa su servicio.
             </Faq>
-            <Faq q="¿Y si no consigo alumnos?">
-              Asumes el costo de la renta mensual. Por eso recomendamos empezar con plan Local (S/. 500). Si en 1 mes no captas mínimo 17 alumnos, te asesoramos qué ajustar.
+            <Faq q="¿Qué pasa después de pagar mi primera renta?">
+              En 1-2 minutos te llega un WhatsApp con tu link único de referidos, tu URL para MacroDroid, kit de marketing, y siguiente paso para activar tu chip WhatsApp Business. Todo automático.
+            </Faq>
+            <Faq q="¿Y si no consigo clientes?">
+              Asumes el costo de la renta mensual. Por eso recomendamos empezar con plan Local (S/. 500). Si en 1 mes no captas mínimo {slug === "miss-sofia" ? "17 alumnos" : "55 consultas"}, te asesoramos qué ajustar.
             </Faq>
             <Faq q="¿Puedo cancelar cuando quiera?">
-              Sí, sin penalidad. Solo no recibes renovación al mes siguiente. Tus alumnos seguirán recibiendo servicio si pagan, hasta el cierre del ciclo.
-            </Faq>
-            <Faq q="¿Hay límite geográfico?">
-              No oficialmente. Cualquier operador puede captar en cualquier ciudad. La práctica: operador local capta mejor en su zona.
+              Sí, sin penalidad. Solo no recibes renovación al mes siguiente. Tus {slug === "miss-sofia" ? "alumnos" : "clientes"} seguirán recibiendo servicio si pagan, hasta el cierre del ciclo.
             </Faq>
           </div>
         </div>
@@ -192,13 +290,13 @@ export default function SeOperadorPage() {
               Empieza ahora
             </div>
             <h2 className="mt-4 text-4xl md:text-5xl font-bold tracking-tight">
-              Quiero ser operador
+              Quiero ser operador {c.display}
             </h2>
             <p className="mt-3 text-zinc-400 max-w-md mx-auto">
               Llena tus datos. Te contactamos por WhatsApp en menos de 24h.
             </p>
           </div>
-          <LeadForm />
+          <LeadForm defaultActivo={slug} />
         </div>
       </section>
 

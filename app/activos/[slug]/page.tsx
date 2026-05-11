@@ -293,6 +293,53 @@ export default async function ActivoPage({ params }: { params: Params }) {
               </a>
             </div>
           </div>
+
+          {/* CTA franquicia (solo activos franquiciables) */}
+          {(activo.slug === "tudestinoya" || activo.slug === "miss-sofia") && (
+            <div className="mt-6 rounded-3xl border border-amber-500/40 bg-gradient-to-br from-amber-500/15 via-orange-500/8 to-transparent p-8 md:p-10 relative overflow-hidden">
+              <div aria-hidden className="absolute -top-20 -right-20 w-60 h-60 rounded-full bg-amber-500/15 blur-3xl pointer-events-none" />
+              <div className="relative">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/40 text-amber-300 text-[10px] font-bold tracking-widest uppercase mb-4">
+                  🚀 Franquicia digital · Más vendida
+                </div>
+                <h3 className="text-3xl md:text-4xl font-bold mb-3">
+                  ¿No quieres comprar el activo? <span className="text-amber-400">Renta una franquicia</span>
+                </h3>
+                <p className="text-zinc-300 leading-relaxed mb-6 max-w-2xl">
+                  Vende {activo.name} en tu zona como operador local sin comprar nada. Renta mensual fija desde S/. 500
+                  con cupo de 30 a 300 alumnos. Tus alumnos te yapean directo (cobras tú), tu paga renta a ActivosYA.
+                  Cero involucramiento técnico — nosotros entregamos toda la plataforma. Cero contratos largos: cancelas
+                  cuando quieras.
+                </p>
+                <div className="grid grid-cols-3 gap-3 mb-6 text-center text-sm">
+                  <div className="p-3 rounded-xl border border-white/10 bg-black/20">
+                    <div className="text-amber-400 font-bold">Local</div>
+                    <div className="text-xs text-zinc-400">S/. 500/mes</div>
+                    <div className="text-[10px] text-zinc-500">30 alumnos</div>
+                  </div>
+                  <div className="p-3 rounded-xl border border-amber-500/40 bg-amber-500/5">
+                    <div className="text-amber-400 font-bold">Comunidad</div>
+                    <div className="text-xs text-zinc-400">S/. 1,200/mes</div>
+                    <div className="text-[10px] text-zinc-500">100 alumnos</div>
+                  </div>
+                  <div className="p-3 rounded-xl border border-white/10 bg-black/20">
+                    <div className="text-amber-400 font-bold">Líder</div>
+                    <div className="text-xs text-zinc-400">S/. 2,500/mes</div>
+                    <div className="text-[10px] text-zinc-500">300 alumnos</div>
+                  </div>
+                </div>
+                <Link
+                  href={`/se-operador?activo=${activo.slug}`}
+                  className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black font-bold shadow-xl shadow-amber-500/30 transition transform hover:-translate-y-0.5"
+                >
+                  Quiero ser operador {activo.name} →
+                </Link>
+                <p className="text-xs text-zinc-500 mt-3">
+                  Sin contrato largo · Activación en 1-2 minutos tras yapear · Cancelas cuando quieras
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </section>
 

@@ -115,6 +115,75 @@ export async function POST(req: NextRequest) {
 
   logRow.parsed = { ...logRow.parsed, ...parsed };
 
+  // ─── ActivosYA Franquicia: ¿es pago de RENTA OPERADOR? ───
+  // Si el monto coincide con un plan (S/.500/1200/2500) Y hay un operador
+  // pendiente_onboarding, activarlo y RETURN antes de tratar como pago Sofia.
+  if ([500, 1200, 2500].includes(parsed.amount)) {
+    try {
+      const { buscarOperadorPendientePorMontoRenta, activarOperadorPorPagoRenta, PLANES, ACTIVOS_FRANQUICIABLES } =
+        await import("@/lib/activosya/operadores");
+      const opPendiente = await buscarOperadorPendientePorMontoRenta(parsed.amount, 240, parsed.senderName);
+      if (opPendiente) {
+        const activacion = await activarOperadorPorPagoRenta({
+          operador_id: opPendiente.id,
+          monto_pen: parsed.amount,
+          yape_operacion: parsed.operation,
+          yape_remitente_nombre: parsed.senderName,
+        });
+
+        const planInfo = PLANES[opPendiente.plan];
+        const setupUrl = `https://activosya.com/operador/setup?token=${activacion.macrodroid_token}`;
+        const referralUrls = activacion.asset_slugs
+          .map((slug) => {
+            const info = ACTIVOS_FRANQUICIABLES[slug as keyof typeof ACTIVOS_FRANQUICIABLES];
+            const path = slug === "tudestinoya" ? "r" : "sofia/r";
+            return `${info?.icon ?? "•"} ${info?.name ?? slug}: https://activosya.com/${path}/${activacion.referral_code}`;
+          })
+          .join("\n");
+
+        const opMsg =
+          `🎉 *¡Cuenta ACTIVADA, ${opPendiente.name.split(" ")[0]}!*\n\n` +
+          `Recibimos tu Yape de S/. ${parsed.amount} ✅\n` +
+          `Plan ${planInfo.label} activo hasta el ${new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString("es-PE", { day: "2-digit", month: "long" })} 📅\n\n` +
+          `*🔗 Tus links únicos de referido:*\n${referralUrls}\n\n` +
+          `*🛠️ Completa tu setup técnico (5 min):*\n${setupUrl}\n\n` +
+          `Ahí encuentras:\n` +
+          `• Plantilla MacroDroid lista para tu Android\n` +
+          `• Tutorial 3 min de instalación\n` +
+          `• Material de marketing (flyers, scripts)\n` +
+          `• Cómo registrar tu chip WhatsApp Business\n\n` +
+          `*Próximo paso:* envíanos foto del chip dedicado para WhatsApp al *+51 998 102 258* y te lo activamos en Meta Cloud (10 min).\n\n` +
+          `🚀 ActivosYA — Empieza a vender HOY`;
+
+        try {
+          if (isMetaCloudConfigured()) {
+            await sendText(opPendiente.whatsapp_personal, opMsg);
+            await sendText("51998102258",
+              `✅ *Operador ACTIVADO automáticamente* (vía Sofia macrodroid)\n\n` +
+              `${opPendiente.name}\nPlan ${planInfo.label} (S/. ${parsed.amount})\n` +
+              `WhatsApp: ${opPendiente.whatsapp_personal}\nYape op: ${parsed.operation}\n\n` +
+              `_Falta agregar SU chip a Meta Cloud cuando te lo envíe._`);
+          }
+        } catch (e) {
+          console.error("[sofia/macrodroid: WhatsApp activación operador]", (e as Error).message);
+        }
+
+        logRow.result = `OPERADOR_ACTIVADO: ${opPendiente.id} (${opPendiente.name}) plan=${opPendiente.plan}`;
+        await supabase.from("mse_macrodroid_log").insert(logRow);
+
+        return NextResponse.json({
+          ok: true,
+          action: "operador_activado",
+          operador_id: opPendiente.id,
+          plan: opPendiente.plan,
+          monto: parsed.amount,
+        });
+      }
+    } catch (e) {
+      console.error("[sofia/macrodroid: detección renta operador]", (e as Error).message);
+    }
+  }
+
   // Buscar pago pendiente: prioriza match por código operación, luego por monto+ventana.
   const sinceIso = new Date(Date.now() - MATCH_WINDOW_MINUTES * 60 * 1000).toISOString();
 

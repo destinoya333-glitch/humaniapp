@@ -1,0 +1,43 @@
+{
+  "version": "7.0",
+  "screens": [
+    {
+      "id": "DATOS",
+      "title": "Compatibilidad Amorosa",
+      "terminal": true,
+      "success": true,
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          { "type": "TextHeading", "text": "Datos de las 2 personas" },
+          { "type": "TextBody", "text": "Necesito los nombres y fechas de nacimiento para tu lectura de compatibilidad amorosa." },
+          {
+            "type": "Form",
+            "name": "form_compat",
+            "init-values": {},
+            "children": [
+              { "type": "TextInput", "name": "p1_nombre", "label": "Persona 1: Nombre completo", "input-type": "text", "required": true, "min-chars": 2, "max-chars": 80 },
+              { "type": "TextInput", "name": "p1_fecha", "label": "Persona 1: Fecha nacimiento (DD/MM/AAAA)", "input-type": "text", "required": true, "min-chars": 6, "max-chars": 20 },
+              { "type": "TextInput", "name": "p2_nombre", "label": "Persona 2: Nombre completo", "input-type": "text", "required": true, "min-chars": 2, "max-chars": 80 },
+              { "type": "TextInput", "name": "p2_fecha", "label": "Persona 2: Fecha nacimiento (DD/MM/AAAA)", "input-type": "text", "required": true, "min-chars": 6, "max-chars": 20 },
+              {
+                "type": "Footer",
+                "label": "Enviar datos",
+                "on-click-action": {
+                  "name": "complete",
+                  "payload": {
+                    "status": "datos_compatibilidad",
+                    "p1_nombre": "${form.p1_nombre}",
+                    "p1_fecha": "${form.p1_fecha}",
+                    "p2_nombre": "${form.p2_nombre}",
+                    "p2_fecha": "${form.p2_fecha}"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
