@@ -17,6 +17,31 @@ import { sendText, downloadMetaMedia } from "@/lib/destinoya/meta-cloud-sender";
 import { sendDestinoFlow, type DestinoFlowKey } from "@/lib/destinoya/flow-sender";
 import { procesarMensaje } from "@/lib/destinoya/agent";
 import { getConversacion, supabase } from "@/lib/destinoya/db";
+import { getOperadorByMetaPhoneId, type OperadorContexto } from "@/lib/activosya/operadores";
+
+// Notif admin Percy (+51 998 102 258) desde canal TuDestinoYa cuando el
+// webhook explota. Best-effort: si falla queda en logs.
+async function notifyPercyAdmin(body: string): Promise<void> {
+  try {
+    const META_TOKEN =
+      process.env.META_DESTINOYA_ACCESS_TOKEN ||
+      process.env.ECODRIVE_META_ACCESS_TOKEN ||
+      "";
+    if (!META_TOKEN) return;
+    await fetch(`https://graph.facebook.com/v22.0/1080734831795014/messages`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${META_TOKEN}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        messaging_product: "whatsapp",
+        to: "51998102258",
+        type: "text",
+        text: { body },
+      }),
+    });
+  } catch (e) {
+    console.error("[destinoya-meta notifyPercyAdmin]", (e as Error).message);
+  }
+}
 
 // Detecta intención de mensaje texto -> Flow correspondiente.
 const TEXT_TO_FLOW: Array<{ pattern: RegExp; flow: DestinoFlowKey }> = [
@@ -101,7 +126,7 @@ function detectEsperaDatos(historial: Array<{ role: string; content: unknown }>)
   return /pago confirmado/i.test(txt) && /(necesito|env[ií]ame|cu[eé]ntame|elige|dame)/i.test(txt);
 }
 
-async function handleMessage(m: MetaMessage): Promise<void> {
+async function handleMessage(m: MetaMessage, operador: OperadorContexto | null = null): Promise<void> {
   const from = m.from;
   if (!from) return;
   const phoneE164 = `+${from.replace(/^\+/, "")}`;
@@ -135,6 +160,7 @@ async function handleMessage(m: MetaMessage): Promise<void> {
       historial,
       imageBuffer: dl.buffer,
       imageMime: dl.mime,
+      operador
     });
     await sendChunked(phoneE164, respuesta);
     return;
@@ -148,6 +174,7 @@ async function handleMessage(m: MetaMessage): Promise<void> {
       telefono: phoneE164,
       mensaje: "[audio recibido — el sistema aún no transcribe audios, por favor escribe tu mensaje]",
       historial,
+      operador
     });
     await sendChunked(phoneE164, respuesta);
     return;
@@ -161,6 +188,7 @@ async function handleMessage(m: MetaMessage): Promise<void> {
       telefono: phoneE164,
       mensaje: `${caption}\n\n[Adjuntaste un documento. El sistema aún no lo procesa automáticamente, por favor describe la consulta en texto.]`,
       historial,
+      operador
     });
     await sendChunked(phoneE164, respuesta);
     return;
@@ -198,6 +226,7 @@ async function handleMessage(m: MetaMessage): Promise<void> {
       if (servicio === "gratuita") {
         const respuesta = await procesarMensaje({
           telefono: phoneE164, mensaje: "5", historial,
+          operador
         });
         await sendChunked(phoneE164, respuesta);
         return;
@@ -210,6 +239,7 @@ async function handleMessage(m: MetaMessage): Promise<void> {
         telefono: phoneE164,
         mensaje: numeroPorServicio[servicio] || servicio,
         historial,
+        operador
       });
       await sendChunked(phoneE164, respuesta);
       return;
@@ -261,6 +291,7 @@ async function handleMessage(m: MetaMessage): Promise<void> {
       telefono: phoneE164,
       mensaje: `[flow submit] ${responseJson}`,
       historial,
+      operador
     });
     await sendChunked(phoneE164, respuesta);
     return;
@@ -279,6 +310,7 @@ async function handleMessage(m: MetaMessage): Promise<void> {
         telefono: phoneE164,
         mensaje: text,
         historial,
+        operador
       });
       await sendChunked(phoneE164, respuesta);
     }
@@ -319,6 +351,7 @@ async function handleMessage(m: MetaMessage): Promise<void> {
         telefono: phoneE164,
         mensaje: text,
         historial,
+        operador
       });
       await dbg("agent_ok", { len: respuesta.length, preview: respuesta.slice(0, 200) });
     } catch (e) {
@@ -367,22 +400,29 @@ export async function POST(request: Request) {
       const p = payload as {
         entry?: Array<{
           changes?: Array<{
-            value?: { messages?: MetaMessage[] };
+            value?: {
+              messages?: MetaMessage[];
+              metadata?: { phone_number_id?: string; display_phone_number?: string };
+            };
           }>;
         }>;
       };
-      const messages: MetaMessage[] = [];
+      // Multi-tenant: identificar operador franquicia por phone_id receptor.
+      // Si no hay match → operador = null (legacy / Percy directo).
+      const messagesByOperador: Array<{ msg: MetaMessage; operador: OperadorContexto | null }> = [];
       for (const entry of p?.entry || []) {
         for (const change of entry.changes || []) {
+          const phoneId = change.value?.metadata?.phone_number_id;
+          const operador = phoneId ? await getOperadorByMetaPhoneId(phoneId) : null;
           for (const msg of change.value?.messages || []) {
-            messages.push(msg);
+            messagesByOperador.push({ msg, operador });
           }
         }
       }
       await Promise.all(
-        messages.map(async (m) => {
+        messagesByOperador.map(async ({ msg, operador }) => {
           try {
-            await handleMessage(m);
+            await handleMessage(msg, operador);
           } catch (e) {
             console.error("[destinoya-meta handle err]", e);
           }
@@ -390,6 +430,15 @@ export async function POST(request: Request) {
       );
     } catch (err) {
       console.error("[destinoya-meta webhook err]", err);
+      const errMsg = (err as Error).message || String(err);
+      const errStack = (err as Error).stack?.slice(0, 500) || "";
+      await notifyPercyAdmin(
+        `🚨 *Error webhook bot TuDestinoYa*\n\n` +
+        `Mensaje: ${errMsg.slice(0, 300)}\n\n` +
+        `Stack:\n${errStack.slice(0, 400)}\n\n` +
+        `Time: ${new Date().toISOString().slice(0, 19)} UTC\n\n` +
+        `_El bot pudo haber dejado de responder a mensajes — revisar logs Vercel._`
+      );
     }
   });
 
