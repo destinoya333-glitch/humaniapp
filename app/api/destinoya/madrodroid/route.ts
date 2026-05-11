@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import twilio from "twilio";
 import {
   buscarPagoPendientePorCelular,
   buscarPagoPendientePorMonto,
@@ -7,15 +6,11 @@ import {
   agregarSaldo,
   getSaldo,
   getConversacion,
+  activarVIP,
 } from "@/lib/destinoya/db";
 import { procesarMensaje } from "@/lib/destinoya/agent";
-import { sendText as sendTextMeta, isMetaCloudConfigured } from "@/lib/destinoya/meta-cloud-sender";
-
-const TWILIO_ACCOUNT_SID = process.env.TWILIO_DESTINOYA_SID!;
-const TWILIO_AUTH_TOKEN = process.env.TWILIO_DESTINOYA_AUTH_TOKEN!;
-const FROM_NUMBER = "whatsapp:+51961347233";
-
-const twilioClient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
+import { sendText as sendTextMeta } from "@/lib/destinoya/meta-cloud-sender";
+import { sendDestinoFlow, type DestinoFlowKey } from "@/lib/destinoya/flow-sender";
 
 function dividirMensaje(texto: string, maxLen = 1500): string[] {
   if (texto.length <= maxLen) return [texto];
@@ -33,8 +28,27 @@ function dividirMensaje(texto: string, maxLen = 1500): string[] {
   return chunks;
 }
 
-// Outbound dual-channel: intenta Meta primero, fallback Twilio para clientes legacy.
-// Cuando todos los clientes esten migrados, eliminar el bloque Twilio.
+// Notif admin Percy (+51 998 102 258) cuando hay actividad de pago relevante.
+async function notifyPercy(body: string): Promise<void> {
+  try {
+    const META_TOKEN = process.env.ECODRIVE_META_ACCESS_TOKEN || "";
+    if (!META_TOKEN) return;
+    await fetch(`https://graph.facebook.com/v22.0/1044803088721236/messages`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${META_TOKEN}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        messaging_product: "whatsapp",
+        to: "51998102258",
+        type: "text",
+        text: { body },
+      }),
+    });
+  } catch (e) {
+    console.error("[madrodroid notifyPercy]", (e as Error).message);
+  }
+}
+
+// Outbound: Meta Cloud only (Twilio eliminado 2026-05-10).
 async function enviarWhatsApp(celular: string, mensaje: string) {
   if (!mensaje || !mensaje.trim()) {
     console.error("enviarWhatsApp: mensaje vacío, no se envía");
@@ -42,23 +56,8 @@ async function enviarWhatsApp(celular: string, mensaje: string) {
   }
   const chunks = dividirMensaje(mensaje);
   for (let i = 0; i < chunks.length; i++) {
-    let metaOk = false;
-    if (isMetaCloudConfigured()) {
-      const r = await sendTextMeta(celular, chunks[i]);
-      metaOk = r.ok;
-      if (!r.ok) console.error(`[madrodroid Meta send err chunk ${i+1}]`, r.error);
-    }
-    if (!metaOk) {
-      try {
-        await twilioClient.messages.create({
-          from: FROM_NUMBER,
-          to: `whatsapp:${celular}`,
-          body: chunks[i],
-        });
-      } catch (err) {
-        console.error(`[madrodroid Twilio fallback err chunk ${i+1}]`, err);
-      }
-    }
+    const r = await sendTextMeta(celular, chunks[i]);
+    if (!r.ok) console.error(`[madrodroid Meta send err chunk ${i+1}]`, r.error);
     if (i < chunks.length - 1) await new Promise(r => setTimeout(r, 500));
   }
 }
@@ -75,6 +74,33 @@ export async function POST(req: NextRequest) {
   try {
     bodyRaw = await req.text();
   } catch {}
+
+  // Wrap todo en try/catch para que excepciones no devuelvan 500 mudas
+  try {
+    return await handlePost(req, headers, bodyRaw, contentType, texto);
+  } catch (err) {
+    const { supabase } = await import("@/lib/destinoya/db");
+    const errMsg = (err as Error).message || String(err);
+    const errStack = (err as Error).stack?.slice(0, 800) || "";
+    await supabase.from("destinoya_debug_log").insert({
+      endpoint: "madrodroid",
+      headers,
+      body: bodyRaw,
+      parsed: { contentType, error: errMsg, stack: errStack },
+      result: `EXCEPTION: ${errMsg.slice(0, 200)}`,
+    }).then(() => {}, () => {});
+    return NextResponse.json({ ok: false, error: "internal", msg: errMsg }, { status: 200 });
+  }
+}
+
+async function handlePost(
+  req: NextRequest,
+  headers: Record<string, string>,
+  bodyRaw: string,
+  contentType: string,
+  textoIn: string,
+): Promise<NextResponse> {
+  let texto = textoIn;
 
   // Parsear según content-type
   try {
@@ -134,6 +160,106 @@ export async function POST(req: NextRequest) {
 
   logEntry.result = `OK_PARSED: monto=${montoYape}, op=${operacion}, celular=${celular || 'N/A'}, nombre=${nombreRemitente || 'N/A'}`;
   await supabase.from("destinoya_debug_log").insert(logEntry);
+
+  // ─── ActivosYA Franquicia: ¿es pago de RENTA OPERADOR? ───
+  // Si el monto coincide con un plan (S/.500/1200/2500) Y hay un operador
+  // pendiente_onboarding registrado en las últimas 4h con ese mismo monto,
+  // activar la cuenta del operador y mandarle WhatsApp con kit de bienvenida.
+  // Esto se evalúa ANTES de tratarlo como pago de alumno DestinoYa.
+  if ([500, 1200, 2500].includes(montoYape)) {
+    try {
+      const { buscarOperadorPendientePorMontoRenta, activarOperadorPorPagoRenta, PLANES, ACTIVOS_FRANQUICIABLES } =
+        await import("@/lib/activosya/operadores");
+      const opPendiente = await buscarOperadorPendientePorMontoRenta(montoYape, 240, nombreRemitente);
+      if (opPendiente) {
+        const activacion = await activarOperadorPorPagoRenta({
+          operador_id: opPendiente.id,
+          monto_pen: montoYape,
+          yape_operacion: operacion,
+          yape_remitente_nombre: nombreRemitente,
+        });
+
+        const planInfo = PLANES[opPendiente.plan];
+        const setupUrl = `https://activosya.com/operador/setup?token=${activacion.macrodroid_token}`;
+        const referralUrls = activacion.asset_slugs
+          .map((slug) => {
+            const info = ACTIVOS_FRANQUICIABLES[slug as keyof typeof ACTIVOS_FRANQUICIABLES];
+            const path = slug === "tudestinoya" ? "r" : "sofia/r";
+            return `${info?.icon ?? "•"} ${info?.name ?? slug}: https://activosya.com/${path}/${activacion.referral_code}`;
+          })
+          .join("\n");
+
+        const opMsg =
+          `🎉 *¡Cuenta ACTIVADA, ${opPendiente.name.split(" ")[0]}!*\n\n` +
+          `Recibimos tu Yape de S/. ${montoYape} ✅\n` +
+          `Plan ${planInfo.label} activo hasta el ${new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString("es-PE", { day: "2-digit", month: "long" })} 📅\n\n` +
+          `*🔗 Tus links únicos de referido:*\n${referralUrls}\n\n` +
+          `*🛠️ Completa tu setup técnico (5 min):*\n${setupUrl}\n\n` +
+          `Ahí encuentras:\n` +
+          `• Plantilla MacroDroid lista para tu Android\n` +
+          `• Tutorial 3 min de instalación\n` +
+          `• Material de marketing (flyers, scripts)\n` +
+          `• Cómo registrar tu chip WhatsApp Business\n\n` +
+          `*Próximo paso:* envíanos foto del chip dedicado para WhatsApp al *+51 998 102 258* y te lo activamos en Meta Cloud (10 min).\n\n` +
+          `🚀 ActivosYA — Empieza a vender HOY`;
+
+        try {
+          const META_TOKEN = process.env.ECODRIVE_META_ACCESS_TOKEN || "";
+          await fetch(`https://graph.facebook.com/v22.0/1044803088721236/messages`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${META_TOKEN}`, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              messaging_product: "whatsapp",
+              to: opPendiente.whatsapp_personal,
+              type: "text",
+              text: { body: opMsg },
+            }),
+          });
+
+          // Notificar a Percy
+          await fetch(`https://graph.facebook.com/v22.0/1044803088721236/messages`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${META_TOKEN}`, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              messaging_product: "whatsapp",
+              to: "51998102258",
+              type: "text",
+              text: {
+                body:
+                  `✅ *Operador ACTIVADO automáticamente*\n\n` +
+                  `${opPendiente.name}\n` +
+                  `Plan ${planInfo.label} (S/. ${montoYape})\n` +
+                  `WhatsApp: ${opPendiente.whatsapp_personal}\n` +
+                  `Yape op: ${operacion}\n\n` +
+                  `_Falta agregar SU chip a Meta Cloud cuando te lo envíe._`,
+              },
+            }),
+          });
+        } catch (e) {
+          console.error("[madrodroid: WhatsApp activación operador]", (e as Error).message);
+        }
+
+        await supabase.from("destinoya_debug_log").insert({
+          endpoint: "madrodroid",
+          headers,
+          body: bodyRaw,
+          parsed: { texto, contentType, monto: montoYape },
+          result: `OPERADOR_ACTIVADO: ${opPendiente.id} (${opPendiente.name}) plan=${opPendiente.plan}`,
+        });
+
+        return NextResponse.json({
+          ok: true,
+          action: "operador_activado",
+          operador_id: opPendiente.id,
+          plan: opPendiente.plan,
+          monto: montoYape,
+        });
+      }
+    } catch (e) {
+      console.error("[madrodroid: detección renta operador]", (e as Error).message);
+      // No bloquear el flujo de pagos de alumnos si esto falla
+    }
+  }
 
   // Estrategia de matching:
   // 1) Si tenemos celular del texto, buscar por celular
@@ -240,15 +366,112 @@ export async function POST(req: NextRequest) {
 
   // Caso 1: pagó exacto o completó
   if (totalPagado === montoEsperado) {
-    // Confirmado → activar siguiente etapa via agente
-    const conversacion = await getConversacion(celularFinal);
-    const historial = (conversacion?.messages as Array<{ role: string; content: unknown }>) || [];
-    const respuesta = await procesarMensaje({
-      telefono: celularFinal,
-      mensaje: `[YAPE_CONFIRMADO_AUTO: monto=${montoEsperado}, operacion=${operacion}, servicio=${pago.servicio}]`,
-      historial,
-    });
-    await enviarWhatsApp(celularFinal, respuesta);
+    // Servicio formato: "categoria:Sub-Servicio" (ej "esoterico:Compatibilidad Amorosa")
+    const servicioStr = String(pago.servicio || "");
+    const [categoria, subServicioRaw] = servicioStr.includes(":")
+      ? servicioStr.split(":", 2)
+      : ["", servicioStr];
+    const subServicio = subServicioRaw || "tu lectura";
+
+    // ─── VIP: activación inmediata, no requiere Flow datos ───
+    if (categoria === "vip") {
+      const planVip = subServicio === "vip_anual" || /anual/i.test(subServicio) ? "anual" : "mensual";
+      try {
+        const vip = await activarVIP(celularFinal, planVip);
+        const fechaVenc = vip?.fecha_vencimiento
+          ? new Date(vip.fecha_vencimiento).toLocaleDateString("es-PE", { day: "2-digit", month: "long", year: "numeric" })
+          : "";
+        await enviarWhatsApp(
+          celularFinal,
+          `✅ *¡VIP ${planVip === "anual" ? "Anual" : "Mensual"} activado!* 💎\n\n` +
+          `Pago confirmado: *S/${montoEsperado}*\n` +
+          `Tu acceso ilimitado vence el *${fechaVenc}* ⭐\n\n` +
+          `A partir de ahora, todos los servicios (Esotérico, Profesional, Rápidas) son ilimitados — solo escribe *menu* y empieza ✨`
+        );
+        await notifyPercy(
+          `💎 *VIP ${planVip === "anual" ? "Anual" : "Mensual"} activado*\n` +
+          `Cliente: ${celularFinal}\n` +
+          `Monto: S/${montoEsperado}\n` +
+          `Vence: ${fechaVenc}\n` +
+          `Op Yape: ${operacion}\n` +
+          `${nombreRemitente ? `De: ${nombreRemitente}\n` : ""}`
+        );
+      } catch (e) {
+        console.error("[madrodroid VIP err]", (e as Error).message);
+        await enviarWhatsApp(
+          celularFinal,
+          `✅ *Pago VIP confirmado: S/${montoEsperado}* — pero tuve un problema activando tu cuenta. Te contacto en minutos para arreglarlo manualmente 🙏`
+        );
+      }
+      return NextResponse.json({ ok: true, action: "vip_activado", plan: planVip });
+    }
+
+    // Determinar Flow de datos a enviar (null = sin Flow, mantener chat)
+    let flowDatos: DestinoFlowKey | null = null;
+    let mensajeChatFallback: string | null = null;
+    if (categoria === "esoterico") {
+      if (/mano/i.test(subServicio)) {
+        flowDatos = null;
+        mensajeChatFallback = `📸 Ahora envíame una *foto clara de tu palma derecha* para tu lectura 🖐️\n\nAsegúrate que se vean bien las líneas ✨`;
+      } else if (/compatibilidad/i.test(subServicio)) {
+        flowDatos = "datos_compatibilidad";
+      } else if (/carta astral/i.test(subServicio)) {
+        flowDatos = "datos_carta_astral";
+      } else if (/feng shui/i.test(subServicio)) {
+        flowDatos = "datos_feng_shui";
+      } else if (/numerolog/i.test(subServicio) || /futuro/i.test(subServicio)) {
+        flowDatos = "datos_numerologia";
+      } else {
+        flowDatos = "datos_numerologia";
+      }
+    } else if (categoria === "profesional") {
+      flowDatos = "datos_profesional";
+    } else if (categoria === "rapidas") {
+      // Caso especial: CV requiere documento (no Flow simple)
+      if (/cv|curriculum|curr[ií]culo|hoja de vida/i.test(subServicio)) {
+        flowDatos = null;
+        mensajeChatFallback =
+          `📄 Para tu *${subServicio}* tienes 2 opciones:\n\n` +
+          `*A)* Si ya tienes un CV (en Word o PDF), envíamelo por chat — lo mejoro y te devuelvo una versión optimizada.\n\n` +
+          `*B)* Si quieres crear uno desde cero, escribe *NUEVO* y te haré preguntas para armarlo.\n\n` +
+          `_Después te preguntaré si lo quieres recibir en Word o PDF._`;
+      } else {
+        flowDatos = "datos_rapidas";
+      }
+    }
+
+    // Mensaje 1 — confirmación corta
+    await enviarWhatsApp(
+      celularFinal,
+      `✅ *¡Pago confirmado!* S/${montoEsperado} 💫`
+    );
+    await notifyPercy(
+      `💰 *Pago confirmado* — S/${montoEsperado}\n` +
+      `Cliente: ${celularFinal}\n` +
+      `Servicio: ${categoria}:${subServicio}\n` +
+      `Op Yape: ${operacion}\n` +
+      `${nombreRemitente ? `De: ${nombreRemitente}\n` : ""}`
+    );
+    await new Promise((r) => setTimeout(r, 700));
+
+    // Mensaje 2 — Flow datos o chat fallback
+    if (flowDatos) {
+      const r = await sendDestinoFlow({
+        phone: celularFinal,
+        flowKey: flowDatos,
+        userIdOrPhone: celularFinal,
+      });
+      if (!r.ok) {
+        // Fallback chat si el Flow falla
+        await enviarWhatsApp(
+          celularFinal,
+          `Tuve un problema mostrando el formulario. Por favor envíame tus datos por chat 🙏`
+        );
+      }
+    } else if (mensajeChatFallback) {
+      await enviarWhatsApp(celularFinal, mensajeChatFallback);
+    }
+
     return NextResponse.json({ ok: true, action: "pago_confirmado" });
   }
 
@@ -258,6 +481,13 @@ export async function POST(req: NextRequest) {
     await enviarWhatsApp(
       celularFinal,
       `⚠️ *Recibí tu Yape de S/${montoYape}*\n\nEl servicio que elegiste cuesta *S/${montoEsperado}*. Hasta ahora has pagado *S/${totalPagado}*.\n\nTe faltan *S/${falta}* — yapea la diferencia y continuamos ✨`
+    );
+    await notifyPercy(
+      `⚠️ *Pago parcial* — recibido S/${montoYape} de S/${montoEsperado}\n` +
+      `Cliente: ${celularFinal}\n` +
+      `Servicio: ${pago.servicio}\n` +
+      `Le faltan: S/${falta}\n` +
+      `Op Yape: ${operacion}`
     );
     return NextResponse.json({ ok: true, action: "pago_parcial", falta });
   }
