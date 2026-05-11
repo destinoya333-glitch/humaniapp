@@ -29,11 +29,16 @@ function dividirMensaje(texto: string, maxLen = 1500): string[] {
 }
 
 // Notif admin Percy (+51 998 102 258) cuando hay actividad de pago relevante.
+// Envia desde canal TuDestinoYa (+51 980 423 754) para mantener branding consistente.
 async function notifyPercy(body: string): Promise<void> {
   try {
-    const META_TOKEN = process.env.ECODRIVE_META_ACCESS_TOKEN || "";
+    const META_TOKEN =
+      process.env.META_DESTINOYA_ACCESS_TOKEN ||
+      process.env.ECODRIVE_META_ACCESS_TOKEN ||
+      "";
     if (!META_TOKEN) return;
-    await fetch(`https://graph.facebook.com/v22.0/1044803088721236/messages`, {
+    const PHONE_ID_DESTINOYA = "1080734831795014";
+    await fetch(`https://graph.facebook.com/v22.0/${PHONE_ID_DESTINOYA}/messages`, {
       method: "POST",
       headers: { Authorization: `Bearer ${META_TOKEN}`, "Content-Type": "application/json" },
       body: JSON.stringify({
