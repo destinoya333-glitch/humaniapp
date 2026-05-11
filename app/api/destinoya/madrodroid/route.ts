@@ -94,6 +94,14 @@ export async function POST(req: NextRequest) {
       parsed: { contentType, error: errMsg, stack: errStack },
       result: `EXCEPTION: ${errMsg.slice(0, 200)}`,
     }).then(() => {}, () => {});
+    // Notif al admin: error inesperado en endpoint critico de pagos
+    await notifyPercy(
+      `🚨 *Error endpoint madrodroid* (pagos Yape)\n\n` +
+      `Mensaje: ${errMsg.slice(0, 300)}\n` +
+      `Body recibido: ${bodyRaw.slice(0, 200)}\n` +
+      `Time: ${new Date().toISOString().slice(0, 19)} UTC\n\n` +
+      `_Un pago Yape pudo haber quedado sin procesar — revisar logs Vercel._`
+    );
     return NextResponse.json({ ok: false, error: "internal", msg: errMsg }, { status: 200 });
   }
 }
