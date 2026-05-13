@@ -59,7 +59,8 @@ async function notificarPasajeroChoferAsignado(
   pasajeroWaId: string,
   origen: string,
   km: number,
-  min: number
+  min: number,
+  destino: string
 ): Promise<void> {
   const sb = db();
 
@@ -166,7 +167,9 @@ async function notificarPasajeroChoferAsignado(
         type: "text",
         text: {
           body:
-            `🚖 Aceptaste el viaje. Va a ${origen}\n\n` +
+            `🚖 Aceptaste el viaje.\n\n` +
+            `📍 *Recoge al pasajero en:* ${origen}\n` +
+            `🏁 *Lleva al destino:* ${destino}\n\n` +
             `📡 Abre tu GPS para que el pasajero te vea en vivo:\n${choferTrackerUrl}\n\n` +
             `Acepta los permisos de ubicacion. Vas a recibir alarma cuando llegue otro pedido.`,
         },
@@ -344,7 +347,7 @@ const flow: FlowDefinition = {
     // Por ahora: buscamos al chofer por intentos_choferes (el ultimo)
     const { data: viajeRow } = await sb
       .from("eco_viajes")
-      .select("intentos_choferes,estado,pasajero_wa_id,origen_direccion,distancia_km,duracion_min,tarifa_estimada")
+      .select("intentos_choferes,estado,pasajero_wa_id,origen_direccion,destino_direccion,distancia_km,duracion_min,tarifa_estimada")
       .eq("id", data.viaje_id)
       .maybeSingle();
 
@@ -368,6 +371,7 @@ const flow: FlowDefinition = {
       estado: string;
       pasajero_wa_id: string;
       origen_direccion: string;
+      destino_direccion: string;
       distancia_km: number;
       duracion_min: number;
       tarifa_estimada: number;
@@ -408,7 +412,8 @@ const flow: FlowDefinition = {
         vRow.pasajero_wa_id,
         vRow.origen_direccion,
         vRow.distancia_km,
-        vRow.duracion_min
+        vRow.duracion_min,
+        vRow.destino_direccion
       );
 
       return {
