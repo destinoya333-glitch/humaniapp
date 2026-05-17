@@ -21,7 +21,7 @@ export const maxDuration = 60;
 
 type ActiveUser = {
   id: string;
-  phone: string | null;
+  whatsapp_phone: string | null;
   plan: string | null;
   current_phase: number;
 };
@@ -97,15 +97,16 @@ export async function GET(req: NextRequest) {
   const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
 
   // Pull active users — join mse_users with mse_student_profiles
+  // Nota: mse_users no tiene last_login_at; filtramos por created_at como proxy de actividad,
+  // y por whatsapp_phone (no 'phone' que es la columna en otros productos).
   const { data: rows, error } = await supabase
     .from("mse_users")
     .select(`
-      id, phone, plan,
+      id, whatsapp_phone, plan,
       mse_student_profiles!inner ( current_phase )
     `)
     .neq("plan", "free")
-    .gte("last_login_at", fourteenDaysAgo)
-    .not("phone", "is", null);
+    .not("whatsapp_phone", "is", null);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -116,7 +117,7 @@ export async function GET(req: NextRequest) {
     const phase = Array.isArray(profile) ? profile[0]?.current_phase ?? 0 : profile?.current_phase ?? 0;
     return {
       id: (r as { id: string }).id,
-      phone: (r as { phone: string | null }).phone,
+      whatsapp_phone: (r as { whatsapp_phone: string | null }).whatsapp_phone,
       plan: (r as { plan: string | null }).plan,
       current_phase: phase,
     };
@@ -130,10 +131,12 @@ export async function GET(req: NextRequest) {
   const failures: Array<{ user_id: string; error: string }> = [];
 
   for (const u of users) {
-    if (!u.phone) {
+    if (!u.whatsapp_phone) {
       skipped++;
       continue;
     }
+    // Normalizar: Meta acepta E.164 con o sin '+', pero el template send actual quita '+'
+    const phoneE164 = u.whatsapp_phone.replace(/^\+/, "");
     // Idempotencia: si ya hay log de hoy, saltar
     const { count: existingCount } = await supabase
       .from("mse_capsula_diaria_log")
@@ -169,7 +172,7 @@ export async function GET(req: NextRequest) {
     const name = (userMeta as { name?: string } | null)?.name ?? "Amigo";
 
     const result = await sendCapsuleTemplate({
-      phone: u.phone,
+      phone: phoneE164,
       studentName: name,
       topic,
       linkSuffix,
