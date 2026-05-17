@@ -123,7 +123,9 @@ export async function GET(req: NextRequest) {
     };
   });
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "https://sofia.activosya.com";
+  // Nota: sofia.activosya.com solo sirve la landing /miss-sofia (rewrite del proxy).
+  // Las páginas Sofia reales (/sofia-chat, /sofia-capsule) viven en activosya.com.
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "https://activosya.com";
   const today = new Date().toISOString().slice(0, 10);
 
   let sent = 0;

@@ -144,7 +144,9 @@ function isCapsulaRequest(msg: string): boolean {
  * genérico al picker.
  */
 async function buildCapsulaReply(lead: WhatsAppLead): Promise<AgentReply> {
-  const baseUrl = (process.env.NEXT_PUBLIC_BASE_URL ?? "https://sofia.activosya.com").replace(
+  // sofia.activosya.com solo sirve la landing /miss-sofia. Las páginas reales
+  // (/sofia-chat, /sofia-capsule) viven en activosya.com.
+  const baseUrl = (process.env.NEXT_PUBLIC_BASE_URL ?? "https://activosya.com").replace(
     /\/$/,
     ""
   );
