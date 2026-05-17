@@ -46,26 +46,61 @@ export async function POST(req: NextRequest) {
   const supabase = getServiceClient();
   const cleanedPhone = whatsapp_phone ? String(whatsapp_phone).trim() : null;
 
-  // Upsert mse_users keyed by id (auth user id)
-  const { error: userErr } = await supabase
-    .from("mse_users")
-    .upsert(
-      {
-        id: authed.id,
-        email: authed.email,
-        name: name.trim(),
-        age,
-        city: city || null,
-        country: country || null,
-        profession: profession || null,
-        motivation: motivation || null,
-        whatsapp_phone: cleanedPhone,
-        plan: "free",
-      },
-      { onConflict: "id" }
-    );
-  if (userErr) {
-    return NextResponse.json({ error: userErr.message }, { status: 500 });
+  // Defensa contra duplicate email: si ya existe un mse_users con este email
+  // (cuenta vieja con auth.user_id distinto), actualizamos por email en vez
+  // de crear un nuevo row. Esto previene el error duplicate key value
+  // violates unique constraint "mse_users_email_key" cuando un usuario
+  // se vuelve a registrar tras haber tenido cuenta previa.
+  let effectiveUserId = authed.id;
+  if (authed.email) {
+    const { data: existingByEmail } = await supabase
+      .from("mse_users")
+      .select("id")
+      .eq("email", authed.email)
+      .maybeSingle();
+
+    if (existingByEmail && (existingByEmail as { id: string }).id !== authed.id) {
+      // Hay una cuenta vieja con este email pero distinto auth.id.
+      // Re-usar el id existente para mantener FK (mse_student_profiles, etc.).
+      effectiveUserId = (existingByEmail as { id: string }).id;
+      const { error: updateErr } = await supabase
+        .from("mse_users")
+        .update({
+          name: name.trim(),
+          age,
+          city: city || null,
+          country: country || null,
+          profession: profession || null,
+          motivation: motivation || null,
+          whatsapp_phone: cleanedPhone,
+        })
+        .eq("email", authed.email);
+      if (updateErr) {
+        return NextResponse.json({ error: updateErr.message }, { status: 500 });
+      }
+    } else {
+      // Path normal: upsert por id
+      const { error: userErr } = await supabase
+        .from("mse_users")
+        .upsert(
+          {
+            id: authed.id,
+            email: authed.email,
+            name: name.trim(),
+            age,
+            city: city || null,
+            country: country || null,
+            profession: profession || null,
+            motivation: motivation || null,
+            whatsapp_phone: cleanedPhone,
+            plan: "free",
+          },
+          { onConflict: "id" }
+        );
+      if (userErr) {
+        return NextResponse.json({ error: userErr.message }, { status: 500 });
+      }
+    }
   }
 
   // Ensure profile exists with Cuna defaults (current_phase=0, phase_day=1).
@@ -73,7 +108,7 @@ export async function POST(req: NextRequest) {
   const { data: existingProfile } = await supabase
     .from("mse_student_profiles")
     .select("user_id, cuna_started_at, personal_facts")
-    .eq("user_id", authed.id)
+    .eq("user_id", effectiveUserId)
     .maybeSingle();
 
   const profileUpdate: Record<string, unknown> = {};
@@ -104,11 +139,11 @@ export async function POST(req: NextRequest) {
       await supabase
         .from("mse_student_profiles")
         .update({ ...profileUpdate, updated_at: new Date().toISOString() })
-        .eq("user_id", authed.id);
+        .eq("user_id", effectiveUserId);
     }
   } else {
     await supabase.from("mse_student_profiles").insert({
-      user_id: authed.id,
+      user_id: effectiveUserId,
       cuna_started_at: profileUpdate.cuna_started_at ?? new Date().toISOString(),
       ...profileUpdate,
     });
@@ -120,7 +155,7 @@ export async function POST(req: NextRequest) {
     try {
       bridged = await convertLeadToUser({
         phone: cleanedPhone,
-        user_id: authed.id,
+        user_id: effectiveUserId,
         name: name.trim(),
       });
     } catch (e) {
