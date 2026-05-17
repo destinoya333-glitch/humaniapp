@@ -25,6 +25,8 @@ import {
 } from "./whatsapp-leads";
 import { cleanTextForTTS } from "./ai/elevenlabs";
 import { synthesizeForPlan } from "./ai/tts-router";
+import { buildCapsuleLink } from "./capsule-link";
+import { suggestedTopicsForPhase } from "./passage-engine";
 
 const SUPABASE_URL = (
   process.env.NEXT_PUBLIC_SUPABASE_URL ?? "https://rfpmvnoaqibqiqxrmheb.supabase.co"
@@ -116,6 +118,91 @@ function isNo(msg: string): boolean {
 function isResetCommand(msg: string): boolean {
   return /^(hola|menu|men[uú]|empezar|empieza|reiniciar|reset|inicio|start|nuevo|otra\s+vez|de\s+nuevo|comenzar)$/i.test(
     msg.trim()
+  );
+}
+
+/**
+ * Detecta cuando el usuario pide su cápsula APA — incluye:
+ *  - texto exacto del botón URL del template "Abrir mi capsula"
+ *  - variantes con/sin acento, mayúsculas
+ *  - palabra suelta "capsula" / "cápsula"
+ *  - "capsula apa", "cápsula del día", etc.
+ */
+function isCapsulaRequest(msg: string): boolean {
+  const s = msg.trim().toLowerCase();
+  if (/^abrir\s+mi\s+c[aá]psula$/i.test(s)) return true;
+  if (/^c[aá]psula(\s+apa)?$/i.test(s)) return true;
+  if (/c[aá]psula\s+(apa|del\s+d[ií]a|de\s+hoy|de\s+ingl[eé]s|teacher\s*poli)/i.test(s)) return true;
+  if (/(abre|abrir|ver|quiero|dame|ir\s+a|empezar)\s+(mi\s+)?c[aá]psula/i.test(s)) return true;
+  return false;
+}
+
+/**
+ * Construye respuesta con link directo a /sofia-capsule. Si el lead tiene
+ * user_id (cuenta creada en mse_users), firma el link con HMAC para
+ * auto-arrancar la cápsula con un tópico fase-apropiado. Si no, manda link
+ * genérico al picker.
+ */
+async function buildCapsulaReply(lead: WhatsAppLead): Promise<AgentReply> {
+  const baseUrl = (process.env.NEXT_PUBLIC_BASE_URL ?? "https://sofia.activosya.com").replace(
+    /\/$/,
+    ""
+  );
+
+  // Intentar resolver user_id + phase desde mse_users + mse_student_profiles
+  let userId: string | null = null;
+  let phase = 0;
+  try {
+    const supabase = createClient(SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+    const { data: user } = await supabase
+      .from("mse_users")
+      .select("id")
+      .eq("whatsapp_phone", lead.phone.startsWith("+") ? lead.phone : `+${lead.phone}`)
+      .maybeSingle();
+    if (user?.id) {
+      userId = (user as { id: string }).id;
+      const { data: profile } = await supabase
+        .from("mse_student_profiles")
+        .select("current_phase")
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (profile?.current_phase != null) {
+        phase = (profile as { current_phase: number }).current_phase;
+      }
+    }
+  } catch (e) {
+    console.error("[buildCapsulaReply lookup err]", e);
+  }
+
+  if (!userId) {
+    // No tiene cuenta — mandar al picker genérico
+    return plain(
+      `Acá tienes tu cápsula APA:\n\n${baseUrl}/sofia-capsule\n\n` +
+      `Si no tienes cuenta, te pide crearla en 30 segundos.`
+    );
+  }
+
+  // Tópico fase-apropiado determinístico por día
+  const suggestions = suggestedTopicsForPhase(phase as 0 | 1 | 2 | 3 | 4 | 5);
+  const idx =
+    (parseInt(userId.replace(/-/g, "").slice(0, 8), 16) + new Date().getDate()) %
+    suggestions.length;
+  const topic = suggestions[idx];
+  const difficulty: "easy" | "medium" | "hard" =
+    phase <= 1 ? "easy" : phase <= 3 ? "medium" : "hard";
+
+  const link = buildCapsuleLink({
+    baseUrl,
+    userId,
+    topic,
+    difficulty,
+    ttlSeconds: 60 * 60 * 36,
+  });
+
+  return plain(
+    `Tu cápsula APA está lista. Hoy es sobre *${topic}* — toca el link:\n\n` +
+    `${link}\n\n` +
+    `Te toma 5-10 min: pasaje narrado, conversación conmigo y quiz con tus correcciones tipo Teacher Poli.`
   );
 }
 
@@ -526,6 +613,17 @@ export async function processWhatsAppMessage(
   tenantId: string | null = null
 ): Promise<AgentReply> {
   const lead = await getOrCreateLead(phone, tenantId);
+
+  // ⚡ Detección temprana: usuario pidió su cápsula APA (botón del template
+  // o texto manual "capsula"). Responde con el link directo sin importar
+  // el estado del lead. Esto evita que Sofia conversational se confunda
+  // con "cápsula del tiempo" u otras malinterpretaciones.
+  if (isCapsulaRequest(userMessage)) {
+    await appendMessage(phone, "user", userMessage);
+    const reply = await buildCapsulaReply(lead);
+    await appendMessage(phone, "assistant", reply.text ?? "");
+    return reply;
+  }
 
   // Hard reset — pero NUNCA si el cliente tiene plan pagado activo
   if (isResetCommand(userMessage) && lead.status !== "converted" && !hasPaidPlan(lead)) {
