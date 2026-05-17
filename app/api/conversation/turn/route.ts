@@ -16,6 +16,7 @@ import {
   incrementUsage,
 } from "@/lib/miss-sofia-voice/db";
 import { callMissSofia } from "@/lib/miss-sofia-voice/ai/claude";
+import { getRoleplayById } from "@/lib/miss-sofia-voice/roleplay-scenarios";
 import { whisperSTT } from "@/lib/miss-sofia-voice/ai/whisper";
 import { cleanTextForTTS } from "@/lib/miss-sofia-voice/ai/elevenlabs";
 import { synthesizeAsBase64 } from "@/lib/miss-sofia-voice/ai/tts-router";
@@ -49,10 +50,19 @@ export async function POST(req: NextRequest) {
     );
     const { data: session } = await supabase
       .from("mse_sessions")
-      .select("user_id")
+      .select("user_id, session_type")
       .eq("id", sessionId)
       .single();
     if (!session) return NextResponse.json({ error: "session not found" }, { status: 404 });
+
+    // Roleplay overlay (si session_type viene como "roleplay:<id>")
+    let rolePlayOverlay: string | undefined;
+    const sessionType = (session as { session_type?: string }).session_type ?? "";
+    if (sessionType.startsWith("roleplay:")) {
+      const scenarioId = sessionType.slice("roleplay:".length);
+      const scenario = getRoleplayById(scenarioId);
+      if (scenario) rolePlayOverlay = scenario.system_overlay;
+    }
 
     const [user, profile] = await Promise.all([
       getUser(session.user_id),
@@ -109,9 +119,9 @@ export async function POST(req: NextRequest) {
       console.error("ngsl tracker:", err)
     );
 
-    // Call Sofia with full transcript
+    // Call Sofia with full transcript + opcional roleplay overlay
     const transcript = await getTranscript(sessionId);
-    const responseText = await callMissSofia(transcript);
+    const responseText = await callMissSofia(transcript, { extraSystem: rolePlayOverlay });
 
     // Append Sofia turn (raw, with tags if any — needed for /end Shadow Coach analysis)
     await appendToTranscript(sessionId, { role: "assistant", content: responseText });

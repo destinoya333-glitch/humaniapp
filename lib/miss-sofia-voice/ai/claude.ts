@@ -15,13 +15,25 @@ function getClient(): Anthropic {
 
 export type ConversationMessage = { role: "user" | "assistant"; content: string };
 
-export async function callMissSofia(messages: ConversationMessage[]): Promise<string> {
+export async function callMissSofia(
+  messages: ConversationMessage[],
+  opts?: { extraSystem?: string }
+): Promise<string> {
+  const systemBlocks: Array<{
+    type: "text";
+    text: string;
+    cache_control?: { type: "ephemeral" };
+  }> = [
+    { type: "text", text: MISS_SOFIA_MASTER_PROMPT, cache_control: { type: "ephemeral" } },
+  ];
+  if (opts?.extraSystem && opts.extraSystem.trim()) {
+    // Non-cached: overlay varía por sesión (roleplay scenario), no vale la pena cachear
+    systemBlocks.push({ type: "text", text: opts.extraSystem });
+  }
   const response = await getClient().messages.create({
     model: CLAUDE_MODEL,
     max_tokens: 600,
-    system: [
-      { type: "text", text: MISS_SOFIA_MASTER_PROMPT, cache_control: { type: "ephemeral" } },
-    ],
+    system: systemBlocks,
     messages: messages.map((m) => ({ role: m.role, content: m.content })),
   });
   const text = response.content.find((b) => b.type === "text");

@@ -201,10 +201,18 @@ export default function SofiaChatPage() {
     setLoading(true);
     setError(null);
     try {
+      // Roleplay desde query param (?roleplay=<id>) o localStorage
+      let roleplayId: string | null = null;
+      if (typeof window !== "undefined") {
+        const params = new URLSearchParams(window.location.search);
+        roleplayId = params.get("roleplay") || window.localStorage.getItem("sofia_roleplay_scenario");
+        // Una vez consumido, limpiar para que la próxima sesión sea normal
+        if (roleplayId) window.localStorage.removeItem("sofia_roleplay_scenario");
+      }
       const res = await fetch("/api/conversation/start", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: userId }),
+        body: JSON.stringify({ user_id: userId, roleplay_id: roleplayId ?? undefined }),
       });
       const data = await res.json();
       if (!res.ok) {

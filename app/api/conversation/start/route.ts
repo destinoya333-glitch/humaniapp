@@ -25,6 +25,7 @@ import {
 import { callMissSofia } from "@/lib/miss-sofia-voice/ai/claude";
 import { cleanTextForTTS } from "@/lib/miss-sofia-voice/ai/elevenlabs";
 import { synthesizeAsBase64 } from "@/lib/miss-sofia-voice/ai/tts-router";
+import { getRoleplayById } from "@/lib/miss-sofia-voice/roleplay-scenarios";
 import {
   getEffectivePlanForVoice,
   getFreeTierStatus,
@@ -35,10 +36,16 @@ import {
 
 export async function POST(req: NextRequest) {
   try {
-    const { user_id } = await req.json();
+    const { user_id, roleplay_id } = await req.json();
     if (!user_id) {
       return NextResponse.json({ error: "user_id required" }, { status: 400 });
     }
+
+    // Resolver roleplay si se pidió uno
+    const roleplay =
+      typeof roleplay_id === "string" && roleplay_id.length > 0
+        ? getRoleplayById(roleplay_id)
+        : null;
 
     const user = await getUser(user_id);
     if (!user) return NextResponse.json({ error: "user not found" }, { status: 404 });
@@ -72,12 +79,23 @@ export async function POST(req: NextRequest) {
 
     const session = await createSession({
       user_id,
-      session_type: ctx.ritual_slot,
+      // session_type encodea el roleplay si aplica — /turn lo lee para reinyectar overlay
+      session_type: roleplay ? `roleplay:${roleplay.id}` : ctx.ritual_slot,
     });
 
-    // Generate Sofia's opening turn.
-    const firstUserMsg = contextAsFirstUserMessage(ctx);
-    const openingText = await callMissSofia([{ role: "user", content: firstUserMsg }]);
+    let firstUserMsg: string;
+    let openingText: string;
+
+    if (roleplay) {
+      // En roleplay, Sofia entra DIRECTO en personaje con opener_en — sin llamar a Claude.
+      // Esto preserva el guion y ahorra una llamada API en el arranque.
+      firstUserMsg = `[ROLEPLAY ${roleplay.id} — student opens chat. Sofia is in character. Stay in role.]`;
+      openingText = roleplay.opener_en;
+    } else {
+      // Flujo Cuna normal: contexto → Sofia genera apertura
+      firstUserMsg = contextAsFirstUserMessage(ctx);
+      openingText = await callMissSofia([{ role: "user", content: firstUserMsg }]);
+    }
 
     await appendToTranscript(session.id, { role: "user", content: firstUserMsg });
     // Append raw response (with tags if any) for Shadow Coach to analyze later
@@ -116,6 +134,9 @@ export async function POST(req: NextRequest) {
         ritual_slot: ctx.ritual_slot,
         mission_title: ctx.today_mission?.title ?? null,
         novel_chapter: ctx.novel?.current_chapter_number ?? null,
+        roleplay: roleplay
+          ? { id: roleplay.id, title_es: roleplay.title_es, emoji: roleplay.emoji }
+          : null,
       },
     });
   } catch (e) {

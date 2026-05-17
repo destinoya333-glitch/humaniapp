@@ -30,7 +30,7 @@ async function sendCapsuleTemplate(opts: {
   phone: string;
   studentName: string;
   topic: string;
-  link: string;
+  linkSuffix: string; // querystring SIN el prefijo de URL (Meta limita botones URL a sufijo dinámico)
 }): Promise<{ ok: boolean; error?: string }> {
   const phoneId = process.env.META_SOFIA_PHONE_ID;
   const token = process.env.META_SOFIA_ACCESS_TOKEN;
@@ -65,7 +65,7 @@ async function sendCapsuleTemplate(opts: {
                 type: "button",
                 sub_type: "url",
                 index: "0",
-                parameters: [{ type: "text", text: opts.link }],
+                parameters: [{ type: "text", text: opts.linkSuffix }],
               },
             ],
           },
@@ -158,6 +158,8 @@ export async function GET(req: NextRequest) {
       topic,
       difficulty,
     });
+    // Extraer querystring del link para usarlo como sufijo del botón template
+    const linkSuffix = link.includes("?") ? link.substring(link.indexOf("?") + 1) : "";
 
     const { data: userMeta } = await supabase
       .from("mse_users")
@@ -170,7 +172,7 @@ export async function GET(req: NextRequest) {
       phone: u.phone,
       studentName: name,
       topic,
-      link,
+      linkSuffix,
     });
 
     if (result.ok) {
