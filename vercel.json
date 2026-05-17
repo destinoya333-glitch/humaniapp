@@ -11,6 +11,30 @@
     {
       "path": "/api/cron/cuento-reset-vip",
       "schedule": "0 10 1 * *"
+    },
+    {
+      "path": "/api/cron/sofia-rituals-tick?slot=morning",
+      "schedule": "0 10 * * *"
+    },
+    {
+      "path": "/api/cron/sofia-rituals-lunch",
+      "schedule": "0 16 * * *"
+    },
+    {
+      "path": "/api/cron/sofia-rituals-night",
+      "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/sofia-rituals-bedtime",
+      "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/activosya-kpi-snapshot",
+      "schedule": "30 5 * * *"
+    },
+    {
+      "path": "/api/cron/sofia-capsula-diaria",
+      "schedule": "0 14 * * *"
     }
   ]
 }

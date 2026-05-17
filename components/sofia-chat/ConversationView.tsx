@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import TappableText from "./TappableText";
 
 export type ChatMessage = {
   role: "user" | "assistant";
@@ -11,9 +12,16 @@ export type ChatMessage = {
 type Props = {
   messages: ChatMessage[];
   isLoading?: boolean;
+  userId?: string | null;
+  enableTapToDefine?: boolean;
 };
 
-export default function ConversationView({ messages, isLoading }: Props) {
+export default function ConversationView({
+  messages,
+  isLoading,
+  userId,
+  enableTapToDefine = true,
+}: Props) {
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -45,7 +53,11 @@ export default function ConversationView({ messages, isLoading }: Props) {
                 Miss Sofia
               </div>
             )}
-            {m.content}
+            {m.role === "assistant" && enableTapToDefine ? (
+              <TappableText text={m.content} userId={userId ?? null} context={m.content} />
+            ) : (
+              m.content
+            )}
           </div>
         </div>
       ))}

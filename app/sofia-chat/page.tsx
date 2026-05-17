@@ -7,6 +7,8 @@ import ConversationView, {
 } from "@/components/sofia-chat/ConversationView";
 import TimerWarning from "@/components/sofia-chat/TimerWarning";
 import UpgradeModal from "@/components/sofia-chat/UpgradeModal";
+import ReviewTab from "@/components/sofia-chat/ReviewTab";
+import RolePlaySelector from "@/components/sofia-chat/RolePlaySelector";
 
 /* ─── Types matching the Cuna endpoints ──────────────────────── */
 
@@ -112,6 +114,8 @@ export default function SofiaChatPage() {
   const [error, setError] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [rolePlayOpen, setRolePlayOpen] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Auth check
@@ -294,6 +298,8 @@ export default function SofiaChatPage() {
         refreshChapter(userId);
         refreshNgsl(userId);
       }
+      // Abrir Revisión APA — las cards aparecen dentro de ~10-15s vía after().
+      setReviewOpen(true);
     } finally {
       setLoading(false);
     }
@@ -335,6 +341,12 @@ export default function SofiaChatPage() {
               <span className="text-zinc-400 font-normal">Método Cuna</span>
             </h1>
             <div className="flex items-center gap-3 text-xs">
+              <a
+                href="/sofia-capsule"
+                className="text-amber-400 hover:text-amber-300 transition-colors font-semibold"
+              >
+                🧠 Cápsula APA
+              </a>
               <a
                 href="/sofia-progress"
                 className="text-zinc-500 hover:text-amber-400 transition-colors"
@@ -437,7 +449,7 @@ export default function SofiaChatPage() {
         ) : (
           <>
             <div className="card-surface rounded-2xl border border-[#2A2A2A] mb-4">
-              <ConversationView messages={messages} isLoading={loading} />
+              <ConversationView messages={messages} isLoading={loading} userId={userId} />
             </div>
             <div className="card-surface rounded-2xl p-4 border border-[#2A2A2A] flex flex-col items-center">
               <VoiceRecorder onAudioReady={sendTurn} disabled={loading} />
@@ -456,6 +468,30 @@ export default function SofiaChatPage() {
           <div className="mt-3 bg-rose-500/10 border border-rose-500/30 text-rose-300 text-sm p-3 rounded-xl">
             {error}
           </div>
+        )}
+
+        {/* ── Revisión APA (método Teacher Poli dentro de Cuna) ─── */}
+        {userId && (
+          <ReviewTab
+            userId={userId}
+            expanded={reviewOpen}
+            onToggle={() => setReviewOpen((v) => !v)}
+          />
+        )}
+
+        {/* ── Role Play (Sofia entra en personaje) ─────────────── */}
+        {userId && (
+          <RolePlaySelector
+            userId={userId}
+            expanded={rolePlayOpen}
+            onToggle={() => setRolePlayOpen((v) => !v)}
+            onPick={(id) => {
+              if (typeof window !== "undefined") {
+                window.localStorage.setItem("sofia_roleplay_scenario", id);
+                window.location.href = `/sofia-chat?roleplay=${id}`;
+              }
+            }}
+          />
         )}
       </div>
 

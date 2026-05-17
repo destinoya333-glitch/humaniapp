@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import StreakHeatmap from "@/components/sofia-progress/StreakHeatmap";
 
 /* ─── Types matching /api/sofia-progress/dashboard ────────────── */
 
@@ -83,6 +84,7 @@ const MILESTONE_LABELS: Record<string, { label: string; emoji: string }> = {
 
 export default function SofiaProgressPage() {
   const [data, setData] = useState<Dashboard | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -95,6 +97,7 @@ export default function SofiaProgressPage() {
           window.location.href = "/sofia-auth/login";
           return;
         }
+        setUserId(me.user_id);
         const r = await fetch(`/api/sofia-progress/dashboard?user_id=${me.user_id}`);
         if (!r.ok) {
           const err = await r.json().catch(() => ({}));
@@ -190,6 +193,13 @@ export default function SofiaProgressPage() {
           <Stat icon="📚" label="Palabras tuyas" value={String(data.metrics.palabras_tuyas_count)} />
           <Stat icon="🌟" label="Hitos viscerales" value={String(data.metrics.milestones_unlocked_count)} />
         </section>
+
+        {/* ── Streak heatmap (sesiones + cápsulas APA) ─── */}
+        {userId && (
+          <section className="mb-6">
+            <StreakHeatmap userId={userId} />
+          </section>
+        )}
 
         {/* ── Visceral milestones ────────────────────────── */}
         <section className="card-surface rounded-2xl p-5 mb-6 border border-[#2A2A2A]">

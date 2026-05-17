@@ -16,7 +16,8 @@
  *   4. Persist transcript + duration via closeSession
  */
 import { NextRequest, NextResponse } from "next/server";
-import { closeSession, getTranscript } from "@/lib/miss-sofia-voice/db";
+import { after } from "next/server";
+import { closeSession, getTranscript, getStudentProfile } from "@/lib/miss-sofia-voice/db";
 import {
   extractPhaseProgress,
   generateShadowCoachReport,
@@ -25,6 +26,7 @@ import {
   processSessionEnd,
   type ShadowCoachReport,
 } from "@/lib/miss-sofia-voice/shadow-coach";
+import { extractReviewCards } from "@/lib/miss-sofia-voice/review-extractor";
 import { createClient } from "@supabase/supabase-js";
 
 type SessionRow = {
@@ -86,6 +88,30 @@ export async function POST(req: NextRequest) {
       report,
       phaseProgress,
       sessionSummary: report.session_summary ?? "",
+    });
+
+    // 5. Extract APA review cards async (fire and forget) — no bloquea la respuesta.
+    //    Si falla, se loguea pero no impacta al usuario.
+    after(async () => {
+      try {
+        const profile = await getStudentProfile(session.user_id);
+        const phase = profile?.current_phase ?? 0;
+        const cards = await extractReviewCards(transcript, phase);
+        if (cards.length === 0) return;
+        const rows = cards.map((c) => ({
+          user_id: session.user_id,
+          session_id: session.id,
+          category: c.category,
+          user_phrase: c.user_phrase,
+          correction: c.correction,
+          explanation_es: c.explanation_es,
+          severity: c.severity,
+        }));
+        const { error } = await supabase.from("mse_review_cards").insert(rows);
+        if (error) console.error("review_cards insert (after):", error);
+      } catch (e) {
+        console.error("review_cards after() failed:", e);
+      }
     });
 
     return NextResponse.json({
