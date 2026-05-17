@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Image from "next/image";
 import Script from "next/script";
 
 export const metadata: Metadata = {
@@ -83,13 +82,10 @@ export default function EcoDrivePlusPage() {
       <header className="sticky top-0 z-50 border-b border-white/5 bg-[#0A0A0A]/70 backdrop-blur-xl">
         <div className="mx-auto max-w-6xl px-6 h-40 md:h-48 flex items-center justify-between">
           <Link href="/ecodriveplus" className="flex items-center gap-3 group">
-            <Image
-              src="/ecodrive-logo.png"
-              alt="EcoDrive+"
-              width={420}
-              height={148}
-              priority
-              className="h-32 w-auto md:h-40 object-contain group-hover:scale-105 transition-transform"
+            <div
+              role="img"
+              aria-label="EcoDrive+"
+              className="h-32 md:h-40 w-[360px] md:w-[455px] bg-[url('/ecodrive-logo.png')] bg-contain bg-no-repeat bg-left group-hover:scale-105 transition-transform"
             />
           </Link>
           <nav className="hidden md:flex items-center gap-8 text-sm text-zinc-400">
@@ -506,7 +502,7 @@ export default function EcoDrivePlusPage() {
       <footer className="relative px-6 py-12 border-t border-white/5">
         <div className="mx-auto max-w-6xl flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-zinc-500">
           <div className="flex items-center gap-3">
-            <Image src="/ecodrive-logo.png" alt="EcoDrive+" width={28} height={28} className="object-contain" />
+            <div role="img" aria-label="EcoDrive+" className="h-7 w-7 bg-[url('/ecodriveplus/icon.png')] bg-contain bg-no-repeat bg-center" />
             <span>© 2026 EcoDrive+ · Hecho con <span className="text-orange-400">✦</span> en Perú</span>
           </div>
           <div className="flex items-center gap-6">

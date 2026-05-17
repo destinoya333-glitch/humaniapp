@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
-import Image from "next/image";
 import MiCuentaClient from "./MiCuentaClient";
 
 export const metadata: Metadata = {
@@ -53,7 +52,7 @@ export default async function MiCuentaPage() {
       <header className="sticky top-0 z-50 border-b border-white/5 bg-[#0A0A0A]/70 backdrop-blur-xl">
         <div className="mx-auto max-w-6xl px-6 h-20 flex items-center justify-between">
           <Link href="/ecodriveplus" className="flex items-center gap-3 group">
-            <Image src="/ecodrive-logo.png" alt="EcoDrive+" width={420} height={148} priority className="h-12 w-auto md:h-14 object-contain" />
+            <div role="img" aria-label="EcoDrive+" className="h-12 md:h-14 w-[136px] md:w-[160px] bg-[url('/ecodrive-logo.png')] bg-contain bg-no-repeat bg-left" />
           </Link>
           <nav className="flex items-center gap-6 text-sm">
             <Link href="/ecodriveplus" className="text-zinc-400 hover:text-white transition">Inicio</Link>
