@@ -10,67 +10,56 @@ if (typeof window !== "undefined") {
 
 type Props = {
   src: string;
-  /** "ken-burns" = slow infinite zoom 1.0 → 1.08; "parallax" = yPercent scroll-bound; "both" = both. */
-  motion?: "ken-burns" | "parallax" | "both";
-  /** Parallax intensity (px range). Default 80. */
+  alt?: string;
+  motion?: "ken-burns" | "parallax" | "both" | "none";
   parallaxRange?: number;
-  /** Ken Burns origin: "center", "left top", etc. */
   origin?: string;
   className?: string;
-  /** Optional overlay JSX rendered on top of the image. */
   children?: React.ReactNode;
-  /** Override the position-bg class (e.g. bg-left, bg-right). */
-  bgPosition?: string;
+  objectPosition?: string;
 };
 
 export default function CinematicImage({
   src,
+  alt = "",
   motion = "both",
   parallaxRange = 80,
-  origin = "center",
+  origin = "50% 50%",
   className = "",
   children,
-  bgPosition = "bg-center",
+  objectPosition = "center",
 }: Props) {
   const wrapRef = useRef<HTMLDivElement>(null);
-  const imgRef = useRef<HTMLDivElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
     const wrap = wrapRef.current;
     const img = imgRef.current;
     if (!wrap || !img) return;
 
+    gsap.set(img, { scale: 1.08, transformOrigin: origin });
+
     const ctx = gsap.context(() => {
-      // Ken Burns slow zoom (independent of scroll)
       if (motion === "ken-burns" || motion === "both") {
-        gsap.fromTo(
-          img,
-          { scale: 1.0, transformOrigin: origin },
-          {
-            scale: 1.12,
-            duration: 18,
-            ease: "sine.inOut",
-            repeat: -1,
-            yoyo: true,
-          }
-        );
+        gsap.to(img, {
+          scale: 1.18,
+          duration: 18,
+          ease: "sine.inOut",
+          repeat: -1,
+          yoyo: true,
+        });
       }
-      // Parallax bound to scroll position
       if (motion === "parallax" || motion === "both") {
-        gsap.fromTo(
-          img,
-          { yPercent: -parallaxRange / 6 },
-          {
-            yPercent: parallaxRange / 6,
-            ease: "none",
-            scrollTrigger: {
-              trigger: wrap,
-              start: "top bottom",
-              end: "bottom top",
-              scrub: true,
-            },
-          }
-        );
+        gsap.to(img, {
+          yPercent: parallaxRange / 8,
+          ease: "none",
+          scrollTrigger: {
+            trigger: wrap,
+            start: "top bottom",
+            end: "bottom top",
+            scrub: true,
+          },
+        });
       }
     }, wrapRef);
     return () => ctx.revert();
@@ -78,17 +67,14 @@ export default function CinematicImage({
 
   return (
     <div ref={wrapRef} className={`relative overflow-hidden ${className}`}>
-      <div
+      <img
         ref={imgRef}
-        aria-hidden
-        className={`absolute bg-cover bg-no-repeat ${bgPosition} eco-cinematic will-change-transform`}
-        style={{
-          backgroundImage: `url('${src}')`,
-          top: "-8%",
-          right: "-8%",
-          bottom: "-8%",
-          left: "-8%",
-        }}
+        src={src}
+        alt={alt}
+        aria-hidden={alt === ""}
+        className="absolute inset-0 w-full h-full object-cover eco-cinematic will-change-transform"
+        style={{ objectPosition }}
+        loading="eager"
       />
       {children}
     </div>
