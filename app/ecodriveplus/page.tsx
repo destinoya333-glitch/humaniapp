@@ -139,16 +139,16 @@ export default function EcoDrivePlusPage() {
 
       {/* === HEADER === */}
       <header className="relative z-40 border-b border-[var(--eco-line)]">
-        <div className="mx-auto max-w-[1400px] px-6 lg:px-12 h-24 md:h-28 flex items-center justify-between">
-          <Link href="/ecodriveplus" className="flex items-center gap-4 group">
+        <div className="mx-auto max-w-[1400px] px-6 lg:px-12 h-32 md:h-40 flex items-center justify-between">
+          <Link href="/ecodriveplus" className="flex items-center gap-5 group">
             <div
               role="img"
               aria-label="EcoDrive+"
-              className="h-12 w-12 md:h-14 md:w-14 bg-[url('/ecodriveplus/icon.png')] bg-contain bg-no-repeat bg-center group-hover:rotate-[8deg] transition-transform duration-700"
+              className="h-24 w-24 md:h-28 md:w-28 bg-[url('/ecodriveplus/icon.png')] bg-contain bg-no-repeat bg-center group-hover:rotate-[8deg] transition-transform duration-700 shrink-0"
             />
             <div className="leading-none">
-              <div className="eco-display text-2xl md:text-[28px] tracking-tight">EcoDrive<span className="text-[var(--eco-flame)]">+</span></div>
-              <div className="eco-mono mt-1 text-[var(--eco-ink-mute)] hidden sm:block">EST. TRUJILLO · 2024</div>
+              <div className="eco-display text-[32px] md:text-[40px] tracking-tight">EcoDrive<span className="text-[var(--eco-flame)]">+</span></div>
+              <div className="eco-mono mt-2 text-[var(--eco-ink-mute)] hidden sm:block text-[0.95rem] tracking-[0.18em]">EST. TRUJILLO · 2024</div>
             </div>
           </Link>
 
