@@ -692,6 +692,54 @@ export default function EcoDrivePlusPage() {
         </div>
       </section>
 
+      {/* === BANDA GARAJE — Sorteo BYD Yuan Pro === */}
+      <section className="relative py-32 border-t border-[var(--eco-line)] overflow-hidden">
+        <div className="mx-auto max-w-[1400px] px-6 lg:px-24 grid lg:grid-cols-12 gap-y-16 lg:gap-x-12 items-center">
+          <Reveal className="lg:col-span-5">
+            <div className="eco-mono text-[var(--eco-flame)] mb-4">— EcoDrive+ Garaje</div>
+            <h2 className="eco-display text-[56px] md:text-[88px] leading-[0.95] text-[var(--eco-ink)]">
+              Gana un <span className="eco-display-italic text-[var(--eco-flame)]">auto eléctrico.</span>
+            </h2>
+            <p className="mt-8 max-w-md text-[var(--eco-ink-soft)] leading-relaxed">
+              Edición #1: <strong className="text-[var(--eco-ink)]">BYD Yuan Pro 2023</strong>. Sorteo presencial con notario público y casino oficial. Ticket S/.40 (S/.30 si eres pasajero o chofer EcoDrive+). Pass anual S/.99 participa en todos los sorteos del año.
+            </p>
+            <div className="mt-10 flex flex-wrap gap-x-8 gap-y-2 eco-mono text-[var(--eco-ink-mute)]">
+              <span>⌗ Notario público</span>
+              <span>⌗ Casino oficial</span>
+              <span>⌗ Acta blockchain</span>
+            </div>
+            <div className="mt-10">
+              <Magnetic strength={0.3}>
+                <Link href="/ecodriveplus/garaje" className="inline-flex items-center gap-3 px-8 py-5 rounded-full bg-[var(--eco-flame)] text-[var(--eco-bg-deep)] font-semibold eco-mono hover:bg-[var(--eco-flame-soft)] transition-colors">
+                  Ver el sorteo en vivo
+                  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+                </Link>
+              </Magnetic>
+            </div>
+          </Reveal>
+
+          <Reveal delay={0.15} className="lg:col-span-7">
+            <CinematicImage src="/ecodriveplus/byd-yuan-pro.jpg" alt="BYD Yuan Pro 2023 — Premio Garaje #1" motion="both" parallaxRange={70} className="rounded-3xl aspect-[4/3]">
+              <div aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(180deg, transparent 0%, rgba(10,9,8,0.55) 100%)" }} />
+              <div className="relative z-10 h-full flex flex-col justify-end p-8 md:p-10">
+                <div className="flex items-end justify-between gap-6 flex-wrap">
+                  <div>
+                    <div className="eco-mono text-[var(--eco-flame)] mb-2">EDICIÓN #1 · ABIERTA</div>
+                    <div className="eco-display text-[32px] md:text-[48px] text-[var(--eco-ink)] leading-[1.0]">
+                      BYD Yuan Pro
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="eco-mono text-[var(--eco-ink-mute)]">desde</div>
+                    <div className="eco-display text-[36px] md:text-[56px] text-[var(--eco-flame)] leading-none">S/. 30</div>
+                  </div>
+                </div>
+              </div>
+            </CinematicImage>
+          </Reveal>
+        </div>
+      </section>
+
       {/* === FAQ === */}
       <section className="relative py-32 border-t border-[var(--eco-line)]">
         <div className="mx-auto max-w-[1100px] px-6 lg:px-24 grid lg:grid-cols-12 gap-12">
