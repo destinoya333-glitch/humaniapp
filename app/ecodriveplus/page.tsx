@@ -725,8 +725,8 @@ export default function EcoDrivePlusPage() {
           </Reveal>
 
           <Reveal delay={0.15} className="lg:col-span-7">
-            <CinematicImage src="/ecodriveplus/byd-yuan-pro.jpg" alt="BYD Yuan Pro 2023 — Premio Garaje #1" motion="both" parallaxRange={70} className="rounded-3xl aspect-[4/3]">
-              <div aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(180deg, transparent 0%, rgba(10,9,8,0.55) 100%)" }} />
+            <CinematicImage src="/ecodriveplus/trujillo-skyline.jpg" alt="Vista panorámica de Trujillo" motion="both" parallaxRange={70} objectPosition="center 40%" className="rounded-3xl aspect-[4/3]">
+              <div aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(10,9,8,0.10) 0%, rgba(10,9,8,0.45) 60%, rgba(10,9,8,0.90) 100%)" }} />
               <div className="relative z-10 h-full flex flex-col justify-end p-8 md:p-10">
                 <div className="flex items-end justify-between gap-6 flex-wrap">
                   <div>
