@@ -35,6 +35,14 @@
     {
       "path": "/api/cron/sofia-capsula-diaria",
       "schedule": "0 14 * * *"
+    },
+    {
+      "path": "/api/cron/garaje-cleanup-reservas",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/garaje-cerrar-edicion-completa",
+      "schedule": "*/10 * * * *"
     }
   ]
 }
