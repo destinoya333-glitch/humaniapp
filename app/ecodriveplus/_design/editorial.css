@@ -1,0 +1,230 @@
+/* =====================================================
+   EcoDrive+ — Direccion estetica: A. EDITORIAL CINEMATICO
+   - Fondo oscuro calido, tipografia serif display gigante
+   - Espacio negativo generoso, acento naranja oficial #E08821
+   - Asimetria, grano sutil, motion orquestado
+   ===================================================== */
+
+.eco-editorial {
+  /* ── Color tokens ── */
+  --eco-bg: #0A0908;
+  --eco-bg-soft: #131110;
+  --eco-bg-deep: #050403;
+  --eco-ink: #F5EFE7;
+  --eco-ink-soft: #C8C0B5;
+  --eco-ink-mute: #7A7367;
+  --eco-line: rgba(245, 239, 231, 0.08);
+  --eco-line-strong: rgba(245, 239, 231, 0.18);
+
+  /* Acento naranja oficial EcoDrive+ */
+  --eco-flame: #E08821;
+  --eco-flame-soft: #F3A852;
+  --eco-flame-deep: #B86A12;
+  --eco-cream: #FFE4B5;
+
+  /* Tipografia */
+  --eco-display: var(--font-fraunces), "PP Editorial New", Georgia, serif;
+  --eco-body: var(--font-geist), "PP Neue Montreal", sans-serif;
+  --eco-mono: var(--font-mono), "JetBrains Mono", monospace;
+
+  /* Easing */
+  --eco-ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  background: var(--eco-bg);
+  color: var(--eco-ink);
+  font-family: var(--eco-body);
+}
+
+/* ── Grano SVG noise overlay ── */
+.eco-editorial::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 100;
+  opacity: 0.045;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.92' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ── Selection / scrollbar ── */
+.eco-editorial ::selection {
+  background: var(--eco-flame);
+  color: var(--eco-bg);
+}
+
+.eco-editorial {
+  scrollbar-width: thin;
+  scrollbar-color: var(--eco-flame) transparent;
+}
+.eco-editorial *::-webkit-scrollbar { width: 8px; height: 8px; }
+.eco-editorial *::-webkit-scrollbar-track { background: transparent; }
+.eco-editorial *::-webkit-scrollbar-thumb {
+  background: var(--eco-flame-deep);
+  border-radius: 8px;
+}
+.eco-editorial *::-webkit-scrollbar-thumb:hover { background: var(--eco-flame); }
+
+/* ── Tipografia display ── */
+.eco-editorial .eco-display {
+  font-family: var(--eco-display);
+  font-variation-settings: "opsz" 144, "SOFT" 30, "WONK" 0;
+  font-weight: 500;
+  line-height: 0.92;
+  letter-spacing: -0.04em;
+}
+
+.eco-editorial .eco-display-italic {
+  font-family: var(--eco-display);
+  font-variation-settings: "opsz" 144, "SOFT" 100, "WONK" 1;
+  font-style: italic;
+  font-weight: 300;
+  letter-spacing: -0.02em;
+}
+
+.eco-editorial .eco-mono {
+  font-family: var(--eco-mono);
+  font-feature-settings: "ss01", "zero";
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.72rem;
+}
+
+.eco-editorial .eco-mono-md {
+  font-family: var(--eco-mono);
+  letter-spacing: 0.06em;
+  font-size: 0.82rem;
+}
+
+/* ── Backgrounds atmosfericos ── */
+.eco-mesh {
+  background:
+    radial-gradient(70% 60% at 12% 18%, rgba(224, 136, 33, 0.22), transparent 60%),
+    radial-gradient(60% 80% at 88% 12%, rgba(255, 228, 181, 0.10), transparent 65%),
+    radial-gradient(80% 70% at 50% 95%, rgba(184, 106, 18, 0.28), transparent 70%);
+}
+
+.eco-glow-flame {
+  box-shadow:
+    0 0 0 1px rgba(224, 136, 33, 0.3),
+    0 30px 80px -20px rgba(224, 136, 33, 0.35),
+    inset 0 0 60px rgba(224, 136, 33, 0.05);
+}
+
+/* ── Vertical mono label (margen) ── */
+.eco-label-vertical {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-family: var(--eco-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.32em;
+  font-size: 0.7rem;
+  color: var(--eco-ink-mute);
+}
+
+/* ── Cursor custom (desktop) ── */
+@media (hover: hover) and (pointer: fine) {
+  .eco-editorial * { cursor: none !important; }
+}
+
+.eco-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--eco-ink);
+  mix-blend-mode: difference;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  transition: width 0.22s var(--eco-ease), height 0.22s var(--eco-ease);
+  will-change: transform;
+}
+.eco-cursor.is-hover { width: 44px; height: 44px; }
+
+/* ── Animaciones reveal ── */
+.eco-reveal {
+  opacity: 0;
+  transform: translateY(48px);
+  will-change: opacity, transform;
+}
+.eco-reveal-word {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(105%);
+}
+
+/* ── Magnetic CTA wrapper ── */
+.eco-magnetic {
+  display: inline-block;
+  will-change: transform;
+}
+
+/* ── Editorial drop cap ── */
+.eco-dropcap::first-letter {
+  font-family: var(--eco-display);
+  font-variation-settings: "opsz" 144;
+  font-weight: 500;
+  font-size: 4.2em;
+  float: left;
+  line-height: 0.85;
+  margin: 0.05em 0.1em 0 -0.05em;
+  color: var(--eco-flame);
+}
+
+/* ── Tilt headlines ── */
+.eco-tilt-left { transform: rotate(-1.2deg); transform-origin: left center; }
+.eco-tilt-right { transform: rotate(1.2deg); transform-origin: right center; }
+
+/* ── Cinematic image placeholder ── */
+.eco-cinematic {
+  position: relative;
+  overflow: hidden;
+  filter: brightness(0.88) contrast(1.12) saturate(0.92);
+}
+.eco-cinematic::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(10, 9, 8, 0) 0%, rgba(10, 9, 8, 0.7) 100%);
+  pointer-events: none;
+}
+
+/* ── Soft staggered marquee for tags ── */
+@keyframes eco-marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.eco-marquee {
+  animation: eco-marquee 38s linear infinite;
+  white-space: nowrap;
+  display: inline-flex;
+  gap: 3rem;
+}
+
+/* ── Hover lift on cards ── */
+.eco-card {
+  transition:
+    transform 0.6s var(--eco-ease),
+    border-color 0.6s var(--eco-ease),
+    background-color 0.6s var(--eco-ease);
+}
+.eco-card:hover {
+  transform: translateY(-6px);
+  border-color: var(--eco-flame);
+}
+
+/* ── Easter egg footer mono ── */
+.eco-timestamp {
+  font-family: var(--eco-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--eco-ink-mute);
+}
+
+/* ── Hide native scrollbar inside cards ── */
+.eco-no-scrollbar::-webkit-scrollbar { display: none; }
+.eco-no-scrollbar { scrollbar-width: none; }
