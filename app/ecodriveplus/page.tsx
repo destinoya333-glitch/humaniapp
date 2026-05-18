@@ -248,7 +248,7 @@ export default function EcoDrivePlusPage() {
           <div className="lg:col-span-5 relative">
             <div aria-hidden className="absolute -inset-10 eco-mesh rounded-[48px] opacity-50 blur-2xl" />
             {/* SLOT A — Estrella sigil gigante detras del chat */}
-            <div aria-hidden className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[560px] h-[560px] opacity-[0.45] eco-spin-slow pointer-events-none -z-10">
+            <div aria-hidden className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[560px] h-[560px] opacity-[0.45] eco-spin-slow pointer-events-none">
               <div className="eco-halo" />
               <div className="relative w-full h-full eco-sigil" />
             </div>
