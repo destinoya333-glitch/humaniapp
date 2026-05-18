@@ -38,6 +38,61 @@ function normalizePhone(phone: string): string {
   return phone.replace(/^\+/, "").replace(/^whatsapp:/, "").replace(/[^0-9]/g, "");
 }
 
+export async function sendImage(to: string, imageUrl: string, caption?: string): Promise<void> {
+  const creds = getCreds();
+  if (!creds) throw new Error("Meta WhatsApp Cloud API no configurada");
+  const recipient = normalizePhone(to);
+
+  const res = await fetch(`${GRAPH_BASE}/${creds.phoneId}/messages`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${creds.token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      messaging_product: "whatsapp",
+      recipient_type: "individual",
+      to: recipient,
+      type: "image",
+      image: { link: imageUrl, caption: caption ?? undefined },
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Meta sendImage failed (${res.status}): ${err}`);
+  }
+}
+
+export async function sendDocument(
+  to: string,
+  documentUrl: string,
+  filename: string,
+  caption?: string,
+): Promise<void> {
+  const creds = getCreds();
+  if (!creds) throw new Error("Meta WhatsApp Cloud API no configurada");
+  const recipient = normalizePhone(to);
+
+  const res = await fetch(`${GRAPH_BASE}/${creds.phoneId}/messages`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${creds.token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      messaging_product: "whatsapp",
+      recipient_type: "individual",
+      to: recipient,
+      type: "document",
+      document: { link: documentUrl, filename, caption: caption ?? undefined },
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Meta sendDocument failed (${res.status}): ${err}`);
+  }
+}
+
 export async function sendText(to: string, body: string): Promise<void> {
   const creds = getCreds();
   if (!creds) throw new Error("Meta WhatsApp Cloud API no configurada");

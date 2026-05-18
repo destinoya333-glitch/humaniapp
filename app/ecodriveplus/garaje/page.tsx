@@ -187,6 +187,14 @@ export default async function GarajePage() {
               <span>⌗ Pass anual S/. 99</span>
               <span>⌗ RUC 20613413228</span>
             </Reveal>
+
+            <Reveal delay={1.15} className="mt-6 inline-flex items-center gap-3 px-4 py-3 rounded-2xl border border-[var(--eco-flame)]/40 bg-[var(--eco-flame)]/[0.06]">
+              <span aria-hidden className="text-2xl">📍</span>
+              <p className="text-[15px] text-[var(--eco-ink-soft)] leading-snug max-w-md">
+                <strong className="text-[var(--eco-ink)]">Entrega del auto:</strong> el ganador recibe el BYD Yuan Pro 2023 en{" "}
+                <span className="text-[var(--eco-flame)] font-semibold">Trujillo, La Libertad</span>. Coordina retiro presencial con notario y representante EcoDrive+.
+              </p>
+            </Reveal>
           </div>
 
           <Reveal delay={0.3} className="lg:col-span-6 relative lg:mt-8">
