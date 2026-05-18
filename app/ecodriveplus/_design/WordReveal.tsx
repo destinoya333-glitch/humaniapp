@@ -59,8 +59,8 @@ export default function WordReveal({
       {words.map((w, i) => (
         <span
           key={`${w}-${i}`}
-          className="inline-block overflow-hidden align-baseline pb-[0.18em]"
-          style={{ marginRight: "0.28em" }}
+          className="inline-block overflow-hidden align-top pt-[0.06em] pb-[0.45em]"
+          style={{ marginRight: "0.28em", lineHeight: "1.0" }}
         >
           <span data-word-inner className={`inline-block ${wordClassName}`}>
             {w}

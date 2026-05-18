@@ -330,6 +330,29 @@ export default function EcoDrivePlusPage() {
         </div>
       </section>
 
+      {/* === BANDA CINEMÁTICA — CIUDAD === */}
+      <section className="relative h-[60vh] md:h-[75vh] min-h-[420px] overflow-hidden border-y border-[var(--eco-line)]">
+        <div
+          aria-hidden
+          className="absolute inset-0 bg-cover bg-center eco-cinematic"
+          style={{ backgroundImage: "url('/ecodriveplus/hero-city.jpg')" }}
+        />
+        <div aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(10,9,8,0.55) 0%, rgba(10,9,8,0.25) 50%, rgba(10,9,8,0.85) 100%)" }} />
+        <div aria-hidden className="absolute inset-0" style={{ background: "radial-gradient(80% 60% at 50% 60%, rgba(224,136,33,0.18), transparent 70%)" }} />
+        <div className="relative h-full mx-auto max-w-[1400px] px-6 lg:px-24 flex flex-col justify-end pb-16 md:pb-24">
+          <Reveal>
+            <div className="eco-mono text-[var(--eco-flame)] mb-4">— Intermezzo</div>
+            <h3 className="eco-display text-[44px] sm:text-[64px] md:text-[96px] leading-[0.95] text-[var(--eco-ink)] max-w-4xl">
+              Pediste delivery hoy.<br />
+              <span className="eco-display-italic text-[var(--eco-flame)]">¿Por qué no tu carro?</span>
+            </h3>
+            <p className="mt-6 max-w-xl eco-mono text-[var(--eco-ink-soft)]">
+              La ciudad ya está conectada. Solo falta que tu próximo viaje también lo esté.
+            </p>
+          </Reveal>
+        </div>
+      </section>
+
       {/* === CÓMO OPERA === */}
       <section id="como" className="relative py-32 border-t border-[var(--eco-line)]">
         <div className="mx-auto max-w-[1400px] px-6 lg:px-24">
@@ -505,26 +528,19 @@ export default function EcoDrivePlusPage() {
           </Reveal>
 
           <Reveal delay={0.2} className="lg:col-span-5">
-            {/* SLOT C — Estrella gigante centrada con halo + rotacion lenta */}
+            {/* SLOT C — Foto cinematica del chofer + sigil estrella + eslogan */}
             <div
-              className="relative rounded-3xl overflow-hidden aspect-[4/5] flex flex-col items-center justify-center p-8"
-              style={{
-                background:
-                  "radial-gradient(120% 80% at 50% 35%, rgba(224,136,33,0.45) 0%, rgba(184,106,18,0.18) 40%, #0E0D0B 78%)",
-              }}
+              className="relative rounded-3xl overflow-hidden aspect-[4/5] eco-cinematic bg-cover bg-center"
+              style={{ backgroundImage: "url('/ecodriveplus/chofer.jpg')" }}
             >
-              <div aria-hidden className="absolute inset-0 opacity-30 pointer-events-none" style={{ backgroundImage: "repeating-linear-gradient(45deg, transparent 0px, transparent 22px, rgba(255,228,181,0.04) 22px, rgba(255,228,181,0.04) 23px)" }} />
-              {/* Halo radial */}
-              <div aria-hidden className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%]">
-                <div className="eco-halo" />
-              </div>
-              {/* Estrella gigante con rotacion */}
-              <div aria-hidden className="relative w-[70%] aspect-square eco-spin-slow">
-                <div className="absolute inset-0 eco-sigil" />
-              </div>
-              <div className="relative mt-8 text-center">
-                <div className="eco-mono text-[var(--eco-cream)] mb-2">SÍMBOLO ECODRIVE+</div>
-                <div className="eco-display-italic text-[22px] md:text-[26px] text-[var(--eco-ink)] leading-tight max-w-xs mx-auto">
+              {/* Gradient overlay para legibilidad */}
+              <div aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(10,9,8,0.15) 0%, rgba(10,9,8,0.40) 55%, rgba(10,9,8,0.92) 100%)" }} />
+              {/* Mini estrella sigil arriba */}
+              <div aria-hidden className="absolute top-6 right-6 w-14 h-14 eco-sigil opacity-90 eco-spin-slow" />
+              {/* Eslogan al pie */}
+              <div className="relative z-10 h-full flex flex-col justify-end p-8 md:p-10">
+                <div className="eco-mono text-[var(--eco-flame)] mb-3">— Vista desde el volante</div>
+                <div className="eco-display-italic text-[28px] md:text-[36px] text-[var(--eco-ink)] leading-[1.1] max-w-sm">
                   Mejorando familias, transformando ciudades.
                 </div>
               </div>
@@ -577,8 +593,14 @@ export default function EcoDrivePlusPage() {
       </section>
 
       {/* === CHOFERES === */}
-      <section id="choferes" className="relative py-32 border-t border-[var(--eco-line)]">
-        <div className="mx-auto max-w-[1400px] px-6 lg:px-24 grid lg:grid-cols-12 gap-y-16 lg:gap-x-12">
+      <section id="choferes" className="relative py-32 border-t border-[var(--eco-line)] overflow-hidden">
+        {/* Imagen lateral cinematica EV */}
+        <div aria-hidden className="absolute top-12 right-0 w-[42%] h-[420px] hidden lg:block rounded-l-3xl overflow-hidden eco-cinematic">
+          <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('/ecodriveplus/ev-modern.jpg')" }} />
+          <div className="absolute inset-0" style={{ background: "linear-gradient(270deg, transparent 0%, rgba(10,9,8,0.55) 70%, rgba(10,9,8,1) 100%)" }} />
+          <div className="absolute bottom-6 right-6 eco-mono text-[var(--eco-cream)]">— Energía limpia · BilleteraEco</div>
+        </div>
+        <div className="relative mx-auto max-w-[1400px] px-6 lg:px-24 grid lg:grid-cols-12 gap-y-16 lg:gap-x-12">
           <Reveal className="lg:col-span-5">
             <div className="eco-mono text-[var(--eco-flame)] mb-4">— 08 / Para choferes</div>
             <h2 className="eco-display text-[56px] md:text-[88px] leading-[0.95] text-[var(--eco-ink)]">
@@ -675,7 +697,14 @@ export default function EcoDrivePlusPage() {
 
       {/* === CTA FINAL === */}
       <section className="relative py-40 border-t border-[var(--eco-line)] overflow-hidden">
-        <div aria-hidden className="absolute inset-0 eco-mesh opacity-90" />
+        {/* Background cinematico ciudad nocturna */}
+        <div
+          aria-hidden
+          className="absolute inset-0 bg-cover bg-center eco-cinematic"
+          style={{ backgroundImage: "url('/ecodriveplus/noche.jpg')" }}
+        />
+        <div aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(10,9,8,0.85) 0%, rgba(10,9,8,0.70) 40%, rgba(10,9,8,0.95) 100%)" }} />
+        <div aria-hidden className="absolute inset-0 eco-mesh opacity-60" />
         {/* SLOT D — Logo completo como watermark gigante de fondo */}
         <div aria-hidden className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className="w-[120%] md:w-[90%] h-[80%] eco-wordmark opacity-[0.12]" />
