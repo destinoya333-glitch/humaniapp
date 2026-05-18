@@ -174,19 +174,19 @@ export default function EcoDrivePlusPage() {
       </header>
 
       {/* === HERO === */}
-      <section className="relative pt-12 md:pt-24 pb-24 md:pb-40 overflow-hidden">
+      <section className="relative pt-12 md:pt-24 pb-24 md:pb-40 overflow-hidden isolate">
         {/* Fondo cinematico Plaza de Armas de Trujillo (catedral) con Ken Burns + parallax */}
-        <CinematicImage src="/ecodriveplus/trujillo-plaza.jpg" alt="" motion="both" parallaxRange={140} objectPosition="center 60%" className="absolute inset-0 -z-10">
-          <div aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(10,9,8,0.78) 0%, rgba(10,9,8,0.65) 35%, rgba(10,9,8,0.85) 100%)" }} />
-          <div aria-hidden className="absolute inset-0" style={{ background: "radial-gradient(75% 60% at 20% 35%, rgba(224,136,33,0.20), transparent 70%)" }} />
+        <CinematicImage src="/ecodriveplus/trujillo-plaza.jpg" alt="" motion="both" parallaxRange={140} objectPosition="center 60%" className="absolute inset-0 z-0">
+          <div aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(10,9,8,0.55) 0%, rgba(10,9,8,0.45) 35%, rgba(10,9,8,0.78) 100%)" }} />
+          <div aria-hidden className="absolute inset-0" style={{ background: "radial-gradient(75% 60% at 20% 35%, rgba(224,136,33,0.18), transparent 70%)" }} />
         </CinematicImage>
 
         {/* Vertical label margen izq */}
-        <div aria-hidden className="hidden lg:block absolute left-6 top-32 eco-label-vertical z-10">
+        <div aria-hidden className="hidden lg:block absolute left-6 top-32 eco-label-vertical z-20">
           INDICE · 01 — PRÓLOGO · TRUJILLO LA LIBERTAD
         </div>
 
-        <div className="relative z-10 mx-auto max-w-[1400px] px-6 lg:px-24 grid lg:grid-cols-12 gap-y-16 lg:gap-x-12 items-start">
+        <div className="relative z-20 mx-auto max-w-[1400px] px-6 lg:px-24 grid lg:grid-cols-12 gap-y-16 lg:gap-x-12 items-start">
           {/* Lado izquierdo */}
           <div className="lg:col-span-7 relative">
             <Reveal as="div" className="flex items-center gap-3 mb-10">
