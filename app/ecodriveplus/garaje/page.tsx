@@ -4,6 +4,7 @@ import Script from "next/script";
 import { getGarajeClient, maskNombre } from "@/lib/ecodrive/garaje";
 import { GarajeCounter } from "./_components/GarajeCounter";
 import { GarajeCTA } from "./_components/GarajeCTA";
+import GarajePhotoCarousel from "./_components/GarajePhotoCarousel";
 import Reveal from "../_design/Reveal";
 import WordReveal from "../_design/WordReveal";
 import Magnetic from "../_design/Magnetic";
@@ -83,6 +84,12 @@ async function getData() {
 export default async function GarajePage() {
   const { actual, ultimos, historial, programa, preview } = await getData();
   const heroImage = actual?.premio_fotos?.[0] ?? LOCAL_HERO;
+  const galleryPhotos =
+    (actual?.premio_fotos && actual.premio_fotos.length > 0)
+      ? actual.premio_fotos
+      : (preview?.premio_fotos_urls && preview.premio_fotos_urls.length > 0)
+      ? preview.premio_fotos_urls
+      : [LOCAL_HERO];
 
   return (
     <main className="relative min-h-screen overflow-hidden">
@@ -183,27 +190,23 @@ export default async function GarajePage() {
           </div>
 
           <Reveal delay={0.3} className="lg:col-span-6 relative lg:mt-8">
-            <CinematicImage src={heroImage} alt={actual?.nombre ?? "BYD Yuan Pro 2023"} motion="both" parallaxRange={70} className="rounded-3xl aspect-[4/3]">
-              <div aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(180deg, transparent 0%, rgba(10,9,8,0.55) 100%)" }} />
-              <div className="relative z-10 h-full flex flex-col justify-end p-6 md:p-10">
-                <div className="flex items-end justify-between flex-wrap gap-4">
-                  <div>
-                    <div className="eco-mono text-[var(--eco-flame)] mb-1">PREMIO ACTUAL</div>
-                    <div className="eco-display text-[28px] md:text-[40px] text-[var(--eco-ink)] leading-[1.0]">
-                      {actual?.nombre ?? preview?.nombre ?? "BYD Yuan Pro 2023"}
-                    </div>
-                  </div>
-                  {(actual?.premio_valor || preview?.premio_valor_referencial) && (
-                    <div className="text-right">
-                      <div className="eco-mono text-[var(--eco-ink-mute)]">valor referencial</div>
-                      <div className="eco-display text-[24px] md:text-[32px] text-[var(--eco-flame)] leading-none">
-                        S/. {Number(actual?.premio_valor ?? preview?.premio_valor_referencial).toLocaleString("es-PE")}
-                      </div>
-                    </div>
-                  )}
+            <GarajePhotoCarousel photos={galleryPhotos} alt={actual?.nombre ?? preview?.nombre ?? "BYD Yuan Pro 2023"} />
+            <div className="mt-6 flex items-end justify-between flex-wrap gap-4">
+              <div>
+                <div className="eco-mono text-[var(--eco-flame)] mb-1">PREMIO ACTUAL</div>
+                <div className="eco-display text-[28px] md:text-[40px] text-[var(--eco-ink)] leading-[1.0]">
+                  {actual?.nombre ?? preview?.nombre ?? "BYD Yuan Pro 2023"}
                 </div>
               </div>
-            </CinematicImage>
+              {(actual?.premio_valor || preview?.premio_valor_referencial) && (
+                <div className="text-right">
+                  <div className="eco-mono text-[var(--eco-ink-mute)]">valor referencial</div>
+                  <div className="eco-display text-[24px] md:text-[32px] text-[var(--eco-flame)] leading-none">
+                    S/. {Number(actual?.premio_valor ?? preview?.premio_valor_referencial).toLocaleString("es-PE")}
+                  </div>
+                </div>
+              )}
+            </div>
           </Reveal>
         </div>
       </section>
