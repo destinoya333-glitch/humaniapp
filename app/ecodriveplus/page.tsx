@@ -241,7 +241,7 @@ export default function EcoDrivePlusPage() {
           <div className="lg:col-span-5 relative">
             <div aria-hidden className="absolute -inset-10 eco-mesh rounded-[48px] opacity-50 blur-2xl" />
             {/* SLOT A — Estrella sigil gigante detras del chat */}
-            <div aria-hidden className="absolute -top-20 -right-10 lg:-right-24 w-[420px] h-[420px] opacity-[0.18] eco-spin-slow pointer-events-none">
+            <div aria-hidden className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[560px] h-[560px] opacity-[0.45] eco-spin-slow pointer-events-none -z-10">
               <div className="eco-halo" />
               <div className="relative w-full h-full eco-sigil" />
             </div>
@@ -678,10 +678,10 @@ export default function EcoDrivePlusPage() {
         <div aria-hidden className="absolute inset-0 eco-mesh opacity-90" />
         {/* SLOT D — Logo completo como watermark gigante de fondo */}
         <div aria-hidden className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="w-[120%] md:w-[90%] h-[80%] eco-wordmark opacity-[0.06] blur-[1.5px]" />
+          <div className="w-[120%] md:w-[90%] h-[80%] eco-wordmark opacity-[0.12]" />
         </div>
         {/* Estrella spinning detras del headline */}
-        <div aria-hidden className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] md:w-[480px] md:h-[480px] opacity-[0.12] eco-spin-slow-rev pointer-events-none">
+        <div aria-hidden className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[360px] h-[360px] md:w-[560px] md:h-[560px] opacity-[0.22] eco-spin-slow-rev pointer-events-none">
           <div className="w-full h-full eco-sigil" />
         </div>
         <div className="relative mx-auto max-w-[1400px] px-6 lg:px-24 text-center">

@@ -47,7 +47,6 @@ export default function ChatMockup() {
     <div
       ref={ref}
       className="relative rounded-[28px] bg-[#0E0D0C] border border-[var(--eco-line-strong)] overflow-hidden shadow-[0_40px_120px_-20px_rgba(0,0,0,0.7)]"
-      style={{ transform: "rotate(1.6deg) translateZ(0)" }}
     >
       {/* Header chat */}
       <div className="flex items-center gap-3 px-5 py-4 border-b border-[var(--eco-line)] bg-[#0A0908]/80 backdrop-blur">
