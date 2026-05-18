@@ -145,7 +145,7 @@ export default async function GarajePage() {
           GARAJE · 01 — EDICIÓN ABIERTA
         </div>
 
-        <div className="mx-auto max-w-[1400px] px-6 lg:px-24 grid lg:grid-cols-12 gap-y-16 lg:gap-x-12 items-center">
+        <div className="mx-auto max-w-[1400px] px-6 lg:px-24 grid lg:grid-cols-12 gap-y-16 lg:gap-x-12 items-start">
           <div className="lg:col-span-6 relative">
             <Reveal as="div" className="flex items-center gap-3 mb-10">
               <span className="h-px w-12 bg-[var(--eco-flame)]" />
@@ -176,7 +176,7 @@ export default async function GarajePage() {
             </Reveal>
           </div>
 
-          <Reveal delay={0.3} className="lg:col-span-6 relative">
+          <Reveal delay={0.3} className="lg:col-span-6 relative lg:mt-8">
             <CinematicImage src={heroImage} alt={actual?.nombre ?? "BYD Yuan Pro 2023"} motion="both" parallaxRange={70} className="rounded-3xl aspect-[4/3]">
               <div aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(180deg, transparent 0%, rgba(10,9,8,0.55) 100%)" }} />
               <div className="relative z-10 h-full flex flex-col justify-end p-6 md:p-10">

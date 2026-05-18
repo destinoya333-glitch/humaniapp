@@ -694,7 +694,7 @@ export default function EcoDrivePlusPage() {
 
       {/* === BANDA GARAJE — Sorteo BYD Yuan Pro === */}
       <section className="relative py-32 border-t border-[var(--eco-line)] overflow-hidden">
-        <div className="mx-auto max-w-[1400px] px-6 lg:px-24 grid lg:grid-cols-12 gap-y-16 lg:gap-x-12 items-center">
+        <div className="mx-auto max-w-[1400px] px-6 lg:px-24 grid lg:grid-cols-12 gap-y-16 lg:gap-x-12 items-start">
           <Reveal className="lg:col-span-5">
             <div className="eco-mono text-[var(--eco-flame)] mb-4">— EcoDrive+ Garaje</div>
             <h2 className="eco-display text-[56px] md:text-[88px] leading-[0.95] text-[var(--eco-ink)]">
