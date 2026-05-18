@@ -42,7 +42,7 @@
     },
     {
       "path": "/api/cron/garaje-cerrar-edicion-completa",
-      "schedule": "*/10 * * * *"
+      "schedule": "0 7 * * *"
     }
   ]
 }
