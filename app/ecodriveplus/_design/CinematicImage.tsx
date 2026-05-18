@@ -81,8 +81,14 @@ export default function CinematicImage({
       <div
         ref={imgRef}
         aria-hidden
-        className={`absolute -inset-[8%] bg-cover bg-no-repeat ${bgPosition} eco-cinematic will-change-transform`}
-        style={{ backgroundImage: `url('${src}')` }}
+        className={`absolute bg-cover bg-no-repeat ${bgPosition} eco-cinematic will-change-transform`}
+        style={{
+          backgroundImage: `url('${src}')`,
+          top: "-8%",
+          right: "-8%",
+          bottom: "-8%",
+          left: "-8%",
+        }}
       />
       {children}
     </div>
