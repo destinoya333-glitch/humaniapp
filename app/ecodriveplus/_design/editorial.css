@@ -225,6 +225,60 @@
   color: var(--eco-ink-mute);
 }
 
-/* ── Hide native scrollbar inside cards ── */
+/* ── Logo elements as editorial graphics ── */
+@keyframes eco-rotate-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes eco-rotate-slow-rev {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(-360deg); }
+}
+
+.eco-spin-slow {
+  animation: eco-rotate-slow 80s linear infinite;
+  will-change: transform;
+}
+
+.eco-spin-slow-rev {
+  animation: eco-rotate-slow-rev 120s linear infinite;
+  will-change: transform;
+}
+
+/* Logo as watermark / sigil */
+.eco-sigil {
+  background-image: url("/ecodriveplus/icon.png");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  filter: drop-shadow(0 30px 60px rgba(224,136,33,0.25));
+}
+
+.eco-sigil-mono {
+  background-image: url("/ecodriveplus/icon.png");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.eco-wordmark {
+  background-image: url("/ecodrive-logo.png");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+/* Gradient halo behind a sigil */
+.eco-halo {
+  position: absolute;
+  inset: -20%;
+  border-radius: 50%;
+  background:
+    radial-gradient(closest-side, rgba(224,136,33,0.55) 0%, rgba(184,106,18,0.18) 35%, transparent 75%);
+  filter: blur(40px);
+  pointer-events: none;
+}
+
+/* Hide native scrollbar inside cards */
 .eco-no-scrollbar::-webkit-scrollbar { display: none; }
 .eco-no-scrollbar { scrollbar-width: none; }

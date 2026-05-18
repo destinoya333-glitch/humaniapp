@@ -237,9 +237,14 @@ export default function EcoDrivePlusPage() {
             </Reveal>
           </div>
 
-          {/* Lado derecho — chat mockup elevado y rotado */}
+          {/* Lado derecho — chat mockup elevado y rotado, con estrella sigil de fondo */}
           <div className="lg:col-span-5 relative">
-            <div className="absolute -inset-10 eco-mesh rounded-[48px] opacity-50 blur-2xl" aria-hidden />
+            <div aria-hidden className="absolute -inset-10 eco-mesh rounded-[48px] opacity-50 blur-2xl" />
+            {/* SLOT A — Estrella sigil gigante detras del chat */}
+            <div aria-hidden className="absolute -top-20 -right-10 lg:-right-24 w-[420px] h-[420px] opacity-[0.18] eco-spin-slow pointer-events-none">
+              <div className="eco-halo" />
+              <div className="relative w-full h-full eco-sigil" />
+            </div>
             <ChatMockup />
             <Reveal delay={1.4} className="mt-6 eco-mono text-center text-[var(--eco-ink-mute)]">
               <span className="text-[var(--eco-flame)]">●</span> Conversación reconstruida — 12 segundos de Hola a chofer asignado
@@ -311,6 +316,16 @@ export default function EcoDrivePlusPage() {
             <p className="mt-10 eco-mono text-[var(--eco-ink-mute)]">
               — Trujillo, La Libertad. Hecho por choferes, para choferes y para quien quiera llegar a tiempo.
             </p>
+            {/* SLOT B — logo completo como firma editorial */}
+            <div className="mt-16 flex justify-end items-center gap-6">
+              <span className="eco-mono text-[var(--eco-ink-mute)]">firma</span>
+              <span className="h-px w-16 bg-[var(--eco-line-strong)]" />
+              <div
+                role="img"
+                aria-label="EcoDrive+"
+                className="h-16 md:h-20 w-[260px] md:w-[320px] eco-wordmark bg-left opacity-90"
+              />
+            </div>
           </Reveal>
         </div>
       </section>
@@ -490,21 +505,27 @@ export default function EcoDrivePlusPage() {
           </Reveal>
 
           <Reveal delay={0.2} className="lg:col-span-5">
+            {/* SLOT C — Estrella gigante centrada con halo + rotacion lenta */}
             <div
-              className="relative rounded-3xl overflow-hidden eco-cinematic aspect-[4/5] flex items-end p-8"
+              className="relative rounded-3xl overflow-hidden aspect-[4/5] flex flex-col items-center justify-center p-8"
               style={{
                 background:
-                  "radial-gradient(120% 80% at 30% 30%, rgba(224,136,33,0.4) 0%, rgba(184,106,18,0.15) 40%, #0E0D0B 75%)",
+                  "radial-gradient(120% 80% at 50% 35%, rgba(224,136,33,0.45) 0%, rgba(184,106,18,0.18) 40%, #0E0D0B 78%)",
               }}
             >
-              <div className="absolute inset-0 opacity-30 pointer-events-none" style={{ backgroundImage: "repeating-linear-gradient(45deg, transparent 0px, transparent 22px, rgba(255,228,181,0.04) 22px, rgba(255,228,181,0.04) 23px)" }} />
-              <div className="relative z-10">
-                <div className="eco-mono text-[var(--eco-cream)] mb-2">PLACEHOLDER CINEMÁTICO</div>
-                <div className="eco-display text-[28px] md:text-[34px] leading-[1.05] text-[var(--eco-ink)]">
-                  &ldquo;Portrait of a Peruvian driver inside a modern EV, warm natural light through windshield, Kodak Portra 400.&rdquo;
-                </div>
-                <div className="mt-4 eco-mono text-[var(--eco-ink-mute)]">
-                  Reemplazar en /public/ecodriveplus/chofer.jpg
+              <div aria-hidden className="absolute inset-0 opacity-30 pointer-events-none" style={{ backgroundImage: "repeating-linear-gradient(45deg, transparent 0px, transparent 22px, rgba(255,228,181,0.04) 22px, rgba(255,228,181,0.04) 23px)" }} />
+              {/* Halo radial */}
+              <div aria-hidden className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%]">
+                <div className="eco-halo" />
+              </div>
+              {/* Estrella gigante con rotacion */}
+              <div aria-hidden className="relative w-[70%] aspect-square eco-spin-slow">
+                <div className="absolute inset-0 eco-sigil" />
+              </div>
+              <div className="relative mt-8 text-center">
+                <div className="eco-mono text-[var(--eco-cream)] mb-2">SÍMBOLO ECODRIVE+</div>
+                <div className="eco-display-italic text-[22px] md:text-[26px] text-[var(--eco-ink)] leading-tight max-w-xs mx-auto">
+                  Mejorando familias, transformando ciudades.
                 </div>
               </div>
             </div>
@@ -655,6 +676,14 @@ export default function EcoDrivePlusPage() {
       {/* === CTA FINAL === */}
       <section className="relative py-40 border-t border-[var(--eco-line)] overflow-hidden">
         <div aria-hidden className="absolute inset-0 eco-mesh opacity-90" />
+        {/* SLOT D — Logo completo como watermark gigante de fondo */}
+        <div aria-hidden className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="w-[120%] md:w-[90%] h-[80%] eco-wordmark opacity-[0.06] blur-[1.5px]" />
+        </div>
+        {/* Estrella spinning detras del headline */}
+        <div aria-hidden className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] md:w-[480px] md:h-[480px] opacity-[0.12] eco-spin-slow-rev pointer-events-none">
+          <div className="w-full h-full eco-sigil" />
+        </div>
         <div className="relative mx-auto max-w-[1400px] px-6 lg:px-24 text-center">
           <Reveal>
             <div className="eco-mono text-[var(--eco-flame)] mb-8">— Fin del prólogo</div>
