@@ -337,21 +337,21 @@ export default function EcoDrivePlusPage() {
         </div>
       </section>
 
-      {/* === BANDA CINEMÁTICA — CIUDAD === */}
+      {/* === BANDA CINEMÁTICA — HUANCHACO === */}
       <section className="relative h-[60vh] md:h-[75vh] min-h-[420px] border-y border-[var(--eco-line)]">
-        <CinematicImage src="/ecodriveplus/hero-city.jpg" motion="both" parallaxRange={120} className="absolute inset-0">
-          <div aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(10,9,8,0.55) 0%, rgba(10,9,8,0.25) 50%, rgba(10,9,8,0.85) 100%)" }} />
+        <CinematicImage src="/ecodriveplus/huanchaco.jpg" alt="Playa de Huanchaco, Trujillo" motion="both" parallaxRange={120} objectPosition="center 45%" className="absolute inset-0">
+          <div aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(10,9,8,0.45) 0%, rgba(10,9,8,0.20) 50%, rgba(10,9,8,0.85) 100%)" }} />
           <div aria-hidden className="absolute inset-0" style={{ background: "radial-gradient(80% 60% at 50% 60%, rgba(224,136,33,0.18), transparent 70%)" }} />
         </CinematicImage>
         <div className="relative h-full mx-auto max-w-[1400px] px-6 lg:px-24 flex flex-col justify-end pb-16 md:pb-24">
           <Reveal>
-            <div className="eco-mono text-[var(--eco-flame)] mb-4">— Intermezzo</div>
+            <div className="eco-mono text-[var(--eco-flame)] mb-4">— Intermezzo · Huanchaco</div>
             <h3 className="eco-display text-[44px] sm:text-[64px] md:text-[96px] leading-[0.95] text-[var(--eco-ink)] max-w-4xl">
               Pediste delivery hoy.<br />
               <span className="eco-display-italic text-[var(--eco-flame)]">¿Por qué no tu carro?</span>
             </h3>
             <p className="mt-6 max-w-xl eco-mono text-[var(--eco-ink-soft)]">
-              La ciudad ya está conectada. Solo falta que tu próximo viaje también lo esté.
+              Desde la plaza hasta los caballitos de totora. Eco te lleva.
             </p>
           </Reveal>
         </div>
