@@ -7,6 +7,7 @@ import Magnetic from "./_design/Magnetic";
 import CountUp from "./_design/CountUp";
 import TrujilloClock from "./_design/TrujilloClock";
 import ChatMockup from "./_design/ChatMockup";
+import CinematicImage from "./_design/CinematicImage";
 
 export const metadata: Metadata = {
   title: "EcoDrive+ — Pides tu carro como pides delivery",
@@ -331,14 +332,11 @@ export default function EcoDrivePlusPage() {
       </section>
 
       {/* === BANDA CINEMÁTICA — CIUDAD === */}
-      <section className="relative h-[60vh] md:h-[75vh] min-h-[420px] overflow-hidden border-y border-[var(--eco-line)]">
-        <div
-          aria-hidden
-          className="absolute inset-0 bg-cover bg-center eco-cinematic"
-          style={{ backgroundImage: "url('/ecodriveplus/hero-city.jpg')" }}
-        />
-        <div aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(10,9,8,0.55) 0%, rgba(10,9,8,0.25) 50%, rgba(10,9,8,0.85) 100%)" }} />
-        <div aria-hidden className="absolute inset-0" style={{ background: "radial-gradient(80% 60% at 50% 60%, rgba(224,136,33,0.18), transparent 70%)" }} />
+      <section className="relative h-[60vh] md:h-[75vh] min-h-[420px] border-y border-[var(--eco-line)]">
+        <CinematicImage src="/ecodriveplus/hero-city.jpg" motion="both" parallaxRange={120} className="absolute inset-0">
+          <div aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(10,9,8,0.55) 0%, rgba(10,9,8,0.25) 50%, rgba(10,9,8,0.85) 100%)" }} />
+          <div aria-hidden className="absolute inset-0" style={{ background: "radial-gradient(80% 60% at 50% 60%, rgba(224,136,33,0.18), transparent 70%)" }} />
+        </CinematicImage>
         <div className="relative h-full mx-auto max-w-[1400px] px-6 lg:px-24 flex flex-col justify-end pb-16 md:pb-24">
           <Reveal>
             <div className="eco-mono text-[var(--eco-flame)] mb-4">— Intermezzo</div>
@@ -407,6 +405,24 @@ export default function EcoDrivePlusPage() {
               </Reveal>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* === BANDA CINEMÁTICA — AUTO MODERNO === */}
+      <section className="relative h-[52vh] md:h-[68vh] min-h-[380px] border-y border-[var(--eco-line)]">
+        <CinematicImage src="/ecodriveplus/auto-moderno.jpg" motion="both" parallaxRange={120} className="absolute inset-0">
+          <div aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(90deg, rgba(10,9,8,0.92) 0%, rgba(10,9,8,0.55) 45%, transparent 100%)" }} />
+        </CinematicImage>
+        <div className="relative h-full mx-auto max-w-[1400px] px-6 lg:px-24 flex flex-col justify-center">
+          <Reveal className="max-w-xl">
+            <div className="eco-mono text-[var(--eco-flame)] mb-4">— Intermezzo · Servicio</div>
+            <h3 className="eco-display text-[42px] sm:text-[56px] md:text-[80px] leading-[0.95] text-[var(--eco-ink)]">
+              El carro <span className="eco-display-italic text-[var(--eco-flame)]">correcto</span> para ti.
+            </h3>
+            <p className="mt-6 eco-mono text-[var(--eco-ink-soft)]">
+              Normal · Premium · VIP · XL · Encomienda. Tú eliges, Eco filtra.
+            </p>
+          </Reveal>
         </div>
       </section>
 
@@ -528,23 +544,17 @@ export default function EcoDrivePlusPage() {
           </Reveal>
 
           <Reveal delay={0.2} className="lg:col-span-5">
-            {/* SLOT C — Foto cinematica del chofer + sigil estrella + eslogan */}
-            <div
-              className="relative rounded-3xl overflow-hidden aspect-[4/5] eco-cinematic bg-cover bg-center"
-              style={{ backgroundImage: "url('/ecodriveplus/chofer.jpg')" }}
-            >
-              {/* Gradient overlay para legibilidad */}
+            {/* SLOT C — Foto cinematica del chofer (Ken Burns + parallax) + sigil estrella + eslogan */}
+            <CinematicImage src="/ecodriveplus/chofer.jpg" motion="both" parallaxRange={80} className="rounded-3xl aspect-[4/5]">
               <div aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(10,9,8,0.15) 0%, rgba(10,9,8,0.40) 55%, rgba(10,9,8,0.92) 100%)" }} />
-              {/* Mini estrella sigil arriba */}
               <div aria-hidden className="absolute top-6 right-6 w-14 h-14 eco-sigil opacity-90 eco-spin-slow" />
-              {/* Eslogan al pie */}
               <div className="relative z-10 h-full flex flex-col justify-end p-8 md:p-10">
                 <div className="eco-mono text-[var(--eco-flame)] mb-3">— Vista desde el volante</div>
                 <div className="eco-display-italic text-[28px] md:text-[36px] text-[var(--eco-ink)] leading-[1.1] max-w-sm">
                   Mejorando familias, transformando ciudades.
                 </div>
               </div>
-            </div>
+            </CinematicImage>
           </Reveal>
         </div>
       </section>
@@ -594,12 +604,11 @@ export default function EcoDrivePlusPage() {
 
       {/* === CHOFERES === */}
       <section id="choferes" className="relative py-32 border-t border-[var(--eco-line)] overflow-hidden">
-        {/* Imagen lateral cinematica EV */}
-        <div aria-hidden className="absolute top-12 right-0 w-[42%] h-[420px] hidden lg:block rounded-l-3xl overflow-hidden eco-cinematic">
-          <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('/ecodriveplus/ev-modern.jpg')" }} />
+        {/* Imagen lateral cinematica EV con Ken Burns + parallax */}
+        <CinematicImage src="/ecodriveplus/ev-modern.jpg" motion="both" parallaxRange={60} className="absolute top-12 right-0 w-[42%] h-[420px] hidden lg:block rounded-l-3xl">
           <div className="absolute inset-0" style={{ background: "linear-gradient(270deg, transparent 0%, rgba(10,9,8,0.55) 70%, rgba(10,9,8,1) 100%)" }} />
-          <div className="absolute bottom-6 right-6 eco-mono text-[var(--eco-cream)]">— Energía limpia · BilleteraEco</div>
-        </div>
+          <div className="absolute bottom-6 right-6 eco-mono text-[var(--eco-cream)] z-10">— Energía limpia · BilleteraEco</div>
+        </CinematicImage>
         <div className="relative mx-auto max-w-[1400px] px-6 lg:px-24 grid lg:grid-cols-12 gap-y-16 lg:gap-x-12">
           <Reveal className="lg:col-span-5">
             <div className="eco-mono text-[var(--eco-flame)] mb-4">— 08 / Para choferes</div>
@@ -664,6 +673,25 @@ export default function EcoDrivePlusPage() {
         </div>
       </section>
 
+      {/* === BANDA CINEMÁTICA — CIUDAD AÉREA NOCTURNA === */}
+      <section className="relative h-[55vh] md:h-[68vh] min-h-[380px] border-y border-[var(--eco-line)]">
+        <CinematicImage src="/ecodriveplus/ciudad-aerial.jpg" motion="both" parallaxRange={140} className="absolute inset-0">
+          <div aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(10,9,8,0.45) 0%, rgba(10,9,8,0.20) 45%, rgba(10,9,8,0.85) 100%)" }} />
+          <div aria-hidden className="absolute inset-0" style={{ background: "radial-gradient(60% 50% at 30% 60%, rgba(224,136,33,0.20), transparent 70%)" }} />
+        </CinematicImage>
+        <div className="relative h-full mx-auto max-w-[1400px] px-6 lg:px-24 flex flex-col justify-end pb-16 md:pb-24">
+          <Reveal className="max-w-2xl">
+            <div className="eco-mono text-[var(--eco-flame)] mb-4">— Intermezzo · Cobertura</div>
+            <h3 className="eco-display text-[44px] sm:text-[60px] md:text-[88px] leading-[0.95] text-[var(--eco-ink)]">
+              Cada luz que ves <span className="eco-display-italic text-[var(--eco-flame)]">ya pidió un viaje.</span>
+            </h3>
+            <p className="mt-6 max-w-md eco-mono text-[var(--eco-ink-soft)]">
+              Trujillo empieza. Lima sigue. La movilidad sin app llega a más ciudades cada mes.
+            </p>
+          </Reveal>
+        </div>
+      </section>
+
       {/* === FAQ === */}
       <section className="relative py-32 border-t border-[var(--eco-line)]">
         <div className="mx-auto max-w-[1100px] px-6 lg:px-24 grid lg:grid-cols-12 gap-12">
@@ -697,14 +725,11 @@ export default function EcoDrivePlusPage() {
 
       {/* === CTA FINAL === */}
       <section className="relative py-40 border-t border-[var(--eco-line)] overflow-hidden">
-        {/* Background cinematico ciudad nocturna */}
-        <div
-          aria-hidden
-          className="absolute inset-0 bg-cover bg-center eco-cinematic"
-          style={{ backgroundImage: "url('/ecodriveplus/noche.jpg')" }}
-        />
-        <div aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(10,9,8,0.85) 0%, rgba(10,9,8,0.70) 40%, rgba(10,9,8,0.95) 100%)" }} />
-        <div aria-hidden className="absolute inset-0 eco-mesh opacity-60" />
+        {/* Background cinematico ciudad nocturna con Ken Burns + parallax */}
+        <CinematicImage src="/ecodriveplus/noche.jpg" motion="both" parallaxRange={100} className="absolute inset-0">
+          <div aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(10,9,8,0.85) 0%, rgba(10,9,8,0.70) 40%, rgba(10,9,8,0.95) 100%)" }} />
+          <div aria-hidden className="absolute inset-0 eco-mesh opacity-60" />
+        </CinematicImage>
         {/* SLOT D — Logo completo como watermark gigante de fondo */}
         <div aria-hidden className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className="w-[120%] md:w-[90%] h-[80%] eco-wordmark opacity-[0.12]" />
