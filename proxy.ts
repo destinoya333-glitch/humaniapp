@@ -17,6 +17,9 @@ const SUBDOMAIN_REWRITES: Record<string, string> = {
   "destino.activosya.com": "/destino",
   "ecodrive.activosya.com": "/ecodrive",
   "ecodriveplus.com": "/ecodriveplus",
+  // TuChoferYa
+  "chofer.activosya.com": "/choferya",            // descubrir/reservar chofer (B2C pasajero)
+  "mi.choferya.activosya.com": "/mi-choferya",    // panel chofer (B2C chofer)
 };
 
 export function proxy(request: NextRequest) {
@@ -43,7 +46,8 @@ export function proxy(request: NextRequest) {
     const isGlobal =
       url.pathname.startsWith("/admin") ||
       url.pathname.startsWith("/api") ||
-      url.pathname.startsWith("/track");
+      url.pathname.startsWith("/track") ||
+      url.pathname.startsWith("/verificar"); // portal verificador entidades financieras
     if (isGlobal) return NextResponse.next();
     // Si ya viene con la ruta base, no la duplicamos
     const path = url.pathname.startsWith(rewriteBase)
