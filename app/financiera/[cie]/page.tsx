@@ -162,14 +162,39 @@ function SampleConstancia({ data, autoPrint = false }: { data: SampleCertificate
   const verifyUrl = `https://ecodriveplus.com/financiera/${data.cie}`;
   const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(verifyUrl)}`;
 
-  // Reglas @page + @media print para que la constancia encaje en UNA hoja A4.
-  // Compactacion agresiva por elemento porque la altura natural del HTML
-  // empuja el QR + firma + footer a una 2da pagina.
+  // CSS compactado — se aplica TANTO en pantalla como en impresión para evitar
+  // el "salto" visible cuando el dialogo print abre. La version compacta es
+  // la aprobada por Percy (modelo constancia.jpg) y encaja en 1 hoja A4.
   const printCSS = `
     @page { size: A4; margin: 0.8cm 1.2cm; }
+
+    /* Compactacion BASE — aplica siempre */
+    .constancia-paper, .constancia-paper * { box-sizing: border-box; }
+    body { font-size: 9pt; line-height: 1.35; }
+    .c-header { padding-bottom: 8px !important; margin-bottom: 10px !important; }
+    .c-header img { max-width: 220px !important; }
+    .c-title { font-size: 17pt !important; margin: 2px 0 0 !important; }
+    .c-subtitle { font-size: 9pt !important; }
+    .c-cie-row { margin: 4px 0 10px !important; }
+    .c-section { margin-top: 8px !important; margin-bottom: 4px !important; padding-bottom: 2px !important; font-size: 9pt !important; }
+    .c-field { padding: 1px 0 !important; font-size: 9pt !important; }
+    .c-resumen { padding: 8px 12px !important; margin: 4px 0 8px !important; }
+    .c-resumen-value { font-size: 13pt !important; }
+    .c-resumen-label { font-size: 7.5pt !important; }
+    .c-promedios { font-size: 8.5pt !important; margin-top: -4px !important; margin-bottom: 8px !important; }
+    .c-table { margin: 3px 0 8px !important; font-size: 9pt !important; }
+    .c-table th { padding: 4px 7px !important; }
+    .c-table td { padding: 3px 7px !important; }
+    .c-disclaimer { font-size: 8.5pt !important; margin: 4px 0 8px !important; line-height: 1.3 !important; }
+    .c-bottom { margin-top: 4px !important; }
+    .c-bottom img.qr { width: 78px !important; height: 78px !important; }
+    .c-firma img { max-width: 180px !important; }
+    .c-footer { margin-top: 6px !important; padding-top: 4px !important; font-size: 8pt !important; }
+    .c-banner { margin-top: 8px !important; padding: 6px 10px !important; font-size: 8pt !important; line-height: 1.3 !important; }
+
+    /* Reset visual SOLO al imprimir: sin fondo gris, sin shadow, sin paddings de "papel" */
     @media print {
       html, body { background: white !important; }
-      body { font-size: 9pt !important; line-height: 1.35 !important; }
       .constancia-shell { padding: 0 !important; min-height: auto !important; background: white !important; }
       .constancia-paper {
         max-width: none !important;
@@ -177,27 +202,6 @@ function SampleConstancia({ data, autoPrint = false }: { data: SampleCertificate
         padding: 0 !important;
         box-shadow: none !important;
       }
-      .no-print { display: none !important; }
-      .c-header { padding-bottom: 8px !important; margin-bottom: 10px !important; }
-      .c-header img { max-width: 220px !important; }
-      .c-title { font-size: 17pt !important; margin: 2px 0 0 !important; }
-      .c-subtitle { font-size: 9pt !important; }
-      .c-cie-row { margin: 4px 0 10px !important; }
-      .c-section { margin-top: 8px !important; margin-bottom: 4px !important; padding-bottom: 2px !important; font-size: 9pt !important; }
-      .c-field { padding: 1px 0 !important; font-size: 9pt !important; }
-      .c-resumen { padding: 8px 12px !important; margin: 4px 0 8px !important; }
-      .c-resumen-value { font-size: 13pt !important; }
-      .c-resumen-label { font-size: 7.5pt !important; }
-      .c-promedios { font-size: 8.5pt !important; margin-top: -4px !important; margin-bottom: 8px !important; }
-      .c-table { margin: 3px 0 8px !important; font-size: 9pt !important; }
-      .c-table th { padding: 4px 7px !important; }
-      .c-table td { padding: 3px 7px !important; }
-      .c-disclaimer { font-size: 8.5pt !important; margin: 4px 0 8px !important; line-height: 1.3 !important; }
-      .c-bottom { margin-top: 4px !important; }
-      .c-bottom img.qr { width: 78px !important; height: 78px !important; }
-      .c-firma img { max-width: 180px !important; }
-      .c-footer { margin-top: 6px !important; padding-top: 4px !important; font-size: 8pt !important; }
-      .c-banner { margin-top: 8px !important; padding: 6px 10px !important; font-size: 8pt !important; line-height: 1.3 !important; }
     }
   `;
 
