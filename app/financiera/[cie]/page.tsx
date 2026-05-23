@@ -126,7 +126,9 @@ interface SampleCertificate {
 }
 
 function fmt(n: number): string {
-  return n.toLocaleString("es-PE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  // Montos siempre enteros — Percy pidió quitar decimales para que las cifras
+  // del resumen no se corten/desborden en mobile.
+  return Math.round(n).toLocaleString("es-PE");
 }
 
 export default async function VerificarCiePage({
@@ -355,11 +357,12 @@ function SampleConstancia({ data }: { data: SampleCertificate }) {
                 </code>
               </div>
             </div>
-            <div style={{ width: "55%", textAlign: "center", paddingTop: 36 }}>
+            <div style={{ width: "55%", textAlign: "center" }}>
+              {/* Sin paddingTop — firma alineada al borde superior del QR (90px) */}
               <img
                 src="https://rfpmvnoaqibqiqxrmheb.supabase.co/storage/v1/object/public/brand-assets/ecodrive/firma-sello-percy.png"
                 alt="Firma y sello Percy Rojas - Gerente General"
-                style={{ maxWidth: 230, height: "auto", display: "block", margin: "0 auto" }}
+                style={{ maxWidth: 210, height: "auto", display: "block", margin: "0 auto" }}
               />
             </div>
           </div>
