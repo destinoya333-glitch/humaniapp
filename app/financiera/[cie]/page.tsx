@@ -197,6 +197,7 @@ function SampleConstancia({ data, autoPrint = false }: { data: SampleCertificate
       .c-bottom img.qr { width: 78px !important; height: 78px !important; }
       .c-firma img { max-width: 180px !important; }
       .c-footer { margin-top: 6px !important; padding-top: 4px !important; font-size: 8pt !important; }
+      .c-banner { margin-top: 8px !important; padding: 6px 10px !important; font-size: 8pt !important; line-height: 1.3 !important; }
     }
   `;
 
@@ -385,21 +386,20 @@ function SampleConstancia({ data, autoPrint = false }: { data: SampleCertificate
 
           <div className="c-bottom" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginTop: 14, gap: 16 }}>
             <div style={{ width: "42%" }}>
-              <div style={{ display: "inline-block", verticalAlign: "middle", marginRight: 10 }}>
-                <img
-                  src={qrSrc}
-                  alt="QR de verificación"
-                  className="qr"
-                  style={{
-                    width: 90,
-                    height: 90,
-                    display: "block",
-                    border: "1px solid #ddd",
-                    background: "white",
-                  }}
-                />
-              </div>
-              <div style={{ display: "inline-block", verticalAlign: "middle", fontSize: "9pt", color: "#555" }}>
+              <img
+                src={qrSrc}
+                alt="QR de verificación"
+                className="qr"
+                style={{
+                  width: 90,
+                  height: 90,
+                  display: "block",
+                  border: "1px solid #ddd",
+                  background: "white",
+                  marginBottom: 6,
+                }}
+              />
+              <div style={{ fontSize: "9pt", color: "#555" }}>
                 <strong style={{ display: "block", color: "#1a1a1a" }}>Escanee para verificar</strong>
                 <code style={{ fontSize: "8pt", color: "#888", wordBreak: "break-all" }}>
                   {verifyUrl}
@@ -407,7 +407,8 @@ function SampleConstancia({ data, autoPrint = false }: { data: SampleCertificate
               </div>
             </div>
             <div className="c-firma" style={{ width: "55%", textAlign: "center" }}>
-              {/* Sin paddingTop — firma alineada al borde superior del QR (90px) */}
+              {/* Firma + sello PNG ya incluye el nombre "Percy Rojas Rubio",
+                  cargo "Gerente General" y empresa "ECO DRIVE PLUS S.A.C." */}
               <img
                 src="https://rfpmvnoaqibqiqxrmheb.supabase.co/storage/v1/object/public/brand-assets/ecodrive/firma-sello-percy.png"
                 alt="Firma y sello Percy Rojas - Gerente General"
@@ -420,9 +421,10 @@ function SampleConstancia({ data, autoPrint = false }: { data: SampleCertificate
             Emitido en Trujillo, {data.emitida} · Documento {data.cie} · Hash SHA256 incluido en QR
           </div>
 
-          {/* Banner informativo (no se imprime, solo en pantalla) */}
+          {/* Banner "Verificacion online" — SE IMPRIME al final del documento
+              (Percy lo quiere visible en el PDF, igual que en el modelo aprobado). */}
           <div
-            className="no-print"
+            className="c-banner"
             style={{
               marginTop: 24,
               padding: "12px 16px",
