@@ -59,8 +59,6 @@ export async function POST(req: NextRequest) {
       rating: driver.rating ?? 0,
       affiliated_since: driver.created_at,
     },
-    pdf_url: null,
-    message:
-      "Conductor afiliado confirmado. Para acceder a la Constancia de Ingresos oficial (firmada, sellada, con QR de verificación), se requiere convenio interinstitucional firmado entre su entidad y ECO DRIVE PLUS S.A.C. Solicítelo a projas@ecodriveplus.com.",
+    message: "Conductor afiliado confirmado.",
   });
 }
