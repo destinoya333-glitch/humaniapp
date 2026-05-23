@@ -10,8 +10,14 @@
 import crypto from "node:crypto";
 import { cookies } from "next/headers";
 
-const COOKIE_NAME = "ecodrive_verifier_session";
-const COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 dias
+// _v2 = sesion endurecida 2026-05-23 (8h max + session-only). El cambio de
+// nombre invalida instantaneamente todas las cookies viejas: cualquier user
+// con sesion previa tendra que reloguearse.
+const COOKIE_NAME = "ecodrive_verifier_session_v2";
+// Validez maxima absoluta = 8 horas (jornada laboral). Ademas la cookie se
+// emite como session-only (sin maxAge en el navegador) — al cerrar el browser
+// se borra y la caja debe volver a loguearse. Ambos limites son defensivos.
+const COOKIE_MAX_AGE = 60 * 60 * 8;
 
 export interface VerifierAccount {
   user: string;
@@ -72,12 +78,13 @@ export async function createSession(account: VerifierAccount): Promise<void> {
   const sig = sign(payload);
   const cookie = `${payload}.${sig}`;
   const store = await cookies();
+  // Sin maxAge → cookie session-only. El navegador la borra al cerrarse.
+  // El server tambien valida iat + COOKIE_MAX_AGE (8h) como fallback.
   store.set(COOKIE_NAME, cookie, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
-    maxAge: COOKIE_MAX_AGE,
   });
 }
 
