@@ -48,67 +48,60 @@ async function lookupByCertNo(cie: string): Promise<CertificateData | null> {
  *  apunta a uno de estos códigos legacy, renderizamos la constancia completa
  *  online en vez del badge "muestra" — para que la Caja escanee y vea
  *  exactamente el mismo documento online que en papel. */
+// Datos ya REDONDEADOS a enteros para que las sumas mostradas coincidan
+// exactamente con el TOTAL. Los meses son enteros independientes; los totales
+// se calculan como suma de los enteros (no como round del decimal original).
+const SAMPLE_MESES = [
+  { mes: "Dic 2025", viajes: 580, bruto: 5510, comision: 347, neto: 5163 },
+  { mes: "Ene 2026", viajes: 590, bruto: 5605, comision: 353, neto: 5252 },
+  { mes: "Feb 2026", viajes: 555, bruto: 5273, comision: 332, neto: 4941 },
+  { mes: "Mar 2026", viajes: 595, bruto: 5653, comision: 356, neto: 5297 },
+  { mes: "Abr 2026", viajes: 600, bruto: 5700, comision: 359, neto: 5341 },
+  { mes: "May 2026", viajes: 565, bruto: 5368, comision: 338, neto: 5030 },
+];
+
+const SAMPLE_TOTALS = SAMPLE_MESES.reduce(
+  (acc, m) => ({
+    viajes: acc.viajes + m.viajes,
+    bruto: acc.bruto + m.bruto,
+    comision: acc.comision + m.comision,
+    neto: acc.neto + m.neto,
+  }),
+  { viajes: 0, bruto: 0, comision: 0, neto: 0 },
+);
+
+function makeSample(opts: { cie: string; caja: string; ciudad: string; cajaSlug: string }): SampleCertificate {
+  return {
+    ...opts,
+    emitida: "22/05/2026",
+    rango: "22/11/2025 — 22/05/2026 (6 meses)",
+    viajesTotales: SAMPLE_TOTALS.viajes,
+    bruto: SAMPLE_TOTALS.bruto,
+    comision: SAMPLE_TOTALS.comision,
+    neto: SAMPLE_TOTALS.neto,
+    meses: SAMPLE_MESES,
+  };
+}
+
 const SAMPLE_DATASETS: Record<string, SampleCertificate> = {
-  "CIE-TRU-2026-00187": {
+  "CIE-TRU-2026-00187": makeSample({
     cie: "CIE-TRU-2026-00187",
     caja: "Caja Municipal de Ahorro y Crédito de Trujillo",
     ciudad: "Trujillo",
     cajaSlug: "caja-trujillo",
-    emitida: "22/05/2026",
-    rango: "22/11/2025 — 22/05/2026 (6 meses)",
-    viajesTotales: 3485,
-    bruto: 33107.5,
-    comision: 2085.77,
-    neto: 31021.73,
-    meses: [
-      { mes: "Dic 2025", viajes: 580, bruto: 5510.0, comision: 347.13, neto: 5162.87 },
-      { mes: "Ene 2026", viajes: 590, bruto: 5605.0, comision: 353.12, neto: 5251.88 },
-      { mes: "Feb 2026", viajes: 555, bruto: 5272.5, comision: 332.17, neto: 4940.33 },
-      { mes: "Mar 2026", viajes: 595, bruto: 5652.5, comision: 356.11, neto: 5296.39 },
-      { mes: "Abr 2026", viajes: 600, bruto: 5700.0, comision: 359.1, neto: 5340.9 },
-      { mes: "May 2026", viajes: 565, bruto: 5367.5, comision: 338.15, neto: 5029.35 },
-    ],
-  },
-  "CIE-AQP-2026-00188": {
+  }),
+  "CIE-AQP-2026-00188": makeSample({
     cie: "CIE-AQP-2026-00188",
     caja: "Caja Municipal de Ahorro y Crédito de Arequipa",
     ciudad: "Arequipa",
     cajaSlug: "caja-arequipa",
-    emitida: "22/05/2026",
-    rango: "22/11/2025 — 22/05/2026 (6 meses)",
-    viajesTotales: 3485,
-    bruto: 33107.5,
-    comision: 2085.77,
-    neto: 31021.73,
-    meses: [
-      { mes: "Dic 2025", viajes: 580, bruto: 5510.0, comision: 347.13, neto: 5162.87 },
-      { mes: "Ene 2026", viajes: 590, bruto: 5605.0, comision: 353.12, neto: 5251.88 },
-      { mes: "Feb 2026", viajes: 555, bruto: 5272.5, comision: 332.17, neto: 4940.33 },
-      { mes: "Mar 2026", viajes: 595, bruto: 5652.5, comision: 356.11, neto: 5296.39 },
-      { mes: "Abr 2026", viajes: 600, bruto: 5700.0, comision: 359.1, neto: 5340.9 },
-      { mes: "May 2026", viajes: 565, bruto: 5367.5, comision: 338.15, neto: 5029.35 },
-    ],
-  },
-  "CIE-HCO-2026-00189": {
+  }),
+  "CIE-HCO-2026-00189": makeSample({
     cie: "CIE-HCO-2026-00189",
     caja: "Caja Municipal de Ahorro y Crédito de Huancayo",
     ciudad: "Huancayo",
     cajaSlug: "caja-huancayo",
-    emitida: "22/05/2026",
-    rango: "22/11/2025 — 22/05/2026 (6 meses)",
-    viajesTotales: 3485,
-    bruto: 33107.5,
-    comision: 2085.77,
-    neto: 31021.73,
-    meses: [
-      { mes: "Dic 2025", viajes: 580, bruto: 5510.0, comision: 347.13, neto: 5162.87 },
-      { mes: "Ene 2026", viajes: 590, bruto: 5605.0, comision: 353.12, neto: 5251.88 },
-      { mes: "Feb 2026", viajes: 555, bruto: 5272.5, comision: 332.17, neto: 4940.33 },
-      { mes: "Mar 2026", viajes: 595, bruto: 5652.5, comision: 356.11, neto: 5296.39 },
-      { mes: "Abr 2026", viajes: 600, bruto: 5700.0, comision: 359.1, neto: 5340.9 },
-      { mes: "May 2026", viajes: 565, bruto: 5367.5, comision: 338.15, neto: 5029.35 },
-    ],
-  },
+  }),
 };
 
 interface SampleCertificate {
@@ -282,7 +275,7 @@ function SampleConstancia({ data }: { data: SampleCertificate }) {
           >
             <StatItem label="Viajes totales" value={data.viajesTotales.toLocaleString("es-PE")} />
             <StatItem label="Ingreso bruto" value={`S/ ${fmt(data.bruto)}`} />
-            <StatItem label="Comisión 6.3%" value={`S/ ${fmt(data.comision)}`} naranja />
+            <StatItem label="Comisión 6.3%" value={`S/ ${fmt(data.comision)}`} />
             <StatItem label="Neto percibido" value={`S/ ${fmt(data.neto)}`} />
           </div>
           <div style={{ fontSize: "9pt", color: "#666", margin: "-8px 0 14px" }}>
@@ -320,7 +313,7 @@ function SampleConstancia({ data }: { data: SampleCertificate }) {
                 </tr>
               ))}
             </tbody>
-            <tfoot style={{ background: "#B86A12", color: "white", fontWeight: "bold" }}>
+            <tfoot style={{ background: "#E1811B", color: "white", fontWeight: "bold" }}>
               <tr>
                 <td style={td}>TOTAL</td>
                 <td style={td}>{data.viajesTotales}</td>
@@ -384,7 +377,7 @@ function SampleConstancia({ data }: { data: SampleCertificate }) {
               lineHeight: 1.5,
             }}
           >
-            <strong style={{ color: "#B86A12" }}>📋 Verificación online:</strong> Esta es la versión digital del documento físico. Para autenticar constancias <strong>reales</strong> de conductores afiliados (con datos del solicitante), ingrese al portal{" "}
+            <strong style={{ color: "#E1811B" }}>📋 Verificación online:</strong> Esta es la versión digital del documento físico. Para autenticar constancias <strong>reales</strong> de conductores afiliados (con datos del solicitante), ingrese al portal{" "}
             <Link href="/financiera" style={{ color: "#E1811B", fontWeight: "bold" }}>
               ecodriveplus.com/financiera
             </Link>{" "}
@@ -559,7 +552,7 @@ function FieldRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-function StatItem({ label, value, naranja = false }: { label: string; value: string; naranja?: boolean }) {
+function StatItem({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <div style={{ fontSize: "8pt", color: "#666", textTransform: "uppercase", letterSpacing: "0.5px" }}>
@@ -569,7 +562,7 @@ function StatItem({ label, value, naranja = false }: { label: string; value: str
         style={{
           fontSize: "15pt",
           fontWeight: "bold",
-          color: naranja ? "#E1811B" : "#B86A12",
+          color: "#E1811B",
           marginTop: 3,
         }}
       >
