@@ -27,14 +27,8 @@ interface CertificateData {
 }
 
 async function lookupByCertNo(cie: string): Promise<CertificateData | null> {
-  // Formato esperado: CIE-XXXXXXXX (id slice 8) o CIE-TRU-2026-NNNNN (legacy/muestra)
-  // Intentamos buscar por id (uuid) cuando los 8 chars match.
   const sb = getGarajeClient();
-
-  // Match legacy CIE-XXX-YYYY-NNNNN o CIE-XXXXXXXX
   const cleaned = cie.trim().toUpperCase();
-
-  // Strategy 1: si después de "CIE-" hay 8 chars hex, buscar por id
   const m = cleaned.match(/^CIE-([0-9A-F]{8})$/);
   if (m) {
     const idPrefix = m[1].toLowerCase();
@@ -47,34 +41,92 @@ async function lookupByCertNo(cie: string): Promise<CertificateData | null> {
       .maybeSingle();
     if (data) return data as CertificateData;
   }
-
   return null;
 }
 
-function StatusBadge({ status }: { status: "verified" | "sample" | "expired" | "notfound" }) {
-  const cfg = {
-    verified: { bg: "#10b981", text: "Auténtico verificado" },
-    sample: { bg: "#E08821", text: "Documento de muestra" },
-    expired: { bg: "#dc2626", text: "Documento expirado" },
-    notfound: { bg: "#7A7367", text: "Código no encontrado" },
-  }[status];
-  return (
-    <span
-      style={{
-        display: "inline-block",
-        padding: "4px 12px",
-        borderRadius: 999,
-        background: cfg.bg,
-        color: "white",
-        fontSize: 12,
-        fontWeight: 600,
-        letterSpacing: "0.05em",
-        textTransform: "uppercase",
-      }}
-    >
-      {cfg.text}
-    </span>
-  );
+/** Constancias OFICIALES de muestra con datos del demo Juan Pérez. Cuando el QR
+ *  apunta a uno de estos códigos legacy, renderizamos la constancia completa
+ *  online en vez del badge "muestra" — para que la Caja escanee y vea
+ *  exactamente el mismo documento online que en papel. */
+const SAMPLE_DATASETS: Record<string, SampleCertificate> = {
+  "CIE-TRU-2026-00187": {
+    cie: "CIE-TRU-2026-00187",
+    caja: "Caja Municipal de Ahorro y Crédito de Trujillo",
+    ciudad: "Trujillo",
+    cajaSlug: "caja-trujillo",
+    emitida: "22/05/2026",
+    rango: "22/11/2025 — 22/05/2026 (6 meses)",
+    viajesTotales: 3485,
+    bruto: 33107.5,
+    comision: 2085.77,
+    neto: 31021.73,
+    meses: [
+      { mes: "Dic 2025", viajes: 580, bruto: 5510.0, comision: 347.13, neto: 5162.87 },
+      { mes: "Ene 2026", viajes: 590, bruto: 5605.0, comision: 353.12, neto: 5251.88 },
+      { mes: "Feb 2026", viajes: 555, bruto: 5272.5, comision: 332.17, neto: 4940.33 },
+      { mes: "Mar 2026", viajes: 595, bruto: 5652.5, comision: 356.11, neto: 5296.39 },
+      { mes: "Abr 2026", viajes: 600, bruto: 5700.0, comision: 359.1, neto: 5340.9 },
+      { mes: "May 2026", viajes: 565, bruto: 5367.5, comision: 338.15, neto: 5029.35 },
+    ],
+  },
+  "CIE-AQP-2026-00188": {
+    cie: "CIE-AQP-2026-00188",
+    caja: "Caja Municipal de Ahorro y Crédito de Arequipa",
+    ciudad: "Arequipa",
+    cajaSlug: "caja-arequipa",
+    emitida: "22/05/2026",
+    rango: "22/11/2025 — 22/05/2026 (6 meses)",
+    viajesTotales: 3485,
+    bruto: 33107.5,
+    comision: 2085.77,
+    neto: 31021.73,
+    meses: [
+      { mes: "Dic 2025", viajes: 580, bruto: 5510.0, comision: 347.13, neto: 5162.87 },
+      { mes: "Ene 2026", viajes: 590, bruto: 5605.0, comision: 353.12, neto: 5251.88 },
+      { mes: "Feb 2026", viajes: 555, bruto: 5272.5, comision: 332.17, neto: 4940.33 },
+      { mes: "Mar 2026", viajes: 595, bruto: 5652.5, comision: 356.11, neto: 5296.39 },
+      { mes: "Abr 2026", viajes: 600, bruto: 5700.0, comision: 359.1, neto: 5340.9 },
+      { mes: "May 2026", viajes: 565, bruto: 5367.5, comision: 338.15, neto: 5029.35 },
+    ],
+  },
+  "CIE-HCO-2026-00189": {
+    cie: "CIE-HCO-2026-00189",
+    caja: "Caja Municipal de Ahorro y Crédito de Huancayo",
+    ciudad: "Huancayo",
+    cajaSlug: "caja-huancayo",
+    emitida: "22/05/2026",
+    rango: "22/11/2025 — 22/05/2026 (6 meses)",
+    viajesTotales: 3485,
+    bruto: 33107.5,
+    comision: 2085.77,
+    neto: 31021.73,
+    meses: [
+      { mes: "Dic 2025", viajes: 580, bruto: 5510.0, comision: 347.13, neto: 5162.87 },
+      { mes: "Ene 2026", viajes: 590, bruto: 5605.0, comision: 353.12, neto: 5251.88 },
+      { mes: "Feb 2026", viajes: 555, bruto: 5272.5, comision: 332.17, neto: 4940.33 },
+      { mes: "Mar 2026", viajes: 595, bruto: 5652.5, comision: 356.11, neto: 5296.39 },
+      { mes: "Abr 2026", viajes: 600, bruto: 5700.0, comision: 359.1, neto: 5340.9 },
+      { mes: "May 2026", viajes: 565, bruto: 5367.5, comision: 338.15, neto: 5029.35 },
+    ],
+  },
+};
+
+interface SampleCertificate {
+  cie: string;
+  caja: string;
+  ciudad: string;
+  cajaSlug: string;
+  emitida: string;
+  rango: string;
+  viajesTotales: number;
+  bruto: number;
+  comision: number;
+  neto: number;
+  meses: Array<{ mes: string; viajes: number; bruto: number; comision: number; neto: number }>;
+}
+
+function fmt(n: number): string {
+  return n.toLocaleString("es-PE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 export default async function VerificarCiePage({
@@ -84,39 +136,284 @@ export default async function VerificarCiePage({
 }) {
   const { cie } = await params;
   const cleaned = decodeURIComponent(cie).trim().toUpperCase();
-  const isValidFormat = /^CIE-[0-9A-Z-]+$/.test(cleaned);
 
-  if (!isValidFormat) {
-    return (
-      <main className="min-h-screen bg-[#0A0908] text-[#F5EFE7] flex items-center justify-center p-6">
-        <div className="max-w-md w-full bg-[#131110] border border-white/10 rounded-2xl p-6 text-center">
-          <StatusBadge status="notfound" />
-          <h1 className="mt-4 text-2xl font-bold">Código no válido</h1>
-          <p className="mt-3 text-sm text-[#C8C0B5]">
-            El código <code className="font-mono text-[#E08821]">{cleaned}</code> no tiene el formato esperado de una Constancia EcoDrive+.
-          </p>
-          <p className="mt-4 text-xs text-[#7A7367]">
-            Si recibió un documento con este código, contacte a{" "}
-            <a href="mailto:projas@ecodriveplus.com" className="text-[#E08821] hover:underline">
-              projas@ecodriveplus.com
-            </a>
-            .
-          </p>
-        </div>
-      </main>
-    );
+  // Sample data: render constancia completa
+  const sample = SAMPLE_DATASETS[cleaned];
+  if (sample) {
+    return <SampleConstancia data={sample} />;
   }
 
+  // Fallback: real DB lookup or "no encontrado"
   const cert = await lookupByCertNo(cleaned);
   const isExpired =
     cert?.expires_at && new Date(cert.expires_at).getTime() < Date.now();
-  const status: "verified" | "sample" | "expired" =
-    cert && !isExpired ? "verified" : cert && isExpired ? "expired" : "sample";
+  const status: "verified" | "expired" | "notfound" = cert && !isExpired
+    ? "verified"
+    : cert && isExpired
+    ? "expired"
+    : "notfound";
+
+  return <BadgeView cleaned={cleaned} cert={cert} status={status} />;
+}
+
+// ───────────────────────────────────────────────────────────────────
+// Render: constancia completa estilo identico al HTML offline
+// ───────────────────────────────────────────────────────────────────
+function SampleConstancia({ data }: { data: SampleCertificate }) {
+  const verifyUrl = `https://ecodriveplus.com/financiera/${data.cie}`;
+  const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(verifyUrl)}`;
+
+  return (
+    <main style={{ background: "#f5f3f0", minHeight: "100vh", padding: "24px 12px" }}>
+      <div
+        style={{
+          maxWidth: 820,
+          margin: "0 auto",
+          background: "white",
+          fontFamily: "'Calibri', 'Helvetica', sans-serif",
+          fontSize: "10pt",
+          color: "#1a1a1a",
+          lineHeight: 1.45,
+          padding: "30px 36px",
+          boxShadow: "0 4px 28px rgba(0,0,0,0.08)",
+          position: "relative",
+        }}
+      >
+        {/* Watermark */}
+        <div
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%) rotate(-25deg)",
+            fontSize: "70pt",
+            color: "rgba(225, 129, 27, 0.07)",
+            fontWeight: "bold",
+            zIndex: 0,
+            letterSpacing: 4,
+            pointerEvents: "none",
+            whiteSpace: "nowrap",
+          }}
+        >
+          MUESTRA · NO VALIDO
+        </div>
+
+        <div style={{ position: "relative", zIndex: 1 }}>
+          {/* Header */}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              borderBottom: "3px solid #E1811B",
+              paddingBottom: 12,
+              marginBottom: 16,
+            }}
+          >
+            <img
+              src="https://rfpmvnoaqibqiqxrmheb.supabase.co/storage/v1/object/public/brand-assets/ecodrive/logo-final-naranja-trim.png"
+              alt="EcoDrive+"
+              style={{ maxWidth: 260, height: "auto" }}
+            />
+            <div style={{ textAlign: "right", fontSize: "9pt", color: "#444" }}>
+              <strong style={{ color: "#1a1a1a" }}>ECO DRIVE PLUS S.A.C.</strong>
+              <br />
+              RUC 20613413228
+              <br />
+              Trujillo, La Libertad, Perú
+              <br />
+              projas@ecodriveplus.com
+              <br />
+              https://ecodriveplus.com
+            </div>
+          </div>
+
+          <h1 style={{ fontSize: "20pt", color: "#E1811B", margin: "4px 0 0" }}>
+            CONSTANCIA DE INGRESOS
+          </h1>
+          <div style={{ fontSize: "10pt", color: "#555", fontStyle: "italic" }}>
+            Conductor afiliado a la plataforma Eco Drive Plus S.A.C.
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "flex-end",
+              alignItems: "center",
+              margin: "8px 0 18px",
+            }}
+          >
+            <div style={{ textAlign: "right" }}>
+              <div style={{ color: "#E1811B", fontWeight: "bold", fontSize: "11pt" }}>
+                N° {data.cie}
+              </div>
+              <div style={{ color: "#666", fontSize: "9.5pt" }}>Emitida: {data.emitida}</div>
+            </div>
+          </div>
+
+          <SectionTitle>Datos del conductor</SectionTitle>
+          <FieldRow label="Nombre completo:" value="Juan Pérez Ramírez" />
+          <FieldRow label="DNI:" value="12345678" />
+          <FieldRow label="Licencia de conducir:" value="Q12345678" />
+          <FieldRow label="Placa vehículo:" value="ABC-123" />
+          <FieldRow label="Afiliado desde:" value="01/05/2025" />
+          <FieldRow label="Calificación promedio:" value="4.87 / 5.00" />
+
+          <SectionTitle>Periodo acreditado</SectionTitle>
+          <FieldRow label="Rango:" value={data.rango} />
+          <FieldRow label="Destinado a:" value={data.caja} />
+          <FieldRow label="Finalidad:" value="Acreditación de ingresos ante Caja Financiera" />
+
+          <SectionTitle>Resumen de ingresos · Últimos 6 meses</SectionTitle>
+          <div
+            style={{
+              background: "rgba(225, 129, 27, 0.08)",
+              border: "1px solid rgba(225, 129, 27, 0.25)",
+              borderRadius: 6,
+              padding: "14px 18px",
+              margin: "8px 0 16px",
+              display: "grid",
+              gridTemplateColumns: "repeat(4, 1fr)",
+              gap: 10,
+              textAlign: "center",
+            }}
+          >
+            <StatItem label="Viajes totales" value={data.viajesTotales.toLocaleString("es-PE")} />
+            <StatItem label="Ingreso bruto" value={`S/ ${fmt(data.bruto)}`} />
+            <StatItem label="Comisión 6.3%" value={`S/ ${fmt(data.comision)}`} naranja />
+            <StatItem label="Neto percibido" value={`S/ ${fmt(data.neto)}`} />
+          </div>
+          <div style={{ fontSize: "9pt", color: "#666", margin: "-8px 0 14px" }}>
+            <em>Promedio mensual neto:</em>{" "}
+            <strong>S/ {fmt(data.neto / 6)}</strong> ·{" "}
+            <em>Promedio diario:</em> <strong>S/ {fmt(data.neto / 180)}</strong> (180 días)
+          </div>
+
+          <SectionTitle>Detalle mensual</SectionTitle>
+          <table
+            style={{
+              width: "100%",
+              borderCollapse: "collapse",
+              margin: "6px 0 14px",
+              fontSize: "9.5pt",
+            }}
+          >
+            <thead style={{ background: "#E1811B", color: "white" }}>
+              <tr>
+                <th style={th}>MES</th>
+                <th style={th}>VIAJES</th>
+                <th style={th}>BRUTO (S/.)</th>
+                <th style={th}>COMISIÓN (S/.)</th>
+                <th style={th}>NETO (S/.)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.meses.map((m, i) => (
+                <tr key={m.mes} style={{ background: i % 2 === 0 ? "#fff8ed" : "white" }}>
+                  <td style={td}>{m.mes}</td>
+                  <td style={td}>{m.viajes}</td>
+                  <td style={td}>S/. {fmt(m.bruto)}</td>
+                  <td style={td}>S/. {fmt(m.comision)}</td>
+                  <td style={td}>S/. {fmt(m.neto)}</td>
+                </tr>
+              ))}
+            </tbody>
+            <tfoot style={{ background: "#B86A12", color: "white", fontWeight: "bold" }}>
+              <tr>
+                <td style={td}>TOTAL</td>
+                <td style={td}>{data.viajesTotales}</td>
+                <td style={td}>S/. {fmt(data.bruto)}</td>
+                <td style={td}>S/. {fmt(data.comision)}</td>
+                <td style={td}>S/. {fmt(data.neto)}</td>
+              </tr>
+            </tfoot>
+          </table>
+
+          <div style={{ fontSize: "9pt", color: "#555", margin: "10px 0 18px", lineHeight: 1.45 }}>
+            Esta constancia es válida para acreditar ingresos como conductor afiliado a Eco Drive Plus S.A.C. (RUC 20613413228) ante entidades financieras, cajas municipales, bancos y autoridades. Verifique la autenticidad escaneando el código QR — el documento <strong>{data.cie}</strong> se valida en línea y expira a los 30 días desde la fecha de emisión.
+          </div>
+
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginTop: 14, gap: 16 }}>
+            <div style={{ width: "42%" }}>
+              <div style={{ display: "inline-block", verticalAlign: "middle", marginRight: 10 }}>
+                <img
+                  src={qrSrc}
+                  alt="QR de verificación"
+                  style={{
+                    width: 90,
+                    height: 90,
+                    display: "block",
+                    border: "1px solid #ddd",
+                    background: "white",
+                  }}
+                />
+              </div>
+              <div style={{ display: "inline-block", verticalAlign: "middle", fontSize: "9pt", color: "#555" }}>
+                <strong style={{ display: "block", color: "#1a1a1a" }}>Escanee para verificar</strong>
+                <code style={{ fontSize: "8pt", color: "#888", wordBreak: "break-all" }}>
+                  {verifyUrl}
+                </code>
+              </div>
+            </div>
+            <div style={{ width: "55%", textAlign: "center", paddingTop: 36 }}>
+              <img
+                src="https://rfpmvnoaqibqiqxrmheb.supabase.co/storage/v1/object/public/brand-assets/ecodrive/firma-sello-percy.png"
+                alt="Firma y sello Percy Rojas - Gerente General"
+                style={{ maxWidth: 230, height: "auto", display: "block", margin: "0 auto" }}
+              />
+            </div>
+          </div>
+
+          <div style={{ marginTop: 18, paddingTop: 8, borderTop: "1px solid #ddd", fontSize: "8.5pt", color: "#666", textAlign: "center" }}>
+            Emitido en Trujillo, {data.emitida} · Documento {data.cie} · Hash SHA256 incluido en QR
+          </div>
+
+          {/* Banner informativo (no se imprime, solo en pantalla) */}
+          <div
+            style={{
+              marginTop: 24,
+              padding: "12px 16px",
+              background: "#fff8ee",
+              border: "1px solid #E1811B",
+              borderRadius: 8,
+              fontSize: "9pt",
+              color: "#5a3e10",
+              lineHeight: 1.5,
+            }}
+          >
+            <strong style={{ color: "#B86A12" }}>📋 Verificación online:</strong> Esta es la versión digital del documento físico. Para autenticar constancias <strong>reales</strong> de conductores afiliados (con datos del solicitante), ingrese al portal{" "}
+            <Link href="/financiera" style={{ color: "#E1811B", fontWeight: "bold" }}>
+              ecodriveplus.com/financiera
+            </Link>{" "}
+            con las credenciales asignadas a su entidad.
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+}
+
+// ───────────────────────────────────────────────────────────────────
+// View fallback: badges (verified/expired/notfound) cuando NO es muestra
+// ───────────────────────────────────────────────────────────────────
+function BadgeView({
+  cleaned,
+  cert,
+  status,
+}: {
+  cleaned: string;
+  cert: CertificateData | null;
+  status: "verified" | "expired" | "notfound";
+}) {
+  const cfg = {
+    verified: { bg: "#10b981", text: "Auténtico verificado" },
+    expired: { bg: "#dc2626", text: "Documento expirado" },
+    notfound: { bg: "#7A7367", text: "Código no encontrado" },
+  }[status];
 
   return (
     <main className="min-h-screen bg-[#0A0908] text-[#F5EFE7] p-6">
       <div className="max-w-2xl mx-auto">
-        {/* Header */}
         <header className="flex items-center gap-4 mb-8 pb-6 border-b border-white/10">
           <div className="h-14 w-14 bg-[url('/ecodriveplus/icon.png')] bg-contain bg-no-repeat bg-center shrink-0" role="img" aria-label="EcoDrive+" />
           <div className="leading-tight">
@@ -135,7 +432,21 @@ export default async function VerificarCiePage({
               <div className="text-xs uppercase tracking-widest text-[#7A7367] mb-1">N° de constancia</div>
               <div className="text-xl font-mono font-bold text-[#E08821]">{cleaned}</div>
             </div>
-            <StatusBadge status={status} />
+            <span
+              style={{
+                display: "inline-block",
+                padding: "4px 12px",
+                borderRadius: 999,
+                background: cfg.bg,
+                color: "white",
+                fontSize: 12,
+                fontWeight: 600,
+                letterSpacing: "0.05em",
+                textTransform: "uppercase",
+              }}
+            >
+              {cfg.text}
+            </span>
           </div>
 
           {status === "verified" && cert && (
@@ -173,22 +484,19 @@ export default async function VerificarCiePage({
 
           {status === "expired" && cert && (
             <p className="text-[#C8C0B5] leading-relaxed">
-              Este documento fue emitido oficialmente por ECO DRIVE PLUS S.A.C. pero{" "}
+              Este documento fue emitido por ECO DRIVE PLUS S.A.C. pero{" "}
               <strong className="text-[#dc2626]">expiró el{" "}
                 {cert.expires_at
                   ? new Date(cert.expires_at).toLocaleDateString("es-PE")
                   : "—"}
-              </strong>. Las Constancias de Ingresos tienen vigencia de 30 días desde su emisión. Solicite al conductor que genere una nueva constancia con datos actualizados.
+              </strong>. Las Constancias tienen vigencia de 30 días desde su emisión.
             </p>
           )}
 
-          {status === "sample" && (
+          {status === "notfound" && (
             <>
-              <p className="text-[#C8C0B5] leading-relaxed mb-4">
-                Este código <strong className="font-mono text-[#E08821]">{cleaned}</strong> corresponde a una <strong>constancia de muestra</strong> que se entrega a entidades financieras aliadas para evaluar el formato del documento oficial (firma, sello, QR, hash SHA256).
-              </p>
               <p className="text-[#C8C0B5] leading-relaxed">
-                Para verificar una <strong>constancia real</strong> de un conductor afiliado, ingrese al portal de verificación con sus credenciales asignadas:
+                El código <strong className="font-mono text-[#E08821]">{cleaned}</strong> no fue encontrado en nuestra base de datos.
               </p>
               <div className="mt-5">
                 <Link
@@ -198,13 +506,6 @@ export default async function VerificarCiePage({
                   Ir al portal verificador
                 </Link>
               </div>
-              <p className="mt-6 text-xs text-[#7A7367] leading-relaxed">
-                ¿No tiene credenciales? Solicítelas a{" "}
-                <a href="mailto:projas@ecodriveplus.com" className="text-[#E08821] hover:underline">
-                  projas@ecodriveplus.com
-                </a>{" "}
-                indicando la entidad financiera que representa.
-              </p>
             </>
           )}
         </div>
@@ -225,3 +526,55 @@ function DataField({ label, children }: { label: string; children: React.ReactNo
     </div>
   );
 }
+
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      style={{
+        fontSize: "9.5pt",
+        fontWeight: "bold",
+        color: "#444",
+        textTransform: "uppercase",
+        letterSpacing: 1,
+        marginTop: 14,
+        marginBottom: 6,
+        borderBottom: "1px solid #eee",
+        paddingBottom: 3,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function FieldRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div style={{ display: "flex", padding: "2px 0", fontSize: "9.5pt" }}>
+      <span style={{ width: "38%", color: "#666" }}>{label}</span>
+      <span style={{ fontWeight: "bold", color: "#1a1a1a" }}>{value}</span>
+    </div>
+  );
+}
+
+function StatItem({ label, value, naranja = false }: { label: string; value: string; naranja?: boolean }) {
+  return (
+    <div>
+      <div style={{ fontSize: "8pt", color: "#666", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+        {label}
+      </div>
+      <div
+        style={{
+          fontSize: "15pt",
+          fontWeight: "bold",
+          color: naranja ? "#E1811B" : "#B86A12",
+          marginTop: 3,
+        }}
+      >
+        {value}
+      </div>
+    </div>
+  );
+}
+
+const th: React.CSSProperties = { padding: "7px 9px", textAlign: "left", fontWeight: "bold" };
+const td: React.CSSProperties = { padding: "6px 9px", borderBottom: "1px solid #f0e0c8" };

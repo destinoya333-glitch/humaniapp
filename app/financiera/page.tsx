@@ -12,11 +12,10 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function VerificarPage({ searchParams }: { searchParams: Promise<{ caja?: string }> }) {
+export default async function VerificarPage() {
   const session = await getSession();
   if (!session) {
-    const { caja } = await searchParams;
-    return <VerifierLogin defaultUser={caja ?? ""} />;
+    return <VerifierLogin />;
   }
   return <VerifierDashboard user={session.user} entidad={session.entidad} />;
 }

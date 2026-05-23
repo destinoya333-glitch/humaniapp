@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export function VerifierLogin({ defaultUser = "" }: { defaultUser?: string }) {
+export function VerifierLogin() {
   const router = useRouter();
-  const [user, setUser] = useState(defaultUser);
+  const [user, setUser] = useState("");
   const [pass, setPass] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -58,8 +58,13 @@ export function VerifierLogin({ defaultUser = "" }: { defaultUser?: string }) {
               required
               value={user}
               onChange={(e) => setUser(e.target.value)}
-              placeholder="caja-trujillo"
-              autoComplete="username"
+              placeholder="Su usuario asignado"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck="false"
+              data-1p-ignore
+              data-lpignore="true"
               className="mt-1.5 w-full rounded-lg bg-[#0A0908] border border-white/10 px-3 py-2.5 text-[#F5EFE7] outline-none focus:border-[#E08821] transition"
             />
           </label>
@@ -71,7 +76,9 @@ export function VerifierLogin({ defaultUser = "" }: { defaultUser?: string }) {
               required
               value={pass}
               onChange={(e) => setPass(e.target.value)}
-              autoComplete="current-password"
+              autoComplete="new-password"
+              data-1p-ignore
+              data-lpignore="true"
               className="mt-1.5 w-full rounded-lg bg-[#0A0908] border border-white/10 px-3 py-2.5 text-[#F5EFE7] outline-none focus:border-[#E08821] transition"
             />
           </label>
