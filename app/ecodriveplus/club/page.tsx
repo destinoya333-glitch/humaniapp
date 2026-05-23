@@ -1,35 +1,35 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Script from "next/script";
-import { getGarajeClient, maskNombre } from "@/lib/ecodrive/garaje";
-import { GarajeCounter } from "./_components/GarajeCounter";
-import { GarajeCTA } from "./_components/GarajeCTA";
-import GarajePhotoCarousel from "./_components/GarajePhotoCarousel";
+import { getClubClient, maskNombre } from "@/lib/ecodrive/club";
+import { ClubCounter } from "./_components/ClubCounter";
+import { ClubCTA } from "./_components/ClubCTA";
+import ClubPhotoCarousel from "./_components/ClubPhotoCarousel";
 import Reveal from "../_design/Reveal";
 import WordReveal from "../_design/WordReveal";
 import Magnetic from "../_design/Magnetic";
 import CinematicImage from "../_design/CinematicImage";
 
-const HERO_IMG = "https://rfpmvnoaqibqiqxrmheb.supabase.co/storage/v1/object/public/garaje-fotos/edicion-1/01-portada.jpg";
+const HERO_IMG = "https://rfpmvnoaqibqiqxrmheb.supabase.co/storage/v1/object/public/club-fotos/edicion-1/01-portada.jpg";
 const LOCAL_HERO = "/ecodriveplus/byd-yuan-pro.jpg";
 
 export const metadata: Metadata = {
-  title: "EcoDrive+ Garaje — Membresía anual que sortea un BYD Yuan Pro 2023",
+  title: "EcoDrive+ Club — Membresía anual que sortea un BYD Yuan Pro 2023",
   description:
-    "Programa de membresía con bonificación de sorteo. Garaje Pass anual S/.99 (S/.69 interno EcoDrive+). Participás en cada edición del año + bonus por lealtad.",
-  alternates: { canonical: "https://ecodriveplus.com/garaje" },
+    "Programa de membresía con bonificación de sorteo. Club Pass anual S/.99 (S/.69 interno EcoDrive+). Participás en cada edición del año + bonus por lealtad.",
+  alternates: { canonical: "https://ecodriveplus.com/club" },
   openGraph: {
     type: "website",
-    title: "Membresía Garaje EcoDrive+ — Gana un BYD Yuan Pro 2023",
+    title: "Membresía Club EcoDrive+ — Gana un BYD Yuan Pro 2023",
     description: "Pass anual S/.99 (S/.69 interno). Participás en todos los sorteos del año. Notario público + acta blockchain.",
-    url: "https://ecodriveplus.com/garaje",
+    url: "https://ecodriveplus.com/club",
     siteName: "EcoDrive+",
-    images: [{ url: HERO_IMG, width: 1200, height: 800, alt: "BYD Yuan Pro 2023 — EcoDrive+ Garaje" }],
+    images: [{ url: HERO_IMG, width: 1200, height: 800, alt: "BYD Yuan Pro 2023 — EcoDrive+ Club" }],
     locale: "es_PE",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Membresía Garaje EcoDrive+ — Gana un BYD Yuan Pro 2023",
+    title: "Membresía Club EcoDrive+ — Gana un BYD Yuan Pro 2023",
     description: "Pass anual desde S/.69. Sorteo presencial con notario. Participás en cada edición del año.",
     images: [HERO_IMG],
   },
@@ -58,14 +58,14 @@ type EdicionActual = {
 };
 
 async function getData() {
-  const sb = getGarajeClient();
+  const sb = getClubClient();
   const [actualRes, ultimosRes, historialRes, progRes, previewRes] = await Promise.all([
-    sb.rpc("garaje_edicion_actual"),
-    sb.rpc("garaje_ultimos_vendidos"),
-    sb.rpc("garaje_historial_ediciones"),
-    sb.from("garaje_programa").select("*").limit(1).single(),
+    sb.rpc("club_edicion_actual"),
+    sb.rpc("club_ultimos_vendidos"),
+    sb.rpc("club_historial_ediciones"),
+    sb.from("club_programa").select("*").limit(1).single(),
     sb
-      .from("garaje_ediciones")
+      .from("club_ediciones")
       .select("id,numero_edicion,nombre,premio_descripcion,premio_valor_referencial,premio_fotos_urls,premio_video_url,meta_tickets,ticket_precio_publico,ticket_precio_interno,estado")
       .in("estado", ["borrador", "abierta"])
       .order("numero_edicion", { ascending: false })
@@ -81,7 +81,7 @@ async function getData() {
   };
 }
 
-export default async function GarajePage() {
+export default async function ClubPage() {
   const { actual, ultimos, historial, programa, preview } = await getData();
   const heroImage = actual?.premio_fotos?.[0] ?? LOCAL_HERO;
   const galleryPhotos =
@@ -96,28 +96,28 @@ export default async function GarajePage() {
       {/* Tracking pixels */}
       {META_PIXEL_ID && (
         <>
-          <Script id="meta-pixel-garaje" strategy="afterInteractive">{`!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${META_PIXEL_ID}');fbq('track','PageView');fbq('trackCustom','GarajeView');`}</Script>
+          <Script id="meta-pixel-club" strategy="afterInteractive">{`!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${META_PIXEL_ID}');fbq('track','PageView');fbq('trackCustom','ClubView');`}</Script>
           <noscript><img height="1" width="1" style={{ display: "none" }} src={`https://www.facebook.com/tr?id=${META_PIXEL_ID}&ev=PageView&noscript=1`} alt="" /></noscript>
         </>
       )}
       {TIKTOK_PIXEL_ID && (
-        <Script id="tiktok-pixel-garaje" strategy="afterInteractive">{`!function (w, d, t) {w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var i="https://analytics.tiktok.com/i18n/pixel/events.js";ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=i,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};var o=document.createElement("script");o.type="text/javascript",o.async=!0,o.src=i+"?sdkid="+e+"&lib="+t;var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(o,a)};ttq.load('${TIKTOK_PIXEL_ID}');ttq.page();}(window, document, 'ttq');`}</Script>
+        <Script id="tiktok-pixel-club" strategy="afterInteractive">{`!function (w, d, t) {w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var i="https://analytics.tiktok.com/i18n/pixel/events.js";ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=i,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};var o=document.createElement("script");o.type="text/javascript",o.async=!0,o.src=i+"?sdkid="+e+"&lib="+t;var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(o,a)};ttq.load('${TIKTOK_PIXEL_ID}');ttq.page();}(window, document, 'ttq');`}</Script>
       )}
       {GA4_ID && (
         <>
           <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA4_ID}`} strategy="afterInteractive" />
-          <Script id="ga4-garaje" strategy="afterInteractive">{`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GA4_ID}',{page_path:'/garaje'});gtag('event','view_garaje_landing');`}</Script>
+          <Script id="ga4-club" strategy="afterInteractive">{`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GA4_ID}',{page_path:'/club'});gtag('event','view_club_landing');`}</Script>
         </>
       )}
-      <Script id="schema-garaje" type="application/ld+json" strategy="afterInteractive">{JSON.stringify({
+      <Script id="schema-club" type="application/ld+json" strategy="afterInteractive">{JSON.stringify({
         "@context": "https://schema.org",
         "@type": "Event",
-        name: "Sorteo BYD Yuan Pro 2023 — EcoDrive+ Garaje Edición #1",
-        description: "Sorteo presencial con notario público y casino oficial entre miembros del programa Garaje Pass anual.",
+        name: "Sorteo BYD Yuan Pro 2023 — EcoDrive+ Club Edición #1",
+        description: "Sorteo presencial con notario público y casino oficial entre miembros del programa Club Pass anual.",
         image: HERO_IMG,
         organizer: { "@type": "Organization", name: "EcoDrive Plus SAC", url: "https://ecodriveplus.com" },
         location: { "@type": "Place", name: "Trujillo, La Libertad, Perú" },
-        offers: { "@type": "Offer", price: "99", priceCurrency: "PEN", availability: "https://schema.org/InStock", url: "https://ecodriveplus.com/garaje", category: "Membership" },
+        offers: { "@type": "Offer", price: "99", priceCurrency: "PEN", availability: "https://schema.org/InStock", url: "https://ecodriveplus.com/club", category: "Membership" },
         eventAttendanceMode: "https://schema.org/OnlineEventAttendanceMode",
       })}</Script>
 
@@ -134,7 +134,7 @@ export default async function GarajePage() {
           <Link href="/ecodriveplus" className="flex items-center gap-4 group">
             <div role="img" aria-label="EcoDrive+" className="h-14 w-14 md:h-16 md:w-16 bg-[url('/ecodriveplus/icon.png')] bg-contain bg-no-repeat bg-center group-hover:rotate-[8deg] transition-transform duration-700 shrink-0" />
             <div className="leading-none">
-              <div className="eco-display text-[22px] md:text-[26px] tracking-tight">EcoDrive<span className="text-[var(--eco-flame)]">+</span> <span className="text-[var(--eco-ink-mute)] eco-display-italic">Garaje</span></div>
+              <div className="eco-display text-[22px] md:text-[26px] tracking-tight">EcoDrive<span className="text-[var(--eco-flame)]">+</span> <span className="text-[var(--eco-ink-mute)] eco-display-italic">Club</span></div>
               <div className="eco-mono mt-2 text-[var(--eco-ink-mute)] hidden sm:block">SORTEO PRESENCIAL · NOTARIO PÚBLICO</div>
             </div>
           </Link>
@@ -155,7 +155,7 @@ export default async function GarajePage() {
         </CinematicImage>
 
         <div aria-hidden className="hidden lg:block absolute left-6 top-32 eco-label-vertical z-20">
-          GARAJE · 01 — EDICIÓN ABIERTA
+          CLUB · 01 — EDICIÓN ABIERTA
         </div>
 
         <div className="relative z-20 mx-auto max-w-[1400px] px-6 lg:px-24 grid lg:grid-cols-12 gap-y-16 lg:gap-x-12 items-start">
@@ -198,7 +198,7 @@ export default async function GarajePage() {
           </div>
 
           <Reveal delay={0.3} className="lg:col-span-6 relative lg:mt-8">
-            <GarajePhotoCarousel photos={galleryPhotos} alt={actual?.nombre ?? preview?.nombre ?? "BYD Yuan Pro 2023"} />
+            <ClubPhotoCarousel photos={galleryPhotos} alt={actual?.nombre ?? preview?.nombre ?? "BYD Yuan Pro 2023"} />
             <div className="mt-6 flex items-end justify-between flex-wrap gap-4">
               <div>
                 <div className="eco-mono text-[var(--eco-flame)] mb-1">PREMIO ACTUAL</div>
@@ -231,7 +231,7 @@ export default async function GarajePage() {
                   <p className="mt-6 max-w-xl text-[var(--eco-ink-soft)] leading-relaxed">{actual.premio_descripcion}</p>
                 )}
                 <div className="mt-10">
-                  <GarajeCounter
+                  <ClubCounter
                     edicionId={actual.edicion_id}
                     initialVendidos={actual.vendidos}
                     meta={actual.meta}
@@ -240,7 +240,7 @@ export default async function GarajePage() {
                 </div>
               </div>
               <div className="lg:col-span-5">
-                <GarajeCTA
+                <ClubCTA
                   edicionId={actual.edicion_id}
                   ticketPublico={Number(actual.precio_publico)}
                   ticketInterno={Number(actual.precio_interno)}
@@ -261,12 +261,12 @@ export default async function GarajePage() {
               )}
               <div className="mt-8 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
                 <Magnetic strength={0.3}>
-                  <Link href="https://wa.me/51994810242?text=Quiero%20saber%20cuando%20abre%20la%20edici%C3%B3n%20Garaje" className="inline-flex items-center gap-3 px-8 py-5 rounded-full bg-[var(--eco-flame)] text-[var(--eco-bg-deep)] font-semibold eco-mono hover:bg-[var(--eco-flame-soft)] transition-colors">
+                  <Link href="https://wa.me/51994810242?text=Quiero%20saber%20cuando%20abre%20la%20edici%C3%B3n%20Club" className="inline-flex items-center gap-3 px-8 py-5 rounded-full bg-[var(--eco-flame)] text-[var(--eco-bg-deep)] font-semibold eco-mono hover:bg-[var(--eco-flame-soft)] transition-colors">
                     Avisarme por WhatsApp
                   </Link>
                 </Magnetic>
                 <p className="eco-mono text-[var(--eco-ink-mute)]">
-                  Garaje Pass anual <strong className="text-[var(--eco-ink)]">S/. {Number(programa?.pass_precio_publico ?? 99)}</strong>{" "}
+                  Club Pass anual <strong className="text-[var(--eco-ink)]">S/. {Number(programa?.pass_precio_publico ?? 99)}</strong>{" "}
                   (S/. {Number(programa?.pass_precio_interno ?? 69)} interno EcoDrive+) · Meta {preview.meta_tickets.toLocaleString("es-PE")} por edición
                 </p>
               </div>
@@ -279,7 +279,7 @@ export default async function GarajePage() {
               </p>
               <div className="mt-8">
                 <Magnetic strength={0.3}>
-                  <Link href="https://wa.me/51994810242?text=Quiero%20saber%20del%20pr%C3%B3ximo%20sorteo%20Garaje" className="inline-flex items-center gap-3 px-8 py-5 rounded-full bg-[var(--eco-flame)] text-[var(--eco-bg-deep)] font-semibold eco-mono hover:bg-[var(--eco-flame-soft)] transition-colors">
+                  <Link href="https://wa.me/51994810242?text=Quiero%20saber%20del%20pr%C3%B3ximo%20sorteo%20Club" className="inline-flex items-center gap-3 px-8 py-5 rounded-full bg-[var(--eco-flame)] text-[var(--eco-bg-deep)] font-semibold eco-mono hover:bg-[var(--eco-flame-soft)] transition-colors">
                     Avisarme por WhatsApp
                   </Link>
                 </Magnetic>
@@ -301,7 +301,7 @@ export default async function GarajePage() {
           <div className="grid md:grid-cols-3 gap-8 relative">
             <div aria-hidden className="hidden md:block absolute top-12 left-[8%] right-[8%] h-px bg-gradient-to-r from-transparent via-[var(--eco-flame)] to-transparent opacity-40" />
             {[
-              ["01", "Te haces Pass", "Garaje Pass anual S/. 99 (S/. 69 si sos pasajero o chofer EcoDrive+). Vigencia 12 meses desde la compra."],
+              ["01", "Te haces Pass", "Club Pass anual S/. 99 (S/. 69 si sos pasajero o chofer EcoDrive+). Vigencia 12 meses desde la compra."],
               ["02", "Pagas", "Yape al 998 102 258. En menos de 2 minutos tu Pass queda activado y recibís número por WhatsApp."],
               ["03", "Participás todo el año", "En cada edición que se ejecuta durante tu vigencia participás con número(s). Bonus de lealtad +1 por edición consumida (cap 5)."],
             ].map(([code, title, desc], i) => (
@@ -371,7 +371,7 @@ export default async function GarajePage() {
 
       {/* === BANDA CINEMÁTICA — RECORDATORIO === */}
       <section className="relative h-[55vh] md:h-[70vh] min-h-[400px] border-y border-[var(--eco-line)]">
-        <CinematicImage src={heroImage} alt={actual?.nombre ?? "Premio Garaje"} motion="both" parallaxRange={120} objectPosition="center 45%" className="absolute inset-0">
+        <CinematicImage src={heroImage} alt={actual?.nombre ?? "Premio Club"} motion="both" parallaxRange={120} objectPosition="center 45%" className="absolute inset-0">
           <div aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(10,9,8,0.55) 0%, rgba(10,9,8,0.30) 50%, rgba(10,9,8,0.90) 100%)" }} />
           <div aria-hidden className="absolute inset-0" style={{ background: "radial-gradient(60% 50% at 30% 60%, rgba(224,136,33,0.20), transparent 70%)" }} />
         </CinematicImage>
@@ -389,14 +389,14 @@ export default async function GarajePage() {
       <section className="relative py-24 border-t border-[var(--eco-line)]">
         <div className="mx-auto max-w-[1400px] px-6 lg:px-24 grid md:grid-cols-2 gap-px bg-[var(--eco-line)] border border-[var(--eco-line)]">
           <Reveal>
-            <Link href="/ecodriveplus/garaje/como-funciona" className="block bg-[var(--eco-bg)] p-8 md:p-10 eco-card cursor-pointer">
+            <Link href="/ecodriveplus/club/como-funciona" className="block bg-[var(--eco-bg)] p-8 md:p-10 eco-card cursor-pointer">
               <div className="eco-mono text-[var(--eco-flame)] mb-3">— Reglas</div>
               <h3 className="eco-display text-[32px] md:text-[40px] text-[var(--eco-ink)]">Cómo funciona</h3>
               <p className="mt-4 text-[var(--eco-ink-soft)] leading-relaxed">Reglas del programa, mecánica de Pass, bonus por lealtad y FAQ.</p>
             </Link>
           </Reveal>
           <Reveal delay={0.1}>
-            <Link href="/ecodriveplus/garaje/bases" className="block bg-[var(--eco-bg)] p-8 md:p-10 eco-card cursor-pointer">
+            <Link href="/ecodriveplus/club/bases" className="block bg-[var(--eco-bg)] p-8 md:p-10 eco-card cursor-pointer">
               <div className="eco-mono text-[var(--eco-flame)] mb-3">— Legal</div>
               <h3 className="eco-display text-[32px] md:text-[40px] text-[var(--eco-ink)]">Bases legales</h3>
               <p className="mt-4 text-[var(--eco-ink-soft)] leading-relaxed">Bases notariadas. EcoDrive Plus SAC RUC 20613413228. INDECOPI Perú.</p>
@@ -411,12 +411,12 @@ export default async function GarajePage() {
           <div className="flex items-center gap-3">
             <div role="img" aria-label="EcoDrive+" className="h-8 w-8 bg-[url('/ecodriveplus/icon.png')] bg-contain bg-no-repeat bg-center" />
             <div className="eco-mono text-[var(--eco-ink-soft)]">
-              EcoDrive+ Garaje © 2026 — <span className="text-[var(--eco-flame)]">RUC 20613413228</span>
+              EcoDrive+ Club © 2026 — <span className="text-[var(--eco-flame)]">RUC 20613413228</span>
             </div>
           </div>
           <div className="flex items-center justify-start md:justify-end gap-6 eco-mono">
             <Link href="/ecodriveplus" className="text-[var(--eco-ink-soft)] hover:text-[var(--eco-flame)] transition-colors">EcoDrive+</Link>
-            <Link href="/ecodriveplus/garaje/bases" className="text-[var(--eco-ink-soft)] hover:text-[var(--eco-flame)] transition-colors">Bases</Link>
+            <Link href="/ecodriveplus/club/bases" className="text-[var(--eco-ink-soft)] hover:text-[var(--eco-flame)] transition-colors">Bases</Link>
             <Link href="https://wa.me/51994810242" className="text-[var(--eco-ink-soft)] hover:text-[var(--eco-flame)] transition-colors">Soporte</Link>
           </div>
         </div>

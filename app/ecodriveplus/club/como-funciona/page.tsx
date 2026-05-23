@@ -2,15 +2,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Cómo funciona EcoDrive+ Garaje — Membresía anual y FAQ",
-  description: "Mecánica del programa Garaje: Pass anual, bonus por lealtad, beneficios chofer/pasajero, sorteo con notario y acta blockchain.",
-  alternates: { canonical: "https://ecodriveplus.com/garaje/como-funciona" },
+  title: "Cómo funciona EcoDrive+ Club — Membresía anual y FAQ",
+  description: "Mecánica del programa Club: Pass anual, bonus por lealtad, beneficios chofer/pasajero, sorteo con notario y acta blockchain.",
+  alternates: { canonical: "https://ecodriveplus.com/club/como-funciona" },
 };
 
 const FAQ: Array<{ q: string; a: string }> = [
   {
-    q: "¿Qué es Garaje Pass?",
-    a: "Es la membresía anual del programa EcoDrive+ Garaje. Pagás una sola vez S/.99 (o S/.69 si sos pasajero/chofer EcoDrive+) y quedás activo 12 meses. Durante esos 12 meses participás en cada edición del sorteo que se ejecute, con número(s) asignados a tu nombre. El programa NO vende tickets sueltos — la única forma de participar es haciéndose Pass.",
+    q: "¿Qué es Club Pass?",
+    a: "Es la membresía anual del programa EcoDrive+ Club. Pagás una sola vez S/.99 (o S/.69 si sos pasajero/chofer EcoDrive+) y quedás activo 12 meses. Durante esos 12 meses participás en cada edición del sorteo que se ejecute, con número(s) asignados a tu nombre. El programa NO vende tickets sueltos — la única forma de participar es haciéndose Pass.",
   },
   {
     q: "¿Cómo se ejecuta el sorteo?",
@@ -42,7 +42,7 @@ const FAQ: Array<{ q: string; a: string }> = [
   },
   {
     q: "¿Cómo pago?",
-    a: "Yape al 998 102 258 con la glosa que te indicamos (ej: GARAJE-0042). MacroDroid detecta el pago automático y en menos de 2 minutos te llega WhatsApp con tu Pass confirmado.",
+    a: "Yape al 998 102 258 con la glosa que te indicamos (ej: CLUB-0042). MacroDroid detecta el pago automático y en menos de 2 minutos te llega WhatsApp con tu Pass confirmado.",
   },
   {
     q: "¿Cómo entregan el auto al ganador?",
@@ -50,7 +50,7 @@ const FAQ: Array<{ q: string; a: string }> = [
   },
   {
     q: "¿Esto es legal? ¿No necesita autorización Mincetur?",
-    a: "Sí es legal. EcoDrive+ Garaje es un programa de membresía con bonificación de sorteo, amparado en DS 006-2000-ITINCI Art. 2 inc. b. Como solo se vende membresía (Pass anual con beneficios reales del ecosistema EcoDrive+) y NO ticket suelto independiente, no requiere autorización Mincetur. Las bases están notariadas. Reclamos vía INDECOPI Perú.",
+    a: "Sí es legal. EcoDrive+ Club es un programa de membresía con bonificación de sorteo, amparado en DS 006-2000-ITINCI Art. 2 inc. b. Como solo se vende membresía (Pass anual con beneficios reales del ecosistema EcoDrive+) y NO ticket suelto independiente, no requiere autorización Mincetur. Las bases están notariadas. Reclamos vía INDECOPI Perú.",
   },
   {
     q: "¿Quién está detrás del programa?",
@@ -66,10 +66,10 @@ export default function ComoFunciona() {
   return (
     <main className="min-h-screen bg-[#0A0A0A] text-white">
       <section className="max-w-3xl mx-auto px-4 py-16">
-        <Link href="/ecodriveplus/garaje" className="text-[#E1811B] text-sm mb-6 inline-block">
-          ← Volver al Garaje
+        <Link href="/ecodriveplus/club" className="text-[#E1811B] text-sm mb-6 inline-block">
+          ← Volver al Club
         </Link>
-        <h1 className="text-4xl font-bold mb-3">Cómo funciona EcoDrive+ Garaje</h1>
+        <h1 className="text-4xl font-bold mb-3">Cómo funciona EcoDrive+ Club</h1>
         <p className="text-gray-400 mb-10">Todo lo que querés saber del programa.</p>
 
         <div className="space-y-4">
@@ -87,7 +87,7 @@ export default function ComoFunciona() {
         <div className="mt-12 p-6 bg-[#E1811B]/10 border border-[#E1811B]/40 rounded-xl text-center">
           <p className="text-sm text-gray-300 mb-3">¿Más preguntas?</p>
           <a
-            href="https://wa.me/51994810242?text=Hola,%20tengo%20una%20pregunta%20de%20Garaje%20EcoDrive%2B"
+            href="https://wa.me/51994810242?text=Hola,%20tengo%20una%20pregunta%20de%20Club%20EcoDrive%2B"
             className="inline-block bg-[#E1811B] text-black px-6 py-3 rounded-full font-bold"
           >
             Escribinos por WhatsApp

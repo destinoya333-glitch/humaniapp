@@ -33,5 +33,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: "https://novia.activosya.com", lastModified: now, changeFrequency: "monthly", priority: 0.7 },
     { url: "https://pedido.activosya.com", lastModified: now, changeFrequency: "monthly", priority: 0.7 },
     { url: "https://reserva.activosya.com", lastModified: now, changeFrequency: "monthly", priority: 0.7 },
+    { url: "https://ecodriveplus.com/club", lastModified: now, changeFrequency: "daily", priority: 0.95 },
+    { url: "https://ecodriveplus.com/club/como-funciona", lastModified: now, changeFrequency: "weekly", priority: 0.7 },
+    { url: "https://ecodriveplus.com/club/bases", lastModified: now, changeFrequency: "weekly", priority: 0.6 },
   ];
 }

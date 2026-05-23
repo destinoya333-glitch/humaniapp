@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Firma Percy v5 — Para Zoho</title>
+<style>
+body { font-family: Arial, sans-serif; padding: 30px; background: #f5f5f5; }
+.contenedor { max-width: 760px; margin: 0 auto; background: white; padding: 24px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+.instr { background: #fff7e8; border-left: 4px solid #E1811B; padding: 12px 16px; margin-bottom: 18px; font-size: 14px; color: #333; }
+.instr button { background: #E1811B; color: white; border: 0; padding: 8px 14px; border-radius: 4px; font-weight: bold; cursor: pointer; margin-left: 8px; }
+hr { border: none; border-top: 2px dashed #ddd; margin: 25px 0; }
+</style></head>
+<body>
+<div class="contenedor">
+
+<div class="instr">
+<strong>📋 Cómo usar esta firma HTML</strong><br><br>
+1. Click el botón <strong>"Copiar firma"</strong> abajo<br>
+2. Volvé a Zoho Mail → editor de firma<br>
+3. Borrá el texto viejo<br>
+4. Pegá con Ctrl+V<br>
+5. Guardá
+<br><br>
+<button onclick="copiarFirma()">📋 Copiar firma</button>
+<span id="msg" style="margin-left: 12px; color: green; font-weight: bold;"></span>
+</div>
+
+<h3 style="color: #1a4e2b;">Preview de cómo se verá:</h3>
+
+<div id="firma">
+<div style="font-family: Arial, sans-serif; color: #1a1a1a; max-width: 480px;">
+<div style="font-size: 22px; font-weight: bold; color: #1a4e2b; margin-bottom: 0; line-height: 1.1;">Percy Rojas</div>
+<div style="font-size: 12px; color: #E1811B; font-style: italic; margin-bottom: 4px;">Gerente General · Eco Drive Plus S.A.C.</div>
+<div style="border-top: 2px solid #E1811B; width: 260px; margin: 3px 0 6px;"></div>
+<div style="font-size: 12px; line-height: 1.4; color: #333;">
+<div style="margin-bottom: 2px;">
+<span style="display: inline-block; width: 17px; height: 17px; background: #E1811B; color: white; text-align: center; font-weight: bold; font-size: 10px; line-height: 17px; border-radius: 50%; margin-right: 6px; vertical-align: middle;">W</span>
+<a href="https://wa.me/51998102258" style="color: #1a4e2b; text-decoration: none; font-weight: bold;">+51 998 102 258</a>
+<span style="color: #888; font-style: italic; font-size: 11px;">  ·  WhatsApp / llamadas</span>
+</div>
+<div style="margin-bottom: 2px;">
+<span style="display: inline-block; width: 17px; height: 17px; background: #E1811B; color: white; text-align: center; font-weight: bold; font-size: 10px; line-height: 17px; border-radius: 50%; margin-right: 6px; vertical-align: middle;">@</span>
+<a href="mailto:projas@ecodriveplus.com" style="color: #1a4e2b; text-decoration: none; font-weight: bold;">projas@ecodriveplus.com</a>
+</div>
+<div style="margin-bottom: 2px;">
+<span style="display: inline-block; width: 17px; height: 17px; background: #E1811B; color: white; text-align: center; font-weight: bold; font-size: 10px; line-height: 17px; border-radius: 50%; margin-right: 6px; vertical-align: middle;">U</span>
+<a href="https://ecodriveplus.com" style="color: #1a4e2b; text-decoration: none; font-weight: bold;">ecodriveplus.com</a>
+<span style="color: #888; font-style: italic; font-size: 11px;">  ·  RUC 20613413228</span>
+</div>
+</div>
+<div style="border-top: 1px solid #ddd; margin-top: 6px; padding-top: 4px; font-size: 11px; color: #1a4e2b; font-style: italic;">
+Movilidad electrica · Made in Trujillo, Peru
+</div>
+<div style="margin-top: 7px;">
+<a href="https://ecodriveplus.com/club" style="display: block; width: 262px; box-sizing: border-box; background: #1a4e2b; color: white; padding: 7px 0; border-radius: 4px; text-decoration: none; font-size: 12px; font-weight: bold; letter-spacing: 0.4px; text-align: center;">GANA UN AUTO ELECTRICO &raquo;</a>
+</div>
+<div style="margin-top: 5px;">
+<a href="https://ecodriveplus.com" style="text-decoration: none;">
+<img src="https://rfpmvnoaqibqiqxrmheb.supabase.co/storage/v1/object/public/brand-assets/ecodrive/logo-final-naranja-trim.png" alt="EcoDrive+" width="320" style="display: block; width: 320px; height: auto; border: 0;">
+</a>
+</div>
+</div>
+</div>
+
+<hr>
+
+<h3 style="color: #888;">HTML fuente (por si querés editarlo):</h3>
+<textarea id="src" readonly rows="6" style="width: 100%; font-family: monospace; font-size: 11px; border: 1px solid #ddd; padding: 10px;"></textarea>
+
+</div>
+
+<script>
+const firmaHTML = document.getElementById('firma').innerHTML;
+document.getElementById('src').value = firmaHTML;
+
+function copiarFirma() {
+  const node = document.getElementById('firma');
+  const range = document.createRange();
+  range.selectNodeContents(node);
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+  try {
+    document.execCommand('copy');
+    document.getElementById('msg').textContent = '✅ Copiada — andá a Zoho y pegá con Ctrl+V';
+    sel.removeAllRanges();
+    setTimeout(() => { document.getElementById('msg').textContent = ''; }, 8000);
+  } catch (e) {
+    alert('Copialo manual desde el preview');
+  }
+}
+</script>
+</body></html>

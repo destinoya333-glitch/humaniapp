@@ -2,21 +2,21 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Bases legales — EcoDrive+ Garaje",
+  title: "Bases legales — EcoDrive+ Club",
   description: "Bases legales notariadas del programa de membresía con bonificación de sorteo. EcoDrive Plus SAC RUC 20613413228.",
-  alternates: { canonical: "https://ecodriveplus.com/garaje/bases" },
+  alternates: { canonical: "https://ecodriveplus.com/club/bases" },
 };
 
 export default function BasesPage() {
   return (
     <main className="min-h-screen bg-[#0A0A0A] text-white">
       <section className="max-w-3xl mx-auto px-4 py-16">
-        <Link href="/ecodriveplus/garaje" className="text-[#E1811B] text-sm mb-6 inline-block">
-          ← Volver al Garaje
+        <Link href="/ecodriveplus/club" className="text-[#E1811B] text-sm mb-6 inline-block">
+          ← Volver al Club
         </Link>
         <h1 className="text-4xl font-bold mb-3">Bases legales</h1>
         <p className="text-gray-400 mb-10">
-          Programa EcoDrive+ Garaje. Documento en proceso de legalización ante notario Olva Huanchaco.
+          Programa EcoDrive+ Club. Documento en proceso de legalización ante notario Olva Huanchaco.
         </p>
 
         <article className="prose prose-invert max-w-none space-y-6">
@@ -29,7 +29,7 @@ export default function BasesPage() {
           </Clause>
           <Clause n={2} t="Naturaleza del programa">
             <p>
-              Programa de membresía denominado <strong>EcoDrive+ Garaje</strong>, mediante el cual el participante
+              Programa de membresía denominado <strong>EcoDrive+ Club</strong>, mediante el cual el participante
               accede a beneficios tangibles del ecosistema EcoDrive+ y recibe como bonificación uno o más números
               de participación en sorteos de vehículos eléctricos cuando se cumple la meta de venta de la edición vigente.
             </p>
@@ -37,14 +37,14 @@ export default function BasesPage() {
           <Clause n={3} t="Modalidad de participación">
             <ul>
               <li>
-                <strong>Garaje Pass anual</strong>: S/.99 (público) o S/.69 (interno EcoDrive+). Vigencia 12 meses
+                <strong>Club Pass anual</strong>: S/.99 (público) o S/.69 (interno EcoDrive+). Vigencia 12 meses
                 desde la fecha de compra. Otorga 1 número en cada edición que se ejecute durante la vigencia,
                 más bonus por lealtad (1 número adicional por cada edición consumida, hasta 5 totales por Pass por edición).
               </li>
               <li>Cap máximo: 5 Pass activos por DNI.</li>
               <li>
                 Modalidad única. El programa NO ofrece tickets sueltos ni rifas independientes — toda
-                participación deriva exclusivamente de la membresía Garaje Pass.
+                participación deriva exclusivamente de la membresía Club Pass.
               </li>
             </ul>
           </Clause>
@@ -88,7 +88,7 @@ export default function BasesPage() {
                   cualquier tercero.</li>
               <li>El sorteo se transmite en vivo por las cuentas oficiales de EcoDrive+ en Facebook,
                   Instagram y TikTok. La grabación queda publicada permanentemente en
-                  https://ecodriveplus.com/garaje/historial.</li>
+                  https://ecodriveplus.com/club/historial.</li>
             </ul>
           </Clause>
           <Clause n={7} t="Re-rifa y reembolso">
@@ -123,7 +123,7 @@ export default function BasesPage() {
           </Clause>
           <Clause n={11} t="Facturación">
             <p>
-              Cada compra de Garaje Pass genera factura electrónica SUNAT con IGV incluido, emitida bajo el
+              Cada compra de Club Pass genera factura electrónica SUNAT con IGV incluido, emitida bajo el
               RUC 20613413228. El comprobante se envía al email registrado por el miembro en un plazo
               máximo de 48 horas hábiles.
             </p>

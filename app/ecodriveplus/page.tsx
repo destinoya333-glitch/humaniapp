@@ -698,11 +698,11 @@ export default function EcoDrivePlusPage() {
         </div>
       </section>
 
-      {/* === BANDA GARAJE — Sorteo BYD Yuan Pro === */}
+      {/* === BANDA CLUB — Sorteo BYD Yuan Pro === */}
       <section className="relative py-32 border-t border-[var(--eco-line)] overflow-hidden">
         <div className="mx-auto max-w-[1400px] px-6 lg:px-24 grid lg:grid-cols-12 gap-y-16 lg:gap-x-12 items-start">
           <Reveal className="lg:col-span-5">
-            <div className="eco-mono text-[var(--eco-flame)] mb-4">— EcoDrive+ Garaje</div>
+            <div className="eco-mono text-[var(--eco-flame)] mb-4">— EcoDrive+ Club</div>
             <h2 className="eco-display text-[56px] md:text-[88px] leading-[0.95] text-[var(--eco-ink)]">
               Gana un <span className="eco-display-italic text-[var(--eco-flame)]">auto eléctrico.</span>
             </h2>
@@ -716,7 +716,7 @@ export default function EcoDrivePlusPage() {
             </div>
             <div className="mt-10">
               <Magnetic strength={0.3}>
-                <Link href="/ecodriveplus/garaje" className="inline-flex items-center gap-3 px-8 py-5 rounded-full bg-[var(--eco-flame)] text-[var(--eco-bg-deep)] font-semibold eco-mono hover:bg-[var(--eco-flame-soft)] transition-colors">
+                <Link href="/ecodriveplus/club" className="inline-flex items-center gap-3 px-8 py-5 rounded-full bg-[var(--eco-flame)] text-[var(--eco-bg-deep)] font-semibold eco-mono hover:bg-[var(--eco-flame-soft)] transition-colors">
                   Ver el sorteo en vivo
                   <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
                 </Link>
@@ -832,7 +832,7 @@ export default function EcoDrivePlusPage() {
           </div>
           <div className="flex items-center justify-end gap-8 eco-mono">
             <Link href="/" className="text-[var(--eco-ink-soft)] hover:text-[var(--eco-flame)] transition-colors">ActivosYA</Link>
-            <Link href="/ecodriveplus/garaje" className="text-[var(--eco-ink-soft)] hover:text-[var(--eco-flame)] transition-colors">Garaje</Link>
+            <Link href="/ecodriveplus/club" className="text-[var(--eco-ink-soft)] hover:text-[var(--eco-flame)] transition-colors">Club</Link>
             <Link href="/ecodriveplus/sorteos" className="text-[var(--eco-ink-soft)] hover:text-[var(--eco-flame)] transition-colors">Sorteos</Link>
             <a href={PASAJERO_WA} className="text-[var(--eco-ink-soft)] hover:text-[var(--eco-flame)] transition-colors">Soporte</a>
           </div>

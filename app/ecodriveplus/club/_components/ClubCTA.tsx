@@ -7,7 +7,7 @@ type Step = "form" | "reservado" | "error";
 
 const WSP_ADMIN = "51994810242";
 
-export function GarajeCTA(props: {
+export function ClubCTA(props: {
   edicionId: string;
   ticketPublico: number;
   ticketInterno: number;
@@ -35,7 +35,7 @@ export function GarajeCTA(props: {
     if (waDigits.length < 9) { setErrorMsg("WhatsApp debe ser de 9 dígitos"); return; }
     setLoading(true);
     try {
-      const r = await fetch("/api/ecodrive/garaje/reservar", {
+      const r = await fetch("/api/ecodrive/club/reservar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -58,7 +58,7 @@ export function GarajeCTA(props: {
         numero: d.numero_correlativo,
         precio: d.precio,
         expira: d.expira_en,
-        yape_glosa: d.pagar?.yape?.glosa ?? `GARAJE-${d.numero_correlativo}`,
+        yape_glosa: d.pagar?.yape?.glosa ?? `CLUB-${d.numero_correlativo}`,
         reserva_id: d.reserva_id,
       });
       setStep("reservado");
@@ -71,14 +71,14 @@ export function GarajeCTA(props: {
   };
 
   if (step === "reservado" && reservaResult) {
-    const wsConfirm = `https://wa.me/${WSP_ADMIN}?text=${encodeURIComponent(`Hola! Acabo de yapear S/.${reservaResult.precio} por mi Garaje Pass ${reservaResult.yape_glosa}. Mi DNI es ${dni}. Acá va captura:`)}`;
+    const wsConfirm = `https://wa.me/${WSP_ADMIN}?text=${encodeURIComponent(`Hola! Acabo de yapear S/.${reservaResult.precio} por mi Club Pass ${reservaResult.yape_glosa}. Mi DNI es ${dni}. Acá va captura:`)}`;
     return (
       <div className="bg-green-500/10 border border-green-500/40 rounded-2xl p-6 md:p-8">
         <div className="text-center mb-6">
           <div className="text-green-300 text-sm font-bold mb-2">✅ PASS RESERVADO</div>
           <h2 className="text-4xl md:text-5xl font-black text-white">#{reservaResult.numero}</h2>
           <p className="text-gray-300 text-sm mt-2">
-            Garaje Pass anual a nombre de <strong className="text-white">{nombre}</strong>
+            Club Pass anual a nombre de <strong className="text-white">{nombre}</strong>
           </p>
         </div>
 
@@ -114,7 +114,7 @@ export function GarajeCTA(props: {
         <div className="text-center text-xs text-gray-500 space-y-1">
           <p>⏱️ Tu Pass queda reservado por <strong className="text-white">15 minutos</strong>.</p>
           <p>Una vez confirmemos tu pago, tu Pass se activa por 12 meses y participás en cada sorteo del año.</p>
-          <p>Consultá tu Pass en cualquier momento: <a href="/ecodriveplus/garaje/mi-cuenta" className="text-[#E1811B] underline">/garaje/mi-cuenta</a></p>
+          <p>Consultá tu Pass en cualquier momento: <a href="/ecodriveplus/club/mi-cuenta" className="text-[#E1811B] underline">/club/mi-cuenta</a></p>
         </div>
 
         <button onClick={() => { setStep("form"); setReservaResult(null); setDni(""); setNombre(""); setWhatsapp(""); }} className="mt-4 w-full bg-white/5 hover:bg-white/10 text-gray-300 py-2 rounded-lg text-sm transition">
@@ -139,7 +139,7 @@ export function GarajeCTA(props: {
     <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
       <div className="mb-5">
         <div className="flex items-center justify-between mb-2">
-          <span className="font-bold text-lg">👑 Garaje Pass anual</span>
+          <span className="font-bold text-lg">👑 Club Pass anual</span>
           <span className="text-xs bg-[#E1811B] text-black px-2 py-1 rounded-full">12 MESES</span>
         </div>
         <p className="text-sm text-gray-300 mb-3">

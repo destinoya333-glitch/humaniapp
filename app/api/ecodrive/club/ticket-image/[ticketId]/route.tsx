@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { getGarajeClient } from "@/lib/ecodrive/garaje";
+import { getClubClient } from "@/lib/ecodrive/club";
 import { NextRequest } from "next/server";
 
 export const runtime = "nodejs";
@@ -36,11 +36,11 @@ type TicketData = {
 };
 
 async function getTicket(ticketId: string): Promise<TicketData | null> {
-  const sb = getGarajeClient();
+  const sb = getClubClient();
   const { data } = await sb
-    .from("garaje_tickets")
+    .from("club_tickets")
     .select(
-      "id,numero_correlativo,paid_at,created_at,garaje_ediciones(numero_edicion,nombre,premio_descripcion),garaje_miembros(nombre,dni,whatsapp)",
+      "id,numero_correlativo,paid_at,created_at,club_ediciones(numero_edicion,nombre,premio_descripcion),club_miembros(nombre,dni,whatsapp)",
     )
     .eq("id", ticketId)
     .maybeSingle();
@@ -50,16 +50,16 @@ async function getTicket(ticketId: string): Promise<TicketData | null> {
     numero_correlativo: number;
     paid_at: string | null;
     created_at: string;
-    garaje_ediciones: TicketData["edicion"];
-    garaje_miembros: TicketData["miembro"];
+    club_ediciones: TicketData["edicion"];
+    club_miembros: TicketData["miembro"];
   };
   return {
     id: d.id,
     numero_correlativo: d.numero_correlativo,
     paid_at: d.paid_at,
     created_at: d.created_at,
-    edicion: d.garaje_ediciones,
-    miembro: d.garaje_miembros,
+    edicion: d.club_ediciones,
+    miembro: d.club_miembros,
   };
 }
 
@@ -71,7 +71,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ ticketId: s
     return new Response("ticket not found", { status: 404 });
   }
   const starDataUri = await loadStarDataUri(origin);
-  const verifyUrl = `${origin}/ecodriveplus/garaje?verify=${t.id}`;
+  const verifyUrl = `${origin}/ecodriveplus/club?verify=${t.id}`;
   const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(verifyUrl)}`;
 
   const fechaCompra = new Date(t.paid_at ?? t.created_at).toLocaleDateString("es-PE", {
@@ -106,7 +106,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ ticketId: s
           )}
           <div style={{ display: "flex", flexDirection: "column", lineHeight: 1 }}>
             <div style={{ fontSize: 32, fontWeight: 600 }}>
-              EcoDrive<span style={{ color: "#E08821" }}>+</span> Garaje
+              EcoDrive<span style={{ color: "#E08821" }}>+</span> Club
             </div>
             <div
               style={{
@@ -239,7 +239,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ ticketId: s
                 letterSpacing: "0.16em",
               }}
             >
-              ecodriveplus.com/garaje
+              ecodriveplus.com/club
             </div>
           </div>
           {/* QR */}

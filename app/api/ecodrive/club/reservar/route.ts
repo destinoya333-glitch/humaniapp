@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
-  getGarajeClient,
+  getClubClient,
   normalizeWhatsapp,
   isValidDni,
   pricingFor,
   type Modalidad,
   type TipoPerfil,
-} from "@/lib/ecodrive/garaje";
+} from "@/lib/ecodrive/club";
 
 export const dynamic = "force-dynamic";
 
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
   // Programa full-membresía: solo aceptamos Pass anual. El ticket suelto se descontinuó
   // (requería autorización MINCETUR Form. 002; el Pass se ampara en DS 006-2000-ITINCI Art. 2 inc. b).
   if (modalidad !== "pass")
-    return NextResponse.json({ error: "solo se vende Garaje Pass anual" }, { status: 400 });
+    return NextResponse.json({ error: "solo se vende Club Pass anual" }, { status: 400 });
   if (!isValidDni(dni || ""))
     return NextResponse.json({ error: "DNI invalido (8 digitos)" }, { status: 400 });
   const wa = normalizeWhatsapp(whatsapp || "");
@@ -46,20 +46,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "nombre invalido" }, { status: 400 });
   const perfil: TipoPerfil = (tipo_perfil ?? "publico") as TipoPerfil;
 
-  const sb = getGarajeClient();
+  const sb = getClubClient();
 
   let edId = edicion_id;
   if (!edId) {
-    const { data: actual } = await sb.rpc("garaje_edicion_actual");
+    const { data: actual } = await sb.rpc("club_edicion_actual");
     edId = actual?.[0]?.edicion_id;
   }
 
   if (modalidad === "pass") {
-    const { data: prog } = await sb.from("garaje_programa").select("pass_cap_por_dni").single();
-    const { data: miembro } = await sb.from("garaje_miembros").select("id").eq("dni", dni!).maybeSingle();
+    const { data: prog } = await sb.from("club_programa").select("pass_cap_por_dni").single();
+    const { data: miembro } = await sb.from("club_miembros").select("id").eq("dni", dni!).maybeSingle();
     if (miembro) {
       const { count } = await sb
-        .from("garaje_pass")
+        .from("club_pass")
         .select("id", { count: "exact", head: true })
         .eq("miembro_id", miembro.id)
         .eq("estado", "activo");
@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
   let numero = numero_correlativo;
   if (!numero) {
     const { data: ed } = await sb
-      .from("garaje_ediciones")
+      .from("club_ediciones")
       .select("meta_tickets")
       .eq("id", edId!)
       .single();
@@ -82,13 +82,13 @@ export async function POST(req: NextRequest) {
     for (let i = 0; i < 20; i++) {
       numero = 1 + Math.floor(Math.random() * meta);
       const { data: tk } = await sb
-        .from("garaje_tickets")
+        .from("club_tickets")
         .select("id")
         .eq("edicion_id", edId!)
         .eq("numero_correlativo", numero)
         .maybeSingle();
       const { data: rv } = await sb
-        .from("garaje_reservas")
+        .from("club_reservas")
         .select("id")
         .eq("edicion_id", edId!)
         .eq("numero_correlativo", numero)
@@ -102,7 +102,7 @@ export async function POST(req: NextRequest) {
   const expira = new Date(Date.now() + RESERVA_TTL_MIN * 60_000).toISOString();
 
   const { data: reserva, error } = await sb
-    .from("garaje_reservas")
+    .from("club_reservas")
     .insert({
       edicion_id: edId,
       numero_correlativo: numero,
@@ -132,10 +132,10 @@ export async function POST(req: NextRequest) {
       yape: {
         celular_destino: "998102258",
         monto: Number(reserva.precio_esperado),
-        glosa: `GARAJE-${reserva.numero_correlativo}`,
+        glosa: `CLUB-${reserva.numero_correlativo}`,
         qr_url: yape,
       },
-      niubiz_form_url: `/ecodriveplus/garaje/pagar?reserva=${reserva.id}`,
+      niubiz_form_url: `/ecodriveplus/club/pagar?reserva=${reserva.id}`,
     },
   });
 }

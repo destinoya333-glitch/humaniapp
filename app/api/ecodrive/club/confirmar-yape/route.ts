@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getGarajeClient } from "@/lib/ecodrive/garaje";
+import { getClubClient } from "@/lib/ecodrive/club";
 import { sendImage, sendText, isMetaConfigured } from "@/lib/ecodrive/wa-send";
 
 export const dynamic = "force-dynamic";
@@ -18,7 +18,7 @@ async function notifyTicketReady(opts: {
 }): Promise<void> {
   if (!isMetaConfigured()) return;
   const base = publicBase(opts.req);
-  const imageUrl = `${base}/api/ecodrive/garaje/ticket-image/${opts.ticketId}`;
+  const imageUrl = `${base}/api/ecodrive/club/ticket-image/${opts.ticketId}`;
   const caption =
     `¡Listo, ${opts.nombre.split(" ")[0] ?? ""}! Tu boleto #${String(
       opts.numeroCorrelativo,
@@ -28,7 +28,7 @@ async function notifyTicketReady(opts: {
   try {
     await sendImage(opts.whatsapp, imageUrl, caption);
   } catch (e) {
-    console.warn("[garaje/confirmar-yape] sendImage falló, fallback a texto", e);
+    console.warn("[club/confirmar-yape] sendImage falló, fallback a texto", e);
     try {
       await sendText(
         opts.whatsapp,
@@ -36,7 +36,7 @@ async function notifyTicketReady(opts: {
           `Mira tu boleto: ${imageUrl}`,
       );
     } catch (e2) {
-      console.warn("[garaje/confirmar-yape] sendText fallback también falló", e2);
+      console.warn("[club/confirmar-yape] sendText fallback también falló", e2);
     }
   }
 }
@@ -53,23 +53,23 @@ async function notifyPassReady(opts: {
   if (!isMetaConfigured()) return;
   const base = publicBase(opts.req);
   const lines = [
-    `¡Bienvenido al Garaje EcoDrive+, ${opts.nombre.split(" ")[0] ?? ""}!`,
+    `¡Bienvenido al Club EcoDrive+, ${opts.nombre.split(" ")[0] ?? ""}!`,
     ``,
     `Tu Pass anual N° ${opts.numeroPass} está activo hasta ${opts.fechaFin}. Participas en TODOS los sorteos del año.`,
   ];
   if (opts.ticketBonusId && opts.ticketBonusNumero) {
     lines.push(``, `Tu primer boleto: #${String(opts.ticketBonusNumero).padStart(4, "0")}.`);
   }
-  lines.push(``, `Ver tu cuenta: ${base}/ecodriveplus/garaje/mi-cuenta`);
+  lines.push(``, `Ver tu cuenta: ${base}/ecodriveplus/club/mi-cuenta`);
   try {
     if (opts.ticketBonusId) {
-      const imageUrl = `${base}/api/ecodrive/garaje/ticket-image/${opts.ticketBonusId}`;
+      const imageUrl = `${base}/api/ecodrive/club/ticket-image/${opts.ticketBonusId}`;
       await sendImage(opts.whatsapp, imageUrl, lines.join("\n"));
     } else {
       await sendText(opts.whatsapp, lines.join("\n"));
     }
   } catch (e) {
-    console.warn("[garaje/confirmar-yape] notifyPass falló", e);
+    console.warn("[club/confirmar-yape] notifyPass falló", e);
   }
 }
 
@@ -85,17 +85,17 @@ export async function POST(req: NextRequest) {
   if (!op_id || !monto)
     return NextResponse.json({ error: "op_id y monto requeridos" }, { status: 400 });
 
-  const sb = getGarajeClient();
+  const sb = getClubClient();
 
   let numero: number | null = null;
-  const refMatch = (glosa || mensaje || "").match(/GARAJE[-\s]?(\d+)/i);
+  const refMatch = (glosa || mensaje || "").match(/CLUB[-\s]?(\d+)/i);
   if (refMatch) numero = Number(refMatch[1]);
 
   let reserva: { id: string; edicion_id: string; modalidad: string; numero_correlativo: number; dni: string; whatsapp: string; nombre: string; tipo_perfil: string; precio_esperado: number } | null = null;
 
   if (numero) {
     const { data } = await sb
-      .from("garaje_reservas")
+      .from("club_reservas")
       .select("id,edicion_id,modalidad,numero_correlativo,dni,whatsapp,nombre,tipo_perfil,precio_esperado")
       .eq("numero_correlativo", numero)
       .gt("expira_en", new Date().toISOString())
@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
   if (!reserva && telefono_emisor) {
     const tel = telefono_emisor.replace(/\D/g, "").slice(-9);
     const { data } = await sb
-      .from("garaje_reservas")
+      .from("club_reservas")
       .select("id,edicion_id,modalidad,numero_correlativo,dni,whatsapp,nombre,tipo_perfil,precio_esperado")
       .like("whatsapp", `%${tel}%`)
       .gt("expira_en", new Date().toISOString())
@@ -118,7 +118,7 @@ export async function POST(req: NextRequest) {
   }
 
   if (!reserva) {
-    await sb.from("garaje_pagos").insert({
+    await sb.from("club_pagos").insert({
       tipo: "ticket",
       metodo: "yape",
       monto,
@@ -135,10 +135,10 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  let { data: miembro } = await sb.from("garaje_miembros").select("*").eq("dni", reserva.dni).maybeSingle();
+  let { data: miembro } = await sb.from("club_miembros").select("*").eq("dni", reserva.dni).maybeSingle();
   if (!miembro) {
     const ins = await sb
-      .from("garaje_miembros")
+      .from("club_miembros")
       .insert({
         nombre: reserva.nombre,
         dni: reserva.dni,
@@ -153,7 +153,7 @@ export async function POST(req: NextRequest) {
 
   // Idempotencia: si ya existe un ticket con este op_id Yape, no duplicar.
   const { data: yaExiste } = await sb
-    .from("garaje_tickets")
+    .from("club_tickets")
     .select("id,numero_correlativo")
     .eq("payment_intent_id", op_id)
     .maybeSingle();
@@ -169,7 +169,7 @@ export async function POST(req: NextRequest) {
 
   // Edicion info para captions del boleto
   const { data: edInfo } = await sb
-    .from("garaje_ediciones")
+    .from("club_ediciones")
     .select("nombre")
     .eq("id", reserva.edicion_id)
     .maybeSingle();
@@ -177,7 +177,7 @@ export async function POST(req: NextRequest) {
 
   if (reserva.modalidad === "ticket") {
     const { data: tk, error } = await sb
-      .from("garaje_tickets")
+      .from("club_tickets")
       .insert({
         edicion_id: reserva.edicion_id,
         numero_correlativo: reserva.numero_correlativo,
@@ -192,7 +192,7 @@ export async function POST(req: NextRequest) {
       .single();
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-    await sb.from("garaje_pagos").insert({
+    await sb.from("club_pagos").insert({
       tipo: "ticket",
       ticket_id: tk.id,
       miembro_id: miembro.id,
@@ -201,9 +201,9 @@ export async function POST(req: NextRequest) {
       estado: "confirmado",
       raw_payload: body,
     });
-    await sb.from("garaje_reservas").delete().eq("id", reserva.id);
+    await sb.from("club_reservas").delete().eq("id", reserva.id);
     await sb
-      .from("garaje_miembros")
+      .from("club_miembros")
       .update({ total_gastado: Number(miembro.total_gastado) + monto })
       .eq("id", miembro.id);
 
@@ -228,12 +228,12 @@ export async function POST(req: NextRequest) {
   const fechaFin = new Date();
   fechaFin.setFullYear(fechaFin.getFullYear() + 1);
   const { count: passCount } = await sb
-    .from("garaje_pass")
+    .from("club_pass")
     .select("id", { count: "exact", head: true })
     .eq("miembro_id", miembro.id);
 
   const { data: pass, error } = await sb
-    .from("garaje_pass")
+    .from("club_pass")
     .insert({
       miembro_id: miembro.id,
       numero_pass_en_dni: (passCount ?? 0) + 1,
@@ -248,7 +248,7 @@ export async function POST(req: NextRequest) {
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  await sb.from("garaje_pagos").insert({
+  await sb.from("club_pagos").insert({
     tipo: "pass",
     pass_id: pass.id,
     miembro_id: miembro.id,
@@ -262,13 +262,13 @@ export async function POST(req: NextRequest) {
   let ticketBonusNumero: number | null = null;
   if (reserva.edicion_id) {
     const { data: ed } = await sb
-      .from("garaje_ediciones")
+      .from("club_ediciones")
       .select("estado")
       .eq("id", reserva.edicion_id)
       .single();
     if (ed?.estado === "abierta") {
       const { data: maxNum } = await sb
-        .from("garaje_tickets")
+        .from("club_tickets")
         .select("numero_correlativo")
         .eq("edicion_id", reserva.edicion_id)
         .order("numero_correlativo", { ascending: false })
@@ -276,7 +276,7 @@ export async function POST(req: NextRequest) {
         .maybeSingle();
       const next = (maxNum?.numero_correlativo ?? 0) + 1;
       const { data: bonus } = await sb
-        .from("garaje_tickets")
+        .from("club_tickets")
         .insert({
           edicion_id: reserva.edicion_id,
           numero_correlativo: next,
@@ -295,9 +295,9 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  await sb.from("garaje_reservas").delete().eq("id", reserva.id);
+  await sb.from("club_reservas").delete().eq("id", reserva.id);
   await sb
-    .from("garaje_miembros")
+    .from("club_miembros")
     .update({ total_gastado: Number(miembro.total_gastado) + monto })
     .eq("id", miembro.id);
 

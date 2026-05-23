@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getGarajeClient } from "@/lib/ecodrive/garaje";
+import { getClubClient } from "@/lib/ecodrive/club";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +27,7 @@ interface CertificateData {
 }
 
 async function lookupByCertNo(cie: string): Promise<CertificateData | null> {
-  const sb = getGarajeClient();
+  const sb = getClubClient();
   const cleaned = cie.trim().toUpperCase();
   const m = cleaned.match(/^CIE-([0-9A-F]{8})$/);
   if (m) {

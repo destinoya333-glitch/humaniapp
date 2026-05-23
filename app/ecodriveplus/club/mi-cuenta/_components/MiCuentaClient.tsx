@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 type Pass = { id: string; numero_pass_en_dni: number; fecha_inicio: string; fecha_fin: string; estado: string; ediciones_consumidas: number };
-type Ticket = { id: string; numero_correlativo: number; origen: string; estado: string; paid_at: string | null; garaje_ediciones: { numero_edicion: number; nombre: string; estado: string } | null };
+type Ticket = { id: string; numero_correlativo: number; origen: string; estado: string; paid_at: string | null; club_ediciones: { numero_edicion: number; nombre: string; estado: string } | null };
 type Miembro = { nombre: string; dni: string; whatsapp: string; tipo_perfil: string; total_gastado: number };
 
 export function MiCuentaClient() {
@@ -16,7 +16,7 @@ export function MiCuentaClient() {
     setLoading(true);
     setErr("");
     try {
-      const r = await fetch(`/api/ecodrive/garaje/mis-numeros?whatsapp=${encodeURIComponent(wa)}`);
+      const r = await fetch(`/api/ecodrive/club/mis-numeros?whatsapp=${encodeURIComponent(wa)}`);
       const d = await r.json();
       if (!r.ok) setErr(d.error || "error");
       else setData(d);
@@ -54,14 +54,14 @@ export function MiCuentaClient() {
           {!data.miembro ? (
             <div className="bg-yellow-500/10 border border-yellow-500/40 rounded-xl p-6 text-center">
               <p className="text-yellow-200 mb-3">No encontramos compras a este número.</p>
-              <a href="/ecodriveplus/garaje" className="bg-[#E1811B] text-black px-5 py-2 rounded font-bold inline-block">
-                Hacerme Garaje Pass
+              <a href="/ecodriveplus/club" className="bg-[#E1811B] text-black px-5 py-2 rounded font-bold inline-block">
+                Hacerme Club Pass
               </a>
             </div>
           ) : (
             <div className="space-y-6">
               <div className="bg-white/5 border border-white/10 rounded-xl p-5">
-                <p className="text-sm text-gray-400">Miembro Garaje</p>
+                <p className="text-sm text-gray-400">Miembro Club</p>
                 <h2 className="text-2xl font-bold mb-2">{data.miembro.nombre}</h2>
                 <div className="text-sm text-gray-300 grid grid-cols-2 gap-2">
                   <div>DNI: <strong>{data.miembro.dni}</strong></div>
@@ -100,7 +100,7 @@ export function MiCuentaClient() {
                         <div>
                           <p className="font-bold text-[#E1811B]">#{t.numero_correlativo}</p>
                           <p className="text-xs text-gray-400">
-                            Edición #{t.garaje_ediciones?.numero_edicion ?? "?"} · {t.garaje_ediciones?.nombre} · origen: {t.origen}
+                            Edición #{t.club_ediciones?.numero_edicion ?? "?"} · {t.club_ediciones?.nombre} · origen: {t.origen}
                           </p>
                         </div>
                         <span className={`text-xs px-2 py-1 rounded ${
@@ -117,8 +117,8 @@ export function MiCuentaClient() {
               {data.tickets.length === 0 && data.pass.length === 0 && (
                 <div className="bg-yellow-500/10 border border-yellow-500/40 rounded-xl p-6 text-center">
                   <p className="text-yellow-200 mb-3">Todavía no tenés Pass activo.</p>
-                  <a href="/ecodriveplus/garaje" className="bg-[#E1811B] text-black px-5 py-2 rounded font-bold inline-block">
-                    Hacerme Garaje Pass
+                  <a href="/ecodriveplus/club" className="bg-[#E1811B] text-black px-5 py-2 rounded font-bold inline-block">
+                    Hacerme Club Pass
                   </a>
                 </div>
               )}

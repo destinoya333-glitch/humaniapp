@@ -9,11 +9,11 @@ type Props = {
 };
 
 /**
- * Galeria de fotos del premio Garaje.
+ * Galeria de fotos del premio Club.
  * Foto grande arriba (aspect 4/3) con Ken Burns + crossfade al cambiar.
  * Barra de thumbnails abajo con prev/next + scroll horizontal.
  */
-export default function GarajePhotoCarousel({ photos, alt }: Props) {
+export default function ClubPhotoCarousel({ photos, alt }: Props) {
   const [index, setIndex] = useState(0);
   const imgRef = useRef<HTMLImageElement>(null);
   const stripRef = useRef<HTMLDivElement>(null);

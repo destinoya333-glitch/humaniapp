@@ -37,11 +37,11 @@
       "schedule": "0 14 * * *"
     },
     {
-      "path": "/api/cron/garaje-cleanup-reservas",
+      "path": "/api/cron/club-cleanup-reservas",
       "schedule": "0 6 * * *"
     },
     {
-      "path": "/api/cron/garaje-cerrar-edicion-completa",
+      "path": "/api/cron/club-cerrar-edicion-completa",
       "schedule": "0 7 * * *"
     }
   ]

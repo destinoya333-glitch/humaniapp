@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/ecodrive/verifier-auth";
-import { getGarajeClient } from "@/lib/ecodrive/garaje";
+import { getClubClient } from "@/lib/ecodrive/club";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
   // depender de que haya un conductor real en BD con ese DNI.
   if (dni === "12345678") {
     try {
-      await getGarajeClient().from("verifier_lookups").insert({
+      await getClubClient().from("verifier_lookups").insert({
         verifier_user: session.user,
         entidad: session.entidad,
         dni_query: dni,
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  const sb = getGarajeClient();
+  const sb = getClubClient();
   const { data: driver } = await sb
     .from("v2_drivers")
     .select("id, dni, status, total_trips, rating, created_at")
