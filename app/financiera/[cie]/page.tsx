@@ -164,6 +164,16 @@ function SampleConstancia({ data }: { data: SampleCertificate }) {
   const printCSS = `
     @page { size: A4; margin: 0.8cm 1.2cm; }
 
+    /* CRITICO: forzar a Chrome/Edge/Safari/Firefox a IMPRIMIR los colores de
+       fondo (tabla naranja, resumen, banner). Sin esto, cuando el usuario
+       guarda como PDF, los bg-color se eliminan y queda un certificado sin
+       color = "formato antiguo" segun Percy. */
+    .constancia-paper, .constancia-paper * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      color-adjust: exact !important;
+    }
+
     /* Compactacion BASE — aplica siempre */
     .constancia-paper, .constancia-paper * { box-sizing: border-box; }
     body { font-size: 9pt; line-height: 1.35; }
