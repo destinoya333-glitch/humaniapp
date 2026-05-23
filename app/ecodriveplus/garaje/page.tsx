@@ -14,14 +14,14 @@ const HERO_IMG = "https://rfpmvnoaqibqiqxrmheb.supabase.co/storage/v1/object/pub
 const LOCAL_HERO = "/ecodriveplus/byd-yuan-pro.jpg";
 
 export const metadata: Metadata = {
-  title: "EcoDrive+ Garaje — Sorteamos un BYD Yuan Pro 2023",
+  title: "EcoDrive+ Garaje — Membresía anual que sortea un BYD Yuan Pro 2023",
   description:
-    "Sorteo presencial con notario público y casino oficial. Ticket S/.40 (S/.30 interno EcoDrive+). Pass anual S/.99 (S/.69 interno) participa en todos los sorteos del año.",
+    "Programa de membresía con bonificación de sorteo. Garaje Pass anual S/.99 (S/.69 interno EcoDrive+). Participás en cada edición del año + bonus por lealtad.",
   alternates: { canonical: "https://ecodriveplus.com/garaje" },
   openGraph: {
     type: "website",
-    title: "Gana un BYD Yuan Pro 2023 — EcoDrive+ Garaje",
-    description: "Sorteo presencial con notario. 3,000 tickets de S/.40. Pass anual S/.99 participa todo el año.",
+    title: "Membresía Garaje EcoDrive+ — Gana un BYD Yuan Pro 2023",
+    description: "Pass anual S/.99 (S/.69 interno). Participás en todos los sorteos del año. Notario público + acta blockchain.",
     url: "https://ecodriveplus.com/garaje",
     siteName: "EcoDrive+",
     images: [{ url: HERO_IMG, width: 1200, height: 800, alt: "BYD Yuan Pro 2023 — EcoDrive+ Garaje" }],
@@ -29,8 +29,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Gana un BYD Yuan Pro 2023 — EcoDrive+ Garaje",
-    description: "Sorteo presencial con notario. Tickets desde S/.30. Pass anual desde S/.69.",
+    title: "Membresía Garaje EcoDrive+ — Gana un BYD Yuan Pro 2023",
+    description: "Pass anual desde S/.69. Sorteo presencial con notario. Participás en cada edición del año.",
     images: [HERO_IMG],
   },
 };
@@ -113,11 +113,11 @@ export default async function GarajePage() {
         "@context": "https://schema.org",
         "@type": "Event",
         name: "Sorteo BYD Yuan Pro 2023 — EcoDrive+ Garaje Edición #1",
-        description: "Sorteo presencial con notario público y casino oficial. 3,000 tickets de S/.40. Garaje Pass anual desde S/.69.",
+        description: "Sorteo presencial con notario público y casino oficial entre miembros del programa Garaje Pass anual.",
         image: HERO_IMG,
         organizer: { "@type": "Organization", name: "EcoDrive Plus SAC", url: "https://ecodriveplus.com" },
         location: { "@type": "Place", name: "Trujillo, La Libertad, Perú" },
-        offers: { "@type": "Offer", price: "40", priceCurrency: "PEN", availability: "https://schema.org/InStock", url: "https://ecodriveplus.com/garaje" },
+        offers: { "@type": "Offer", price: "99", priceCurrency: "PEN", availability: "https://schema.org/InStock", url: "https://ecodriveplus.com/garaje", category: "Membership" },
         eventAttendanceMode: "https://schema.org/OnlineEventAttendanceMode",
       })}</Script>
 
@@ -162,29 +162,29 @@ export default async function GarajePage() {
           <div className="lg:col-span-6 relative">
             <Reveal as="div" className="flex items-center gap-3 mb-10">
               <span className="h-px w-12 bg-[var(--eco-flame)]" />
-              <span className="eco-mono text-[var(--eco-flame)]">N° 001 · 3,000 TICKETS</span>
+              <span className="eco-mono text-[var(--eco-flame)]">EDICIÓN 001 · MEMBRESÍA ANUAL</span>
             </Reveal>
 
             <h1 className="eco-display text-[58px] sm:text-[80px] md:text-[104px] xl:text-[128px] text-[var(--eco-ink)]">
-              <span className="block"><WordReveal text="Gana un" /></span>
+              <span className="block"><WordReveal text="Hazte Pass," /></span>
               <span className="block eco-display-italic text-[var(--eco-flame)] -mt-2 md:-mt-4">
-                <WordReveal text="auto eléctrico" delay={0.18} />
+                <WordReveal text="gana un auto" delay={0.18} />
               </span>
-              <span className="block -mt-2 md:-mt-4"><WordReveal text="cada 3,000" delay={0.34} /></span>
-              <span className="block -mt-2 md:-mt-4 eco-display-italic text-[var(--eco-flame)]"><WordReveal text="tickets." delay={0.5} /></span>
+              <span className="block -mt-2 md:-mt-4"><WordReveal text="eléctrico" delay={0.34} /></span>
+              <span className="block -mt-2 md:-mt-4 eco-display-italic text-[var(--eco-flame)]"><WordReveal text="cada edición." delay={0.5} /></span>
             </h1>
 
             <Reveal delay={0.85} className="mt-10 max-w-md text-[17px] md:text-[18px] text-[var(--eco-ink-soft)] leading-[1.55]">
               <p>
-                Programa permanente. Sin fecha fija. El sorteo se realiza al venderse el último ticket de cada edición.{" "}
+                Membresía anual S/. 99 (S/. 69 interno EcoDrive+). Participás en <strong className="text-[var(--eco-ink)]">cada sorteo del año</strong> + bonus por lealtad.{" "}
                 <strong className="text-[var(--eco-ink)]">Notario público + casino oficial + acta blockchain.</strong>
               </p>
             </Reveal>
 
             <Reveal delay={1.05} className="mt-12 flex flex-wrap gap-x-6 gap-y-3 eco-mono text-[var(--eco-ink-mute)]">
-              <span>⌗ Ticket S/. 40</span>
-              <span>⌗ Pasajero/Chofer Eco S/. 30</span>
               <span>⌗ Pass anual S/. 99</span>
+              <span>⌗ Interno EcoDrive+ S/. 69</span>
+              <span>⌗ Hasta 5 Pass por DNI</span>
               <span>⌗ RUC 20613413228</span>
             </Reveal>
 
@@ -266,9 +266,8 @@ export default async function GarajePage() {
                   </Link>
                 </Magnetic>
                 <p className="eco-mono text-[var(--eco-ink-mute)]">
-                  Meta: <strong className="text-[var(--eco-ink)]">{preview.meta_tickets.toLocaleString("es-PE")} tickets</strong>{" · "}
-                  Ticket <strong className="text-[var(--eco-ink)]">S/. {Number(preview.ticket_precio_publico || programa?.ticket_precio_publico || 40)}</strong>{" "}
-                  (S/. {Number(preview.ticket_precio_interno || programa?.ticket_precio_interno || 30)} interno)
+                  Garaje Pass anual <strong className="text-[var(--eco-ink)]">S/. {Number(programa?.pass_precio_publico ?? 99)}</strong>{" "}
+                  (S/. {Number(programa?.pass_precio_interno ?? 69)} interno EcoDrive+) · Meta {preview.meta_tickets.toLocaleString("es-PE")} por edición
                 </p>
               </div>
             </Reveal>
@@ -302,9 +301,9 @@ export default async function GarajePage() {
           <div className="grid md:grid-cols-3 gap-8 relative">
             <div aria-hidden className="hidden md:block absolute top-12 left-[8%] right-[8%] h-px bg-gradient-to-r from-transparent via-[var(--eco-flame)] to-transparent opacity-40" />
             {[
-              ["01", "Eliges", "Ticket suelto S/. 40 (S/. 30 si eres pasajero o chofer EcoDrive+) o Garaje Pass anual S/. 99 (S/. 69 interno) y participas todo el año."],
-              ["02", "Pagas", "Yape o tarjeta. En menos de 2 minutos tu número queda confirmado por WhatsApp."],
-              ["03", "Participas", "Al venderse el ticket #3,000 se transmite el sorteo en vivo. Notario público + casino oficial sacan tu número del ánfora."],
+              ["01", "Te haces Pass", "Garaje Pass anual S/. 99 (S/. 69 si sos pasajero o chofer EcoDrive+). Vigencia 12 meses desde la compra."],
+              ["02", "Pagas", "Yape al 998 102 258. En menos de 2 minutos tu Pass queda activado y recibís número por WhatsApp."],
+              ["03", "Participás todo el año", "En cada edición que se ejecuta durante tu vigencia participás con número(s). Bonus de lealtad +1 por edición consumida (cap 5)."],
             ].map(([code, title, desc], i) => (
               <Reveal key={code} delay={i * 0.12} className="relative pt-12">
                 <div className="absolute -top-2 left-0 eco-mono text-[var(--eco-flame)]">PASO {code}</div>
@@ -380,7 +379,7 @@ export default async function GarajePage() {
           <Reveal>
             <div className="eco-mono text-[var(--eco-flame)] mb-4">— Recordatorio</div>
             <h3 className="eco-display text-[44px] sm:text-[60px] md:text-[88px] leading-[0.95] text-[var(--eco-ink)]">
-              Cada ticket es <span className="eco-display-italic text-[var(--eco-flame)]">un asiento al volante.</span>
+              Tu Pass es <span className="eco-display-italic text-[var(--eco-flame)]">un asiento al volante.</span>
             </h3>
           </Reveal>
         </div>
