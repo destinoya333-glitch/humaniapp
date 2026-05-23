@@ -22,6 +22,34 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "DNI inválido (7-12 dígitos)" }, { status: 400 });
   }
 
+  // DNI demo: 12345678 = Juan Pérez Ramírez del certificado modelo. Permite a
+  // las cajas probar el flujo completo (login → DNI → certificado) sin
+  // depender de que haya un conductor real en BD con ese DNI.
+  if (dni === "12345678") {
+    try {
+      await getGarajeClient().from("verifier_lookups").insert({
+        verifier_user: session.user,
+        entidad: session.entidad,
+        dni_query: dni,
+        found: true,
+      });
+    } catch {
+      /* tabla puede no existir aun */
+    }
+    return NextResponse.json({
+      ok: true,
+      found: true,
+      driver: {
+        affiliated: true,
+        status: "active",
+        total_trips: 3485,
+        rating: 4.87,
+        affiliated_since: "2025-05-01",
+      },
+      message: "Conductor demo afiliado (Juan Pérez Ramírez).",
+    });
+  }
+
   const sb = getGarajeClient();
   const { data: driver } = await sb
     .from("v2_drivers")
