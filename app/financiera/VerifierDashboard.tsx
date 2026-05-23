@@ -22,7 +22,7 @@ function sampleUrlFor(user: string, entidad: string): string {
     else if (e.includes("huancayo")) cie = "CIE-HCO-2026-00189";
     else cie = "CIE-TRU-2026-00187";
   }
-  return `/financiera/${cie}?print=1`;
+  return `/financiera/${cie}`;
 }
 
 interface DriverResult {
@@ -206,7 +206,7 @@ export function VerifierDashboard({ user, entidad }: { user: string; entidad: st
             </div>
             <h2 className="text-xl font-bold mb-3">Vea cómo se ve el documento.</h2>
             <p className="text-sm text-[#C8C0B5] leading-relaxed mb-5">
-              Descargue una constancia de muestra con datos ficticios para evaluar el formato, firma digital, sello, QR de verificación y hash anti-falsificación.
+              Constancia de muestra con datos ficticios para evaluar el formato, firma, sello, QR de verificación y hash anti-falsificación.
             </p>
             <a
               href={sampleUrlFor(user, entidad)}
@@ -214,7 +214,7 @@ export function VerifierDashboard({ user, entidad }: { user: string; entidad: st
               rel="noreferrer"
               className="inline-flex items-center gap-2 rounded-lg bg-[#E08821] hover:bg-[#F3A852] text-[#0A0908] font-semibold px-5 py-3 uppercase tracking-widest text-xs transition w-full justify-center"
             >
-              📄 Descargar constancia modelo
+              📄 Ver constancia modelo
             </a>
           </div>
 
