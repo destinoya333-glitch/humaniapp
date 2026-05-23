@@ -162,8 +162,28 @@ function SampleConstancia({ data, autoPrint = false }: { data: SampleCertificate
   const verifyUrl = `https://ecodriveplus.com/financiera/${data.cie}`;
   const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(verifyUrl)}`;
 
+  // Reglas @page + @media print para que la constancia encaje en UNA hoja A4
+  // (igual que el HTML offline). Sin esto el render desborda a 2 hojas por
+  // el padding/shadow del <main> y el banner "Verificación online" extra.
+  const printCSS = `
+    @page { size: A4; margin: 1.4cm; }
+    @media print {
+      html, body { background: white !important; }
+      body { font-size: 9.5pt !important; }
+      .constancia-shell { padding: 0 !important; min-height: auto !important; background: white !important; }
+      .constancia-paper {
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+      }
+      .no-print { display: none !important; }
+    }
+  `;
+
   return (
-    <main style={{ background: "#f5f3f0", minHeight: "100vh", padding: "24px 12px" }}>
+    <main className="constancia-shell" style={{ background: "#f5f3f0", minHeight: "100vh", padding: "24px 12px" }}>
+      <style dangerouslySetInnerHTML={{ __html: printCSS }} />
       {autoPrint && (
         <script
           dangerouslySetInnerHTML={{
@@ -172,6 +192,7 @@ function SampleConstancia({ data, autoPrint = false }: { data: SampleCertificate
         />
       )}
       <div
+        className="constancia-paper"
         style={{
           maxWidth: 820,
           margin: "0 auto",
@@ -377,6 +398,7 @@ function SampleConstancia({ data, autoPrint = false }: { data: SampleCertificate
 
           {/* Banner informativo (no se imprime, solo en pantalla) */}
           <div
+            className="no-print"
             style={{
               marginTop: 24,
               padding: "12px 16px",
