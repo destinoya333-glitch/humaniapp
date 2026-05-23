@@ -3,8 +3,27 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-const BOT_BASE = "https://bot-whatsapp-production-085b.up.railway.app";
-const SAMPLE_PDF_URL = `${BOT_BASE}/api/certificate/sample`;
+// Keyed por el SLUG de usuario (caja-trujillo / caja-arequipa / caja-huancayo),
+// no por el display name. La sesion guarda entidad como display name completo
+// ("Caja Municipal de Ahorro y Credito de Arequipa S.A.") asi que la
+// detección hay que hacerla con `user` o normalizando la entidad.
+const SAMPLE_CIE_BY_USER: Record<string, string> = {
+  "caja-trujillo": "CIE-TRU-2026-00187",
+  "caja-arequipa": "CIE-AQP-2026-00188",
+  "caja-huancayo": "CIE-HCO-2026-00189",
+};
+
+function sampleUrlFor(user: string, entidad: string): string {
+  const key = user.trim().toLowerCase();
+  let cie = SAMPLE_CIE_BY_USER[key];
+  if (!cie) {
+    const e = entidad.toLowerCase();
+    if (e.includes("arequipa")) cie = "CIE-AQP-2026-00188";
+    else if (e.includes("huancayo")) cie = "CIE-HCO-2026-00189";
+    else cie = "CIE-TRU-2026-00187";
+  }
+  return `/financiera/${cie}?print=1`;
+}
 
 interface DriverResult {
   found: boolean;
@@ -190,7 +209,7 @@ export function VerifierDashboard({ user, entidad }: { user: string; entidad: st
               Descargue una constancia de muestra con datos ficticios para evaluar el formato, firma digital, sello, QR de verificación y hash anti-falsificación.
             </p>
             <a
-              href={SAMPLE_PDF_URL}
+              href={sampleUrlFor(user, entidad)}
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-2 rounded-lg bg-[#E08821] hover:bg-[#F3A852] text-[#0A0908] font-semibold px-5 py-3 uppercase tracking-widest text-xs transition w-full justify-center"

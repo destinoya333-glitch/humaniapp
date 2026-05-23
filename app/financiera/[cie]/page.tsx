@@ -126,16 +126,20 @@ function fmt(n: number): string {
 
 export default async function VerificarCiePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ cie: string }>;
+  searchParams: Promise<{ print?: string }>;
 }) {
   const { cie } = await params;
+  const { print } = await searchParams;
   const cleaned = decodeURIComponent(cie).trim().toUpperCase();
+  const autoPrint = print === "1";
 
   // Sample data: render constancia completa
   const sample = SAMPLE_DATASETS[cleaned];
   if (sample) {
-    return <SampleConstancia data={sample} />;
+    return <SampleConstancia data={sample} autoPrint={autoPrint} />;
   }
 
   // Fallback: real DB lookup or "no encontrado"
@@ -154,12 +158,19 @@ export default async function VerificarCiePage({
 // ───────────────────────────────────────────────────────────────────
 // Render: constancia completa estilo identico al HTML offline
 // ───────────────────────────────────────────────────────────────────
-function SampleConstancia({ data }: { data: SampleCertificate }) {
+function SampleConstancia({ data, autoPrint = false }: { data: SampleCertificate; autoPrint?: boolean }) {
   const verifyUrl = `https://ecodriveplus.com/financiera/${data.cie}`;
   const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(verifyUrl)}`;
 
   return (
     <main style={{ background: "#f5f3f0", minHeight: "100vh", padding: "24px 12px" }}>
+      {autoPrint && (
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.addEventListener('load',function(){setTimeout(function(){window.print();},700);});`,
+          }}
+        />
+      )}
       <div
         style={{
           maxWidth: 820,
