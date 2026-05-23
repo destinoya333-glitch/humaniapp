@@ -47,7 +47,8 @@ export function proxy(request: NextRequest) {
       url.pathname.startsWith("/admin") ||
       url.pathname.startsWith("/api") ||
       url.pathname.startsWith("/track") ||
-      url.pathname.startsWith("/verificar"); // portal verificador entidades financieras
+      url.pathname.startsWith("/verificar") || // legacy redirect → /financiera
+      url.pathname.startsWith("/financiera"); // portal verificador entidades financieras
     if (isGlobal) return NextResponse.next();
     // Si ya viene con la ruta base, no la duplicamos
     const path = url.pathname.startsWith(rewriteBase)

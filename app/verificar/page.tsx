@@ -1,21 +1,12 @@
-import type { Metadata } from "next";
-import { getSession } from "@/lib/ecodrive/verifier-auth";
-import { VerifierLogin } from "./VerifierLogin";
-import { VerifierDashboard } from "./VerifierDashboard";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Portal Verificador — ECO DRIVE PLUS S.A.C.",
-  description:
-    "Portal exclusivo de entidades financieras aliadas. Verificación de conductores afiliados y constancias de ingresos.",
-  robots: { index: false, follow: false },
-};
-
-export default async function VerificarPage() {
-  const session = await getSession();
-  if (!session) {
-    return <VerifierLogin />;
-  }
-  return <VerifierDashboard user={session.user} entidad={session.entidad} />;
+/**
+ * Redirect legacy /verificar → /financiera. El portal de entidades
+ * financieras se renombró el 2026-05-23. Esta ruta queda como redirect para
+ * compatibilidad con cartas convenio que ya tenían la URL antigua.
+ */
+export default function LegacyVerificarRedirect() {
+  redirect("/financiera");
 }

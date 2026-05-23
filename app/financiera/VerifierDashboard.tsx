@@ -32,7 +32,7 @@ export function VerifierDashboard({ user, entidad }: { user: string; entidad: st
     setResult(null);
     setBusy(true);
     try {
-      const res = await fetch("/api/ecodrive/verifier/lookup", {
+      const res = await fetch("/api/ecodrive/financiera/lookup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ dni }),
@@ -48,7 +48,7 @@ export function VerifierDashboard({ user, entidad }: { user: string; entidad: st
   }
 
   async function logout() {
-    await fetch("/api/ecodrive/verifier/login", { method: "DELETE" });
+    await fetch("/api/ecodrive/financiera/login", { method: "DELETE" });
     router.refresh();
   }
 

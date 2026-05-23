@@ -6,14 +6,8 @@ export const dynamic = "force-dynamic";
 
 /**
  * Búsqueda de conductor por DNI para entidades financieras autorizadas.
- *
- * Política: si NO existe convenio firmado entre EcoDrive+ y la entidad
- * verificadora, devolvemos solo confirmación de que el conductor está
- * afiliado (sin datos sensibles ni URL del PDF). Una vez firmado el
- * convenio, se puede habilitar el flag enable_pdf por entidad para que
- * descarguen la constancia real.
- *
- * Por ahora todas las cuentas tienen enable_pdf=false (modo demo).
+ * Mismo comportamiento que /api/ecodrive/verifier/lookup — renombrado
+ * a /financiera/ por consistencia con el portal /financiera.
  */
 export async function POST(req: NextRequest) {
   const session = await getSession();
@@ -35,7 +29,6 @@ export async function POST(req: NextRequest) {
     .eq("dni", dni)
     .maybeSingle();
 
-  // Log de auditoría: registramos cada consulta (entidad + dni)
   try {
     await sb.from("verifier_lookups").insert({
       verifier_user: session.user,
@@ -44,7 +37,7 @@ export async function POST(req: NextRequest) {
       found: !!driver,
     });
   } catch {
-    // tabla puede no existir aun; ignorar para no romper UX
+    // tabla puede no existir aun
   }
 
   if (!driver) {
@@ -66,7 +59,6 @@ export async function POST(req: NextRequest) {
       rating: driver.rating ?? 0,
       affiliated_since: driver.created_at,
     },
-    // PDF real requiere convenio firmado.
     pdf_url: null,
     message:
       "Conductor afiliado confirmado. Para acceder a la Constancia de Ingresos oficial (firmada, sellada, con QR de verificación), se requiere convenio interinstitucional firmado entre su entidad y ECO DRIVE PLUS S.A.C. Solicítelo a projas@ecodriveplus.com.",

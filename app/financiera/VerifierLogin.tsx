@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export function VerifierLogin() {
+export function VerifierLogin({ defaultUser = "" }: { defaultUser?: string }) {
   const router = useRouter();
-  const [user, setUser] = useState("");
+  const [user, setUser] = useState(defaultUser);
   const [pass, setPass] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -15,7 +15,7 @@ export function VerifierLogin() {
     setError(null);
     setBusy(true);
     try {
-      const res = await fetch("/api/ecodrive/verifier/login", {
+      const res = await fetch("/api/ecodrive/financiera/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ user, pass }),
