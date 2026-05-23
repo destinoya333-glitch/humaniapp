@@ -162,14 +162,14 @@ function SampleConstancia({ data, autoPrint = false }: { data: SampleCertificate
   const verifyUrl = `https://ecodriveplus.com/financiera/${data.cie}`;
   const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(verifyUrl)}`;
 
-  // Reglas @page + @media print para que la constancia encaje en UNA hoja A4
-  // (igual que el HTML offline). Sin esto el render desborda a 2 hojas por
-  // el padding/shadow del <main> y el banner "Verificación online" extra.
+  // Reglas @page + @media print para que la constancia encaje en UNA hoja A4.
+  // Compactacion agresiva por elemento porque la altura natural del HTML
+  // empuja el QR + firma + footer a una 2da pagina.
   const printCSS = `
-    @page { size: A4; margin: 1.4cm; }
+    @page { size: A4; margin: 0.8cm 1.2cm; }
     @media print {
       html, body { background: white !important; }
-      body { font-size: 9.5pt !important; }
+      body { font-size: 9pt !important; line-height: 1.35 !important; }
       .constancia-shell { padding: 0 !important; min-height: auto !important; background: white !important; }
       .constancia-paper {
         max-width: none !important;
@@ -178,6 +178,25 @@ function SampleConstancia({ data, autoPrint = false }: { data: SampleCertificate
         box-shadow: none !important;
       }
       .no-print { display: none !important; }
+      .c-header { padding-bottom: 8px !important; margin-bottom: 10px !important; }
+      .c-header img { max-width: 220px !important; }
+      .c-title { font-size: 17pt !important; margin: 2px 0 0 !important; }
+      .c-subtitle { font-size: 9pt !important; }
+      .c-cie-row { margin: 4px 0 10px !important; }
+      .c-section { margin-top: 8px !important; margin-bottom: 4px !important; padding-bottom: 2px !important; font-size: 9pt !important; }
+      .c-field { padding: 1px 0 !important; font-size: 9pt !important; }
+      .c-resumen { padding: 8px 12px !important; margin: 4px 0 8px !important; }
+      .c-resumen-value { font-size: 13pt !important; }
+      .c-resumen-label { font-size: 7.5pt !important; }
+      .c-promedios { font-size: 8.5pt !important; margin-top: -4px !important; margin-bottom: 8px !important; }
+      .c-table { margin: 3px 0 8px !important; font-size: 9pt !important; }
+      .c-table th { padding: 4px 7px !important; }
+      .c-table td { padding: 3px 7px !important; }
+      .c-disclaimer { font-size: 8.5pt !important; margin: 4px 0 8px !important; line-height: 1.3 !important; }
+      .c-bottom { margin-top: 4px !important; }
+      .c-bottom img.qr { width: 78px !important; height: 78px !important; }
+      .c-firma img { max-width: 180px !important; }
+      .c-footer { margin-top: 6px !important; padding-top: 4px !important; font-size: 8pt !important; }
     }
   `;
 
@@ -228,6 +247,7 @@ function SampleConstancia({ data, autoPrint = false }: { data: SampleCertificate
         <div style={{ position: "relative", zIndex: 1 }}>
           {/* Header */}
           <div
+            className="c-header"
             style={{
               display: "flex",
               justifyContent: "space-between",
@@ -255,14 +275,15 @@ function SampleConstancia({ data, autoPrint = false }: { data: SampleCertificate
             </div>
           </div>
 
-          <h1 style={{ fontSize: "20pt", color: "#E1811B", margin: "4px 0 0" }}>
+          <h1 className="c-title" style={{ fontSize: "20pt", color: "#E1811B", margin: "4px 0 0" }}>
             CONSTANCIA DE INGRESOS
           </h1>
-          <div style={{ fontSize: "10pt", color: "#555", fontStyle: "italic" }}>
+          <div className="c-subtitle" style={{ fontSize: "10pt", color: "#555", fontStyle: "italic" }}>
             Conductor afiliado a la plataforma Eco Drive Plus S.A.C.
           </div>
 
           <div
+            className="c-cie-row"
             style={{
               display: "flex",
               justifyContent: "flex-end",
@@ -293,6 +314,7 @@ function SampleConstancia({ data, autoPrint = false }: { data: SampleCertificate
 
           <SectionTitle>Resumen de ingresos · Últimos 6 meses</SectionTitle>
           <div
+            className="c-resumen"
             style={{
               background: "rgba(225, 129, 27, 0.08)",
               border: "1px solid rgba(225, 129, 27, 0.25)",
@@ -310,7 +332,7 @@ function SampleConstancia({ data, autoPrint = false }: { data: SampleCertificate
             <StatItem label="Comisión 6.3%" value={`S/ ${fmt(data.comision)}`} />
             <StatItem label="Neto percibido" value={`S/ ${fmt(data.neto)}`} />
           </div>
-          <div style={{ fontSize: "9pt", color: "#666", margin: "-8px 0 14px" }}>
+          <div className="c-promedios" style={{ fontSize: "9pt", color: "#666", margin: "-8px 0 14px" }}>
             <em>Promedio mensual neto:</em>{" "}
             <strong>S/ {fmt(data.neto / 6)}</strong> ·{" "}
             <em>Promedio diario:</em> <strong>S/ {fmt(data.neto / 180)}</strong> (180 días)
@@ -318,6 +340,7 @@ function SampleConstancia({ data, autoPrint = false }: { data: SampleCertificate
 
           <SectionTitle>Detalle mensual</SectionTitle>
           <table
+            className="c-table"
             style={{
               width: "100%",
               borderCollapse: "collapse",
@@ -356,16 +379,17 @@ function SampleConstancia({ data, autoPrint = false }: { data: SampleCertificate
             </tfoot>
           </table>
 
-          <div style={{ fontSize: "9pt", color: "#555", margin: "10px 0 18px", lineHeight: 1.45 }}>
+          <div className="c-disclaimer" style={{ fontSize: "9pt", color: "#555", margin: "10px 0 18px", lineHeight: 1.45 }}>
             Esta constancia es válida para acreditar ingresos como conductor afiliado a Eco Drive Plus S.A.C. (RUC 20613413228) ante entidades financieras, cajas municipales, bancos y autoridades. Verifique la autenticidad escaneando el código QR — el documento <strong>{data.cie}</strong> se valida en línea y expira a los 30 días desde la fecha de emisión.
           </div>
 
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginTop: 14, gap: 16 }}>
+          <div className="c-bottom" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginTop: 14, gap: 16 }}>
             <div style={{ width: "42%" }}>
               <div style={{ display: "inline-block", verticalAlign: "middle", marginRight: 10 }}>
                 <img
                   src={qrSrc}
                   alt="QR de verificación"
+                  className="qr"
                   style={{
                     width: 90,
                     height: 90,
@@ -382,7 +406,7 @@ function SampleConstancia({ data, autoPrint = false }: { data: SampleCertificate
                 </code>
               </div>
             </div>
-            <div style={{ width: "55%", textAlign: "center" }}>
+            <div className="c-firma" style={{ width: "55%", textAlign: "center" }}>
               {/* Sin paddingTop — firma alineada al borde superior del QR (90px) */}
               <img
                 src="https://rfpmvnoaqibqiqxrmheb.supabase.co/storage/v1/object/public/brand-assets/ecodrive/firma-sello-percy.png"
@@ -392,7 +416,7 @@ function SampleConstancia({ data, autoPrint = false }: { data: SampleCertificate
             </div>
           </div>
 
-          <div style={{ marginTop: 18, paddingTop: 8, borderTop: "1px solid #ddd", fontSize: "8.5pt", color: "#666", textAlign: "center" }}>
+          <div className="c-footer" style={{ marginTop: 18, paddingTop: 8, borderTop: "1px solid #ddd", fontSize: "8.5pt", color: "#666", textAlign: "center" }}>
             Emitido en Trujillo, {data.emitida} · Documento {data.cie} · Hash SHA256 incluido en QR
           </div>
 
@@ -559,6 +583,7 @@ function DataField({ label, children }: { label: string; children: React.ReactNo
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
     <div
+      className="c-section"
       style={{
         fontSize: "9.5pt",
         fontWeight: "bold",
@@ -578,7 +603,7 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 
 function FieldRow({ label, value }: { label: string; value: string }) {
   return (
-    <div style={{ display: "flex", padding: "2px 0", fontSize: "9.5pt" }}>
+    <div className="c-field" style={{ display: "flex", padding: "2px 0", fontSize: "9.5pt" }}>
       <span style={{ width: "38%", color: "#666" }}>{label}</span>
       <span style={{ fontWeight: "bold", color: "#1a1a1a" }}>{value}</span>
     </div>
@@ -588,10 +613,11 @@ function FieldRow({ label, value }: { label: string; value: string }) {
 function StatItem({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <div style={{ fontSize: "8pt", color: "#666", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+      <div className="c-resumen-label" style={{ fontSize: "8pt", color: "#666", textTransform: "uppercase", letterSpacing: "0.5px" }}>
         {label}
       </div>
       <div
+        className="c-resumen-value"
         style={{
           fontSize: "15pt",
           fontWeight: "bold",
