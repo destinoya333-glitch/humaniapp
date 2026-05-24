@@ -14,8 +14,18 @@ type Chofer = {
   vehiculo_color: string;
   placa: string;
   status: string;
+  rating: number | null;
+  rejection_reason: string | null;
   created_at: string;
 };
+
+type Action =
+  | "approve"
+  | "reject"
+  | "suspend"
+  | "reactivate"
+  | "set_rating"
+  | "force_off_duty";
 
 export default function ChoferesAdminPage() {
   const [passcode, setPasscode] = useState("");
@@ -46,17 +56,36 @@ export default function ChoferesAdminPage() {
     if (authed) load(status);
   }, [status, authed]);
 
-  const action = async (id: string, act: "approve" | "reject" | "suspend") => {
-    const reason = act !== "approve" ? prompt("Razon (opcional)") || "" : "";
+  const action = async (id: string, act: Action) => {
+    const body: Record<string, unknown> = { id, action: act };
+    if (act === "reject" || act === "suspend") {
+      body.reason = prompt("Razon (opcional)") || "";
+    }
+    if (act === "set_rating") {
+      const r = prompt("Nueva calificacion (1.0 - 5.0)") || "";
+      const num = parseFloat(r);
+      if (!isFinite(num) || num < 1 || num > 5) {
+        alert("Rating fuera de rango");
+        return;
+      }
+      body.rating = num;
+    }
+    if (act === "force_off_duty") {
+      if (!confirm("Sacar a este chofer de turno ahora?")) return;
+    }
     const res = await fetch("/api/ecodrive/admin/choferes", {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
         "x-admin-passcode": passcode,
       },
-      body: JSON.stringify({ id, action: act, reason }),
+      body: JSON.stringify(body),
     });
     if (res.ok) load(status);
+    else {
+      const j = await res.json().catch(() => ({}));
+      alert(`Error: ${j.error || res.status}`);
+    }
   };
 
   if (!authed) {
@@ -107,9 +136,14 @@ export default function ChoferesAdminPage() {
         <div className="grid gap-3">
           {list.map((c) => (
             <div key={c.id} className="bg-white rounded-xl shadow-sm p-4">
-              <div className="flex items-start justify-between mb-2">
-                <div>
-                  <div className="font-bold text-lg">{c.nombre}</div>
+              <div className="flex items-start justify-between mb-2 gap-4">
+                <div className="min-w-0">
+                  <div className="font-bold text-lg">
+                    {c.nombre}{" "}
+                    <span className="text-sm font-normal text-amber-600">
+                      ⭐ {c.rating?.toFixed(2) ?? "—"}
+                    </span>
+                  </div>
                   <div className="text-sm text-zinc-600">
                     DNI {c.dni} · {c.edad} años · {c.zona_principal || "—"}
                   </div>
@@ -119,31 +153,58 @@ export default function ChoferesAdminPage() {
                   <div className="text-xs text-zinc-500 mt-1">
                     WhatsApp +{c.wa_id} · {new Date(c.created_at).toLocaleString("es-PE")}
                   </div>
+                  {c.rejection_reason && (
+                    <div className="text-xs text-red-600 mt-1">Motivo: {c.rejection_reason}</div>
+                  )}
                 </div>
-                {c.status === "pending" && (
-                  <div className="flex gap-2">
+                <div className="flex flex-col gap-1 shrink-0">
+                  {c.status === "pending" && (
+                    <>
+                      <button
+                        onClick={() => action(c.id, "approve")}
+                        className="bg-green-600 text-white px-3 py-1 rounded text-sm font-semibold"
+                      >
+                        Aprobar
+                      </button>
+                      <button
+                        onClick={() => action(c.id, "reject")}
+                        className="bg-red-600 text-white px-3 py-1 rounded text-sm font-semibold"
+                      >
+                        Rechazar
+                      </button>
+                    </>
+                  )}
+                  {c.status === "approved" && (
+                    <>
+                      <button
+                        onClick={() => action(c.id, "set_rating")}
+                        className="bg-amber-500 text-white px-3 py-1 rounded text-sm font-semibold"
+                      >
+                        Ajustar ⭐
+                      </button>
+                      <button
+                        onClick={() => action(c.id, "force_off_duty")}
+                        className="bg-blue-600 text-white px-3 py-1 rounded text-sm font-semibold"
+                      >
+                        Sacar de turno
+                      </button>
+                      <button
+                        onClick={() => action(c.id, "suspend")}
+                        className="bg-zinc-600 text-white px-3 py-1 rounded text-sm font-semibold"
+                      >
+                        Suspender
+                      </button>
+                    </>
+                  )}
+                  {(c.status === "rejected" || c.status === "suspended") && (
                     <button
-                      onClick={() => action(c.id, "approve")}
-                      className="bg-green-600 text-white px-3 py-1 rounded text-sm font-semibold"
+                      onClick={() => action(c.id, "reactivate")}
+                      className="bg-emerald-600 text-white px-3 py-1 rounded text-sm font-semibold"
                     >
-                      Aprobar
+                      Reactivar
                     </button>
-                    <button
-                      onClick={() => action(c.id, "reject")}
-                      className="bg-red-600 text-white px-3 py-1 rounded text-sm font-semibold"
-                    >
-                      Rechazar
-                    </button>
-                  </div>
-                )}
-                {c.status === "approved" && (
-                  <button
-                    onClick={() => action(c.id, "suspend")}
-                    className="bg-zinc-600 text-white px-3 py-1 rounded text-sm font-semibold"
-                  >
-                    Suspender
-                  </button>
-                )}
+                  )}
+                </div>
               </div>
             </div>
           ))}

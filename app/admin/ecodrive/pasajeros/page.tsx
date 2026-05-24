@@ -38,14 +38,39 @@ export default function PasajerosAdminPage() {
     if (authed) load(status);
   }, [status, authed]);
 
-  const action = async (id: string, act: "approve" | "reject" | "suspend") => {
-    const reason = act !== "approve" ? prompt("Razon (opcional)") || "" : "";
+  const action = async (
+    id: string,
+    act: "approve" | "reject" | "suspend" | "reactivate" | "refund"
+  ) => {
+    const body: Record<string, unknown> = { id, action: act };
+    if (act === "reject" || act === "suspend") {
+      body.reason = prompt("Razon (opcional)") || "";
+    }
+    if (act === "refund") {
+      const amt = prompt("Monto a devolver (S/.)") || "";
+      const num = parseFloat(amt);
+      if (!isFinite(num) || num <= 0) {
+        alert("Monto invalido");
+        return;
+      }
+      body.amount = num;
+      body.descripcion = prompt("Motivo / descripcion") || "Devolucion admin";
+    }
     const res = await fetch("/api/ecodrive/admin/pasajeros", {
       method: "PATCH",
       headers: { "Content-Type": "application/json", "x-admin-passcode": passcode },
-      body: JSON.stringify({ id, action: act, reason }),
+      body: JSON.stringify(body),
     });
-    if (res.ok) load(status);
+    if (res.ok) {
+      if (act === "refund") {
+        const j = await res.json();
+        alert(`Devolucion OK. Saldo despues: S/.${j.refund?.saldo_despues?.toFixed(2)}`);
+      }
+      load(status);
+    } else {
+      const j = await res.json().catch(() => ({}));
+      alert(`Error: ${j.error || res.status}`);
+    }
   };
 
   if (!authed) {
@@ -97,15 +122,23 @@ export default function PasajerosAdminPage() {
                     +{p.wa_id} · {new Date(p.created_at).toLocaleString("es-PE")}
                   </div>
                 </div>
-                {p.status === "pending" && (
-                  <div className="flex gap-2">
-                    <button onClick={() => action(p.id, "approve")} className="bg-green-600 text-white px-3 py-1 rounded text-sm font-semibold">Aprobar</button>
-                    <button onClick={() => action(p.id, "reject")} className="bg-red-600 text-white px-3 py-1 rounded text-sm font-semibold">Rechazar</button>
-                  </div>
-                )}
-                {p.status === "approved" && (
-                  <button onClick={() => action(p.id, "suspend")} className="bg-zinc-600 text-white px-3 py-1 rounded text-sm font-semibold">Suspender</button>
-                )}
+                <div className="flex flex-col gap-1 shrink-0">
+                  {p.status === "pending" && (
+                    <>
+                      <button onClick={() => action(p.id, "approve")} className="bg-green-600 text-white px-3 py-1 rounded text-sm font-semibold">Aprobar</button>
+                      <button onClick={() => action(p.id, "reject")} className="bg-red-600 text-white px-3 py-1 rounded text-sm font-semibold">Rechazar</button>
+                    </>
+                  )}
+                  {p.status === "approved" && (
+                    <>
+                      <button onClick={() => action(p.id, "refund")} className="bg-amber-500 text-white px-3 py-1 rounded text-sm font-semibold">Devolver S/.</button>
+                      <button onClick={() => action(p.id, "suspend")} className="bg-zinc-600 text-white px-3 py-1 rounded text-sm font-semibold">Bloquear</button>
+                    </>
+                  )}
+                  {(p.status === "rejected" || p.status === "suspended") && (
+                    <button onClick={() => action(p.id, "reactivate")} className="bg-emerald-600 text-white px-3 py-1 rounded text-sm font-semibold">Reactivar</button>
+                  )}
+                </div>
               </div>
             </div>
           ))}

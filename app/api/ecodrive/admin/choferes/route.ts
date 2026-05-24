@@ -120,15 +120,16 @@ export async function PATCH(req: NextRequest) {
 
   const body = (await req.json()) as {
     id: string;
-    action: "approve" | "reject" | "suspend";
+    action: "approve" | "reject" | "suspend" | "reactivate" | "set_rating" | "force_off_duty";
     reason?: string;
+    rating?: number;
   };
   if (!body.id || !body.action) {
     return NextResponse.json({ error: "missing_fields" }, { status: 400 });
   }
 
   const update: Record<string, unknown> = { updated_at: new Date().toISOString() };
-  if (body.action === "approve") {
+  if (body.action === "approve" || body.action === "reactivate") {
     update.status = "approved";
     update.approved_at = new Date().toISOString();
     update.approved_by = "admin";
@@ -139,9 +140,36 @@ export async function PATCH(req: NextRequest) {
   } else if (body.action === "suspend") {
     update.status = "suspended";
     update.rejection_reason = body.reason || "Sin razon";
+  } else if (body.action === "set_rating") {
+    const r = Number(body.rating);
+    if (!isFinite(r) || r < 1 || r > 5) {
+      return NextResponse.json({ error: "rating_out_of_range" }, { status: 400 });
+    }
+    update.rating = Math.round(r * 100) / 100;
+  } else if (body.action === "force_off_duty") {
+    // se aplica a chofer_estado, no a eco_choferes
   }
 
   const sb = db();
+
+  // force_off_duty: actualizar chofer_estado por wa_id (no por id de eco_choferes)
+  if (body.action === "force_off_duty") {
+    const { data: choferRow } = await sb
+      .from("eco_choferes")
+      .select("wa_id")
+      .eq("id", body.id)
+      .single();
+    if (!choferRow?.wa_id) {
+      return NextResponse.json({ error: "chofer_not_found" }, { status: 404 });
+    }
+    const { error: e2 } = await sb
+      .from("chofer_estado")
+      .update({ en_turno: false, ultimo_ping: new Date().toISOString() })
+      .eq("telefono", choferRow.wa_id);
+    if (e2) return NextResponse.json({ error: e2.message }, { status: 500 });
+    return NextResponse.json({ ok: true });
+  }
+
   const { data: choferRow, error: updateErr } = await sb
     .from("eco_choferes")
     .update(update)

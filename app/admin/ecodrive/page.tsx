@@ -141,13 +141,15 @@ export default async function EcodriveAdminPage() {
               Datos en vivo · Trujillo, La Libertad · {new Date().toLocaleString("es-PE", { timeZone: "America/Lima" })}
             </p>
           </div>
-          <div className="flex gap-2">
-            <Link
-              href="/admin/ecodrive/mapa"
-              className="text-xs text-amber-400 hover:text-amber-300 border border-amber-500/30 rounded px-3 py-1 hover:bg-amber-500/10"
-            >
-              🗺️ Mapa Trujillo
-            </Link>
+          <div className="flex gap-2 flex-wrap justify-end max-w-2xl">
+            <NavLink href="/admin/ecodrive/mapa" label="🗺️ Mapa" />
+            <NavLink href="/admin/ecodrive/choferes" label="🚗 Choferes" />
+            <NavLink href="/admin/ecodrive/pasajeros" label="🧍 Pasajeros" />
+            <NavLink href="/admin/ecodrive/tracking" label="📡 Tracking" />
+            <NavLink href="/admin/ecodrive/push" label="📢 Push" />
+            <NavLink href="/admin/ecodrive/tarifas" label="💰 Tarifas" />
+            <NavLink href="/admin/ecodrive/incidencias" label="⚠️ Incidencias" />
+            <NavLink href="/admin/ecodrive/reportes" label="📊 Reportes" />
             <form action={logoutAction}>
               <button
                 type="submit"
@@ -426,6 +428,17 @@ export default async function EcodriveAdminPage() {
         </p>
       </div>
     </main>
+  );
+}
+
+function NavLink({ href, label }: { href: string; label: string }) {
+  return (
+    <Link
+      href={href}
+      className="text-xs text-amber-400 hover:text-amber-300 border border-amber-500/30 rounded px-3 py-1 hover:bg-amber-500/10 whitespace-nowrap"
+    >
+      {label}
+    </Link>
   );
 }
 
