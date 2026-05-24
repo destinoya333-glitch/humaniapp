@@ -14,6 +14,14 @@
  */
 import { NextResponse, after } from "next/server";
 import {
+  isStopCommand,
+  isStartCommand,
+  markOptOut,
+  clearOptOut,
+  OPT_OUT_REPLY,
+  OPT_IN_REPLY,
+} from "@/lib/marketing/opt-out";
+import {
   processVoiceMessage,
   processWhatsAppMessage,
   getDiaUnoAudioUrl,
@@ -141,6 +149,18 @@ async function handleMessage(m: MetaMessage, operador: OperadorContexto | null =
   if (m.type === "text") {
     const text = (m.text?.body || "").trim();
     const lowerText = text.toLowerCase();
+
+    // Marketing opt-out / opt-in (prioridad sobre cualquier flow o intent).
+    if (isStopCommand(text)) {
+      await markOptOut(phoneE164, "sofia");
+      await sendText(phoneE164, OPT_OUT_REPLY);
+      return;
+    }
+    if (isStartCommand(text)) {
+      await clearOptOut(phoneE164);
+      await sendText(phoneE164, OPT_IN_REPLY);
+      return;
+    }
 
     // Caso especial: usuario dice "si" estando en greeting -> mandar Flow Pacto Cuna
     // (reemplaza la captura conversacional pacto_name -> city -> motiv -> minutes -> commit)

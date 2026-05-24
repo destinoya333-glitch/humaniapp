@@ -13,6 +13,14 @@
  *  - Interactive: usa el title del button/list reply como texto
  */
 import { NextResponse, after } from "next/server";
+import {
+  isStopCommand,
+  isStartCommand,
+  markOptOut,
+  clearOptOut,
+  OPT_OUT_REPLY,
+  OPT_IN_REPLY,
+} from "@/lib/marketing/opt-out";
 import { sendText, downloadMetaMedia } from "@/lib/destinoya/meta-cloud-sender";
 import { sendDestinoFlow, type DestinoFlowKey } from "@/lib/destinoya/flow-sender";
 import { procesarMensaje } from "@/lib/destinoya/agent";
@@ -249,7 +257,11 @@ async function handleMessage(m: MetaMessage, operador: OperadorContexto | null =
     if (parsed.status === "submenu_listo") {
       const subServicio = parsed.sub_servicio as string;
       const plan = parsed.plan as string;
-      const monto = parsed.monto as number;
+      // Derivar monto del plan (el Flow no lo envia directamente)
+      const montoPorPlan: Record<string, number> = {
+        basico: 3, intermedio: 6, premium: 9, pro: 9.9,
+      };
+      const monto = (parsed.monto as number | undefined) ?? montoPorPlan[plan?.toLowerCase()] ?? 0;
       const categoria = parsed.categoria as string;
 
       // Bot pide datos de la consulta según sub-servicio
@@ -265,6 +277,24 @@ async function handleMessage(m: MetaMessage, operador: OperadorContexto | null =
         pedidoData = `Cuéntame tu situación de ${subServicio} con detalle.`;
       }
 
+      // CRITICO: insertar pago_pendiente en BD para que el madrodroid handler
+      // pueda asociar el Yape entrante con este servicio.
+      try {
+        const supa = (await import("@supabase/supabase-js")).createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        );
+        await supa.from("destinoya_pagos").insert({
+          celular: phoneE164,
+          servicio: `${categoria}:${subServicio}`,
+          monto,
+          estado: "esperando_pago",
+          tenant_id: operador?.tenant_id ?? null,
+        });
+      } catch (e) {
+        console.error("[destinoya submenu_listo insert err]", (e as Error).message);
+      }
+
       await sendText(phoneE164,
         `📌 ${subServicio} · ${plan} · *S/${monto}*\n\n` +
         `Yapea ahora a *998 102 258* (Percy Roj*).\n\n` +
@@ -277,8 +307,12 @@ async function handleMessage(m: MetaMessage, operador: OperadorContexto | null =
     // Flow Pago / VIP submit -> ya guardado en DB por el handler. Solo confirma.
     const status = parsed.status as string | undefined;
     if (status === "pago_registrado" || status === "vip_pendiente") {
-      const plan = parsed.plan as string | undefined;
-      const monto = parsed.monto as number | undefined;
+      const plan = (parsed.plan as string | undefined) ?? "";
+      const montoPorPlan: Record<string, number> = {
+        basico: 3, intermedio: 6, premium: 9, pro: 9.9,
+        regular: 49, vip: 99,
+      };
+      const monto = (parsed.monto as number | undefined) ?? montoPorPlan[plan.toLowerCase()] ?? 0;
       await sendText(
         phoneE164,
         `✅ Pago registrado: ${plan} S/${monto}.\n\nValidaremos en minutos vía Yape. Mientras te pediré los datos para tu consulta.`
@@ -322,6 +356,18 @@ async function handleMessage(m: MetaMessage, operador: OperadorContexto | null =
     const text = (m.text?.body || "").trim();
     await dbg("text_msg", { phone: phoneE164, text });
     if (!text) return;
+
+    // Marketing opt-out / opt-in (prioridad sobre Flows e intents).
+    if (isStopCommand(text)) {
+      await markOptOut(phoneE164, "destino");
+      await sendText(phoneE164, OPT_OUT_REPLY);
+      return;
+    }
+    if (isStartCommand(text)) {
+      await clearOptOut(phoneE164);
+      await sendText(phoneE164, OPT_IN_REPLY);
+      return;
+    }
 
     // Detectar intent → enviar Flow
     const flowMatch = maybeMatchFlow(text);

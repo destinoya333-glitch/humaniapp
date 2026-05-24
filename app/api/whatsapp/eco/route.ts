@@ -18,6 +18,14 @@ import { NextResponse, after } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { issueChoferTrackerToken } from "@/lib/ecodrive/tracker-token";
 import { findNearestChofer } from "@/lib/ecodrive/matching";
+import {
+  isStopCommand,
+  isStartCommand,
+  markOptOut,
+  clearOptOut,
+  OPT_OUT_REPLY,
+  OPT_IN_REPLY,
+} from "@/lib/marketing/opt-out";
 void findNearestChofer; // reservado para futura mejora del bot conversacional
 
 export const runtime = "nodejs";
@@ -357,28 +365,15 @@ async function handleMessage(m: {
   if (m.type === "text") {
     const text = (m.text?.body || "").toLowerCase().trim();
 
-    // Marketing opt-out / opt-in (debe ir antes de cualquier otro handler).
-    // STOP -> registra en marketing_opt_out; broadcasts futuros excluyen al numero.
-    // EMPEZAR/START/REACTIVAR -> remueve del opt-out.
-    if (/^(stop|baja|cancelar suscripcion|no recibir|no enviar|no quiero recibir)\b/.test(text)) {
-      await db()
-        .from("marketing_opt_out")
-        .upsert(
-          { whatsapp: from, source: "user_stop", opted_out_at: new Date().toISOString() },
-          { onConflict: "whatsapp" },
-        );
-      await sendText(
-        from,
-        "Listo, te dimos de baja de nuestros mensajes promocionales. No vas a recibir mas campañas marketing.\n\nSi cambias de idea, escribe *EMPEZAR* para volver a recibirlas.\n\nLos mensajes operativos (estado de viaje, sorteos donde participas, confirmaciones de pago) siguen activos."
-      );
+    // Marketing opt-out / opt-in via helper compartido (misma tabla cross-bot).
+    if (isStopCommand(text)) {
+      await markOptOut(from, "eco");
+      await sendText(from, OPT_OUT_REPLY);
       return;
     }
-    if (/^(empezar|start|reactivar|si quiero recibir|reanudar)\b/.test(text)) {
-      await db().from("marketing_opt_out").delete().eq("whatsapp", from);
-      await sendText(
-        from,
-        "Reactivado. Volveras a recibir nuestras promociones y novedades. Gracias por seguir con EcoDrive+ Club."
-      );
+    if (isStartCommand(text)) {
+      await clearOptOut(from);
+      await sendText(from, OPT_IN_REPLY);
       return;
     }
 

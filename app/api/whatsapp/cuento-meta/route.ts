@@ -11,6 +11,14 @@
  */
 import { NextResponse, after } from "next/server";
 import {
+  isStopCommand,
+  isStartCommand,
+  markOptOut,
+  clearOptOut,
+  OPT_OUT_REPLY,
+  OPT_IN_REPLY,
+} from "@/lib/marketing/opt-out";
+import {
   sendText,
   uploadAndSendMedia,
   downloadMetaMedia,
@@ -68,6 +76,50 @@ async function sendChunked(toPhone: string, body: string): Promise<void> {
   }
 }
 
+/**
+ * Transcribe audio de WhatsApp usando Groq Whisper (model whisper-large-v3-turbo).
+ * Reusa el patrón validado en lib/miss-sofia-voice y app/api/whatsapp/choferya.
+ */
+async function transcribirAudio(mediaId: string): Promise<string | null> {
+  const groqKey = (process.env.GROQ_API_KEY ?? "").trim();
+  if (!groqKey) {
+    console.error("[cuento transcribirAudio] GROQ_API_KEY no configurada");
+    return null;
+  }
+  try {
+    const dl = await downloadMetaMedia(mediaId);
+    if (!dl) return null;
+    const fd = new FormData();
+    const blob = new Blob([new Uint8Array(dl.buffer)], {
+      type: dl.mime || "audio/ogg",
+    });
+    fd.append("file", blob, "voice.ogg");
+    fd.append(
+      "model",
+      process.env.GROQ_WHISPER_MODEL || "whisper-large-v3-turbo",
+    );
+    fd.append("language", "es");
+    fd.append("response_format", "json");
+    const r = await fetch(
+      "https://api.groq.com/openai/v1/audio/transcriptions",
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${groqKey}` },
+        body: fd,
+      },
+    );
+    if (!r.ok) {
+      console.error("[cuento transcribirAudio] groq HTTP", r.status);
+      return null;
+    }
+    const j = (await r.json()) as { text?: string };
+    return (j.text || "").trim() || null;
+  } catch (e) {
+    console.error("[cuento transcribirAudio] err", (e as Error).message);
+    return null;
+  }
+}
+
 async function handleMessage(
   m: MetaMessage,
   operador: OperadorContexto | null = null,
@@ -78,7 +130,7 @@ async function handleMessage(
 
   // ─── IMAGEN: probablemente captura Yape ─────────────────────────
   if (m.type === "image" && m.image?.id) {
-    await sendText(phoneE164, "🦊 Revisando tu Yape... dame unos segundos ✨");
+    await sendText(phoneE164, "🦮 Revisando tu Yape... dame unos segundos ✨");
     const dl = await downloadMetaMedia(m.image.id);
     if (!dl) {
       await sendText(phoneE164, "No pude descargar tu imagen. Intenta enviarla de nuevo.");
@@ -132,13 +184,32 @@ async function handleMessage(
     return;
   }
 
-  // ─── AUDIO ──────────────────────────────────────────────────────
+  // ─── AUDIO (Whisper transcription via Groq) ─────────────────────
   if (m.type === "audio" && m.audio?.id) {
-    // TODO: descargar + Whisper Groq. Por ahora pedir texto.
-    await sendText(
-      phoneE164,
-      "🦊 Recibí tu audio. Por ahora solo proceso texto — escríbeme tu mensaje y lo armamos juntos.",
-    );
+    const transcript = await transcribirAudio(m.audio.id);
+    if (!transcript) {
+      await sendText(
+        phoneE164,
+        "🦮 No pude entender tu audio. Intenta de nuevo o escríbeme el texto.",
+      );
+      return;
+    }
+    await sendText(phoneE164, `🎙️ Te oí decir: _"${transcript.slice(0, 200)}"_`);
+    const r = await procesarMensaje({
+      telefono: phoneE164,
+      mensaje: transcript,
+      operador,
+    });
+    if (r.reply) await sendChunked(phoneE164, r.reply);
+    if (r.audio_pedido_id) {
+      const conv = await getConversacion(phoneE164);
+      const ctxConv = (conv?.contexto ?? {}) as Record<string, unknown>;
+      await generarYEnviarCuento({
+        phone: phoneE164,
+        pedido_id: r.audio_pedido_id,
+        ctxConv,
+      });
+    }
     return;
   }
 
@@ -171,6 +242,18 @@ async function handleMessage(
     const text = (m.text?.body || "").trim();
     if (!text) return;
 
+    // Marketing opt-out / opt-in (prioridad sobre cualquier otro intent).
+    if (isStopCommand(text)) {
+      await markOptOut(phoneE164, "cuento");
+      await sendText(phoneE164, OPT_OUT_REPLY);
+      return;
+    }
+    if (isStartCommand(text)) {
+      await clearOptOut(phoneE164);
+      await sendText(phoneE164, OPT_IN_REPLY);
+      return;
+    }
+
     const r = await procesarMensaje({ telefono: phoneE164, mensaje: text, operador });
     if (r.reply) await sendChunked(phoneE164, r.reply);
     if (r.audio_pedido_id) {
@@ -186,7 +269,7 @@ async function handleMessage(
   }
 
   // Fallback
-  await sendText(phoneE164, "🦊 No entendí ese mensaje. Escribe *menú* para empezar.");
+  await sendText(phoneE164, "🦮 No entendí ese mensaje. Escribe *menú* para empezar.");
 }
 
 async function generarYEnviarCuento(opts: {
@@ -194,6 +277,44 @@ async function generarYEnviarCuento(opts: {
   pedido_id: string;
   ctxConv: Record<string, unknown>;
 }): Promise<void> {
+  // Idempotencia: si el pedido ya tiene audio_url, NO regenerar — solo reenviar
+  try {
+    const { supabase } = await import("@/lib/cuentoinfantil/db");
+    const { data: existente } = await supabase
+      .from("tci_pedidos")
+      .select("audio_url, claude_titulo, texto_cuento, duracion_min, personajes")
+      .eq("id", opts.pedido_id)
+      .maybeSingle();
+    if (existente?.audio_url) {
+      const personajes = Array.isArray(existente.personajes) ? existente.personajes : [];
+      const protagonista = (personajes[0] as { nombre?: string })?.nombre || "tu peque";
+      const r = await fetch(existente.audio_url);
+      if (r.ok) {
+        const buf = Buffer.from(await r.arrayBuffer());
+        await uploadAndSendMedia({
+          to: opts.phone,
+          buffer: buf,
+          mimeType: "audio/mpeg",
+          filename: `cuento-${protagonista}.mp3`,
+        });
+      } else {
+        await sendText(opts.phone, `🦮 Tu cuento: ${existente.audio_url}`);
+      }
+      if (existente.claude_titulo || existente.texto_cuento) {
+        await sendText(
+          opts.phone,
+          `🎉 *${existente.claude_titulo ?? "Cuento de " + protagonista}*\n\n` +
+            `${(existente.texto_cuento ?? "").slice(0, 800)}\n\n` +
+            `_Para otro cuento escribe *menú*. Tu historial: *mis cuentos*._`,
+        );
+      }
+      return;
+    }
+  } catch (e) {
+    console.error("[generarYEnviarCuento idempotencia]", (e as Error).message);
+    // Si falla la verificación, sigue con generación normal
+  }
+
   const hijo = opts.ctxConv.hijo as { nombre: string; edad?: number; genero?: "m" | "f" };
   const escenario = opts.ctxConv.escenario as string;
   const duracion = opts.ctxConv.duracion as 2 | 3 | 5;
@@ -239,14 +360,14 @@ async function generarYEnviarCuento(opts: {
         });
       } else {
         // Fallback: enviar link directo
-        await sendText(opts.phone, `🦊 Tu cuento: ${gen.audio_url}`);
+        await sendText(opts.phone, `🦮 Tu cuento: ${gen.audio_url}`);
       }
     }
 
     await sendText(
       opts.phone,
       `🎉 *${gen.titulo}*\n\n${gen.texto_cuento?.slice(0, 800) ?? ""}\n\n` +
-        `_Para otro cuento, escribe *menú*_ 🦊`,
+        `_Para otro cuento, escribe *menú*_ 🦮`,
     );
 
     await upsertConversacion(opts.phone, { estado: "entregado" });
