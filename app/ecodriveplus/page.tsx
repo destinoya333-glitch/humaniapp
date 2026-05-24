@@ -12,13 +12,14 @@ import CinematicImage from "./_design/CinematicImage";
 export const metadata: Metadata = {
   title: "EcoDrive+ — Pides tu carro como pides delivery",
   description:
-    "EcoDrive+ es el primer servicio de viajes 100% por WhatsApp en Trujillo. Sin app, sin descargas. Pides taxi, eliges chofer, pagas con BilleteraEco. Más barato que InDrive y DiDi.",
+    "EcoDrive+ Trujillo: pide tu taxi por WhatsApp en 12 segundos. App pasajero y conductor para billetera, mapa GPS, ranking y Club EcoDrive+. Comisión 6.3% para choferes — la más baja del Perú.",
   alternates: { canonical: "https://ecodriveplus.com" },
   keywords: [
     "taxi Trujillo WhatsApp",
-    "rideshare sin app Perú",
+    "app taxi Trujillo",
     "EcoDrive Trujillo",
-    "taxi por WhatsApp",
+    "pedir taxi por WhatsApp",
+    "app conductor Trujillo",
     "chofer Trujillo comisión baja",
     "InDrive alternativa Perú",
     "DiDi alternativa Trujillo",
@@ -26,7 +27,8 @@ export const metadata: Metadata = {
 };
 
 const PASAJERO_WA = "https://wa.me/51994810242?text=Hola,%20quiero%20pedir%20un%20taxi";
-const CHOFER_WA = "https://wa.me/51994810242?text=Hola,%20quiero%20ser%20chofer%20EcoDrive";
+// CHOFER_WA queda como punto de entrada para info inicial; el uso operativo del chofer es en la app.
+const CHOFER_WA = "https://wa.me/51994810242?text=Hola,%20quiero%20info%20de%20la%20app%20conductor%20EcoDrive%2B";
 
 const META_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID;
 const GA4_ID = process.env.NEXT_PUBLIC_GA4_ID;
@@ -82,12 +84,12 @@ const TESTIMONIOS = [
 ];
 
 const FAQS: Array<[string, React.ReactNode]> = [
-  ["¿Necesito descargar alguna aplicación?", <>No. EcoDrive+ funciona 100% por WhatsApp. Solo guardas el número <strong className="text-[var(--eco-flame)]">994 810 242</strong> y le escribes a Eco.</>],
-  ["¿Cómo pago el viaje?", <>Tres opciones: <strong>Yape</strong> (al toque al chofer), <strong>BilleteraEco</strong> (con bono S/.5 al primer viaje) o <strong>efectivo</strong>. Tú eliges.</>],
+  ["¿Necesito descargar la app?", <>Para <strong>pedir un taxi</strong> no — basta con WhatsApp al <strong className="text-[var(--eco-flame)]">994 810 242</strong>. Si querés mapa GPS en vivo, BilleteraEco, ranking, sorteos del Club y todos los beneficios, descargá la <strong>app pasajero EcoDrive+</strong>. Si te registrás como conductor, la <strong>app chofer es obligatoria</strong> para operar.</>],
+  ["¿Cómo pago el viaje?", <>Tres opciones: <strong>Yape</strong> (al toque al chofer), <strong>BilleteraEco</strong> en la app (con bono S/.5 al primer viaje) o <strong>efectivo</strong>. Tú eliges.</>],
   ["¿Qué pasa si el chofer no llega?", <>Eco rastrea cada viaje. Si demora o cancela, te reasignamos otro y enviamos compensación a tu BilleteraEco automáticamente.</>],
-  ["¿Cómo me registro como chofer?", <>Escribe a Eco al WhatsApp <strong>994 810 242</strong> diciendo &ldquo;Quiero ser chofer&rdquo;. Pedimos DNI, foto vehículo, SOAT y revisión técnica. Aprobación 24–48 horas.</>],
+  ["¿Cómo me registro como chofer?", <>Descargá la <strong>app chofer EcoDrive+</strong> y completá tu perfil: DNI, foto vehículo, SOAT y revisión técnica. Aprobación 24–48 horas. Si preferís, escribí al WhatsApp <strong>994 810 242</strong> y te guiamos el proceso.</>],
   ["¿La comisión 6.3% incluye algo más?", <>No. 6.3% es lo único que descuenta EcoDrive+ por viaje. Sin pagos por uso, sin suscripciones, sin sorpresas.</>],
-  ["¿Mi familia puede ver dónde estoy en el viaje?", <>Sí. Al pedir el viaje recibes link de seguimiento en vivo que puedes compartir. Ven la ubicación en tiempo real hasta que llegues.</>],
+  ["¿Mi familia puede ver dónde estoy en el viaje?", <>Sí. Al pedir el viaje recibís link de seguimiento en vivo que podés compartir. Ven la ubicación en tiempo real hasta que llegues. Si tienen la app pasajero, ven el mapa con más detalle.</>],
 ];
 
 export default function EcoDrivePlusPage() {
@@ -119,8 +121,8 @@ export default function EcoDrivePlusPage() {
           "@type": "Organization",
           name: "EcoDrive+",
           url: "https://ecodriveplus.com",
-          logo: "https://ecodriveplus.com/ecodrive-logo.png",
-          description: "Servicio de transporte 100% por WhatsApp. Sin app. Comisión 6.3% para choferes.",
+          logo: "https://rfpmvnoaqibqiqxrmheb.supabase.co/storage/v1/object/public/brand-assets/ecodrive/logo-final-naranja-trim.png",
+          description: "Servicio de transporte híbrido: pides por WhatsApp, gestionás desde la app. Comisión 6.3% para choferes — la más baja del Perú.",
           areaServed: { "@type": "City", name: "Trujillo, Perú" },
           contactPoint: {
             "@type": "ContactPoint",
@@ -140,17 +142,13 @@ export default function EcoDrivePlusPage() {
 
       {/* === HEADER === */}
       <header className="relative z-40 border-b border-[var(--eco-line)]">
-        <div className="mx-auto max-w-[1400px] px-6 lg:px-12 h-32 md:h-40 flex items-center justify-between">
-          <Link href="/ecodriveplus" className="flex items-center gap-5 group">
+        <div className="mx-auto max-w-[1400px] px-6 lg:px-12 h-28 md:h-36 flex items-center justify-between">
+          <Link href="/ecodriveplus" className="flex items-center group shrink-0">
             <div
               role="img"
-              aria-label="EcoDrive+"
-              className="h-24 w-24 md:h-28 md:w-28 bg-[url('/ecodriveplus/icon.png')] bg-contain bg-no-repeat bg-center group-hover:rotate-[8deg] transition-transform duration-700 shrink-0"
+              aria-label="EcoDrive+ — Mejorando familias, transformando ciudades"
+              className="h-16 md:h-20 w-[200px] sm:w-[240px] md:w-[300px] bg-[url('https://rfpmvnoaqibqiqxrmheb.supabase.co/storage/v1/object/public/brand-assets/ecodrive/logo-final-naranja-trim.png')] bg-contain bg-no-repeat bg-left group-hover:opacity-90 transition-opacity duration-500"
             />
-            <div className="leading-none">
-              <div className="eco-display text-[32px] md:text-[40px] tracking-tight">EcoDrive<span className="text-[var(--eco-flame)]">+</span></div>
-              <div className="eco-mono mt-2 text-[var(--eco-ink-mute)] hidden sm:block text-[0.95rem] tracking-[0.18em]">EST. TRUJILLO · 2024</div>
-            </div>
           </Link>
 
           <nav className="hidden lg:flex items-center gap-10 eco-mono text-[var(--eco-ink-soft)]">
@@ -211,8 +209,10 @@ export default function EcoDrivePlusPage() {
 
             <Reveal delay={0.85} className="mt-10 max-w-md text-[17px] md:text-[18px] text-[var(--eco-ink-soft)] leading-[1.55]">
               <p>
-                El primer servicio de movilidad <strong className="text-[var(--eco-ink)]">100% por WhatsApp</strong> en Perú.
-                Sin app, sin descargas, sin trámites. <span className="eco-display-italic text-[var(--eco-flame-soft)]">Solo dile Hola</span> al bot Eco.
+                Pedís tu taxi por <strong className="text-[var(--eco-ink)]">WhatsApp</strong> en 12 segundos.
+                Tu billetera, mapa GPS, ranking y sorteo del Club viven en la{" "}
+                <strong className="text-[var(--eco-ink)]">app pasajero</strong>.{" "}
+                <span className="eco-display-italic text-[var(--eco-flame-soft)]">Lo mejor de ambos mundos.</span>
               </p>
             </Reveal>
 
@@ -237,10 +237,10 @@ export default function EcoDrivePlusPage() {
             </Reveal>
 
             <Reveal delay={1.2} className="mt-12 flex flex-wrap gap-x-8 gap-y-2 eco-mono text-[var(--eco-ink-mute)]">
-              <span>⌗ 30 s respuesta</span>
+              <span>⌗ WhatsApp para pedir</span>
+              <span>⌗ App para todo lo demás</span>
               <span>⌗ Yape al toque</span>
-              <span>⌗ Choferes verificados</span>
-              <span>⌗ 24 / 7 — sin pausa</span>
+              <span>⌗ 24 / 7</span>
             </Reveal>
           </div>
 
@@ -301,7 +301,7 @@ export default function EcoDrivePlusPage() {
             <Reveal delay={0.3}>
               <div className="eco-mono text-[var(--eco-ink-mute)] mb-4">— 04 / Disponibilidad</div>
               <div className="eco-display text-[72px] md:text-[96px] text-[var(--eco-ink)]">24/7</div>
-              <div className="eco-mono mt-3 text-[var(--eco-ink-soft)]">Sin pausa, sin app</div>
+              <div className="eco-mono mt-3 text-[var(--eco-ink-soft)]">Sin pausa, sin esperas</div>
             </Reveal>
           </div>
         </div>
@@ -318,7 +318,7 @@ export default function EcoDrivePlusPage() {
             <p className="eco-display text-[36px] md:text-[48px] xl:text-[56px] leading-[1.05] text-[var(--eco-ink)] eco-dropcap">
               No nacimos para competir con Uber. Nacimos para que un chofer trujillano deje de
               entregar <span className="eco-display-italic text-[var(--eco-flame)]">un cuarto de su día</span> a una app que le cobra desde San Francisco. Aquí
-              te quedas con el 93.7%. Aquí pagas por WhatsApp. Aquí, cuando ganas, tu familia gana.
+              te quedas con el 93.7%. Aquí pedís por WhatsApp y manejás todo desde tu app. Aquí, cuando ganas, tu familia gana.
             </p>
             <p className="mt-10 eco-mono text-[var(--eco-ink-mute)]">
               — Trujillo, La Libertad. Hecho por choferes, para choferes y para quien quiera llegar a tiempo.
@@ -365,15 +365,19 @@ export default function EcoDrivePlusPage() {
             <h2 className="eco-display text-[56px] md:text-[88px] leading-[0.95] text-[var(--eco-ink)] max-w-3xl">
               Cuatro pasos. <span className="eco-display-italic text-[var(--eco-flame)]">Doce segundos.</span> Tu carro en camino.
             </h2>
+            <p className="mt-8 max-w-2xl text-[var(--eco-ink-soft)] leading-relaxed">
+              El pasajero pide por WhatsApp. La app pasajero suma billetera, mapa GPS en vivo, ranking, sorteos del Club.
+              Los conductores operan desde la app chofer.
+            </p>
           </Reveal>
 
           <div className="grid md:grid-cols-4 gap-8 relative">
             <div aria-hidden className="hidden md:block absolute top-12 left-[6%] right-[6%] h-px bg-gradient-to-r from-transparent via-[var(--eco-flame)] to-transparent opacity-40" />
             {[
-              ["01", "Dile Hola", "Por WhatsApp. Eco te saluda y pregunta a dónde vas."],
+              ["01", "Dile Hola", "Por WhatsApp al 994 810 242. Eco te saluda y pregunta a dónde vas."],
               ["02", "Comparte ubicación", "Clip 📎 → Ubicación. Eco identifica al toque."],
               ["03", "Elige chofer", "3 ofertas con foto, vehículo, rating y precio. Tú decides."],
-              ["04", "Listo", "Llega tu chofer. Pagas con BilleteraEco o efectivo. 2 % de retorno."],
+              ["04", "Listo", "Llega tu chofer. Pagás con BilleteraEco (app) o efectivo. 2 % de retorno al Pass."],
             ].map(([code, title, desc], i) => (
               <Reveal key={code} delay={i * 0.12} className="relative pt-12">
                 <div className="absolute -top-2 left-0 eco-mono text-[var(--eco-flame)]">PASO {code}</div>
@@ -584,9 +588,9 @@ export default function EcoDrivePlusPage() {
               <div className="text-right">Pago</div>
             </div>
             {[
-              ["Uber", "25–30 %", "60–90 s", "App requerida", "Semanal"],
-              ["InDriver", "10–15 %", "3–5 min", "App requerida", "Variable"],
-              ["DiDi", "20–25 %", "60–90 s", "App requerida", "Semanal"],
+              ["Uber", "25–30 %", "60–90 s", "App obligatoria", "Semanal"],
+              ["InDriver", "10–15 %", "3–5 min", "App obligatoria", "Variable"],
+              ["DiDi", "20–25 %", "60–90 s", "App obligatoria", "Semanal"],
             ].map(([n, c, t, p, pa]) => (
               <Reveal key={n} className="grid grid-cols-5 py-6 items-center text-[var(--eco-ink-soft)] eco-mono-md">
                 <div className="col-span-1 eco-display text-[26px] md:text-[34px] text-[var(--eco-ink-soft)] opacity-60">{n}</div>
@@ -600,7 +604,7 @@ export default function EcoDrivePlusPage() {
               <div className="col-span-1 eco-display text-[28px] md:text-[40px] text-[var(--eco-flame)]">EcoDrive+</div>
               <div className="text-right text-[var(--eco-flame)] font-semibold">6.3 %</div>
               <div className="text-right text-[var(--eco-flame)] font-semibold">12 s</div>
-              <div className="text-right">WhatsApp · sin app</div>
+              <div className="text-right">WhatsApp + app</div>
               <div className="text-right">Yape al toque</div>
             </Reveal>
           </div>
@@ -800,7 +804,7 @@ export default function EcoDrivePlusPage() {
               empieza con un <span className="eco-display-italic text-[var(--eco-flame)]">Hola.</span>
             </h2>
             <p className="mt-12 text-[var(--eco-ink-soft)] eco-mono">
-              No descargues nada · Solo WhatsApp · Trujillo hoy · Lima pronto.
+              Pedís por WhatsApp · La app suma billetera, mapa y Club · Trujillo hoy · Lima pronto.
             </p>
             <div className="mt-12 flex flex-col sm:flex-row gap-4 justify-center">
               <Magnetic strength={0.35}>
@@ -822,9 +826,13 @@ export default function EcoDrivePlusPage() {
       <footer className="relative py-16 border-t border-[var(--eco-line)]">
         <div className="mx-auto max-w-[1400px] px-6 lg:px-24 grid md:grid-cols-3 gap-8 items-center">
           <div className="flex items-center gap-3">
-            <div role="img" aria-label="EcoDrive+" className="h-8 w-8 bg-[url('/ecodriveplus/icon.png')] bg-contain bg-no-repeat bg-center" />
-            <div className="eco-mono text-[var(--eco-ink-soft)]">
-              EcoDrive+ © 2026 — Hecho en <span className="text-[var(--eco-flame)]">Trujillo, Perú</span>
+            <div
+              role="img"
+              aria-label="EcoDrive+"
+              className="h-10 w-[140px] bg-[url('https://rfpmvnoaqibqiqxrmheb.supabase.co/storage/v1/object/public/brand-assets/ecodrive/logo-final-naranja-trim.png')] bg-contain bg-no-repeat bg-left"
+            />
+            <div className="eco-mono text-[var(--eco-ink-soft)] text-sm">
+              © 2026 — <span className="text-[var(--eco-flame)]">Perú</span>
             </div>
           </div>
           <div className="text-center">
