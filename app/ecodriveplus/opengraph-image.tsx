@@ -86,7 +86,7 @@ export default function OpengraphImage() {
             textAlign: "center",
           }}
         >
-          El primer servicio de viajes 100% por WhatsApp en Perú.
+          Pedís tu taxi por WhatsApp en 12 segundos.
         </div>
 
         {/* Subtítulo línea 2 */}
@@ -99,7 +99,7 @@ export default function OpengraphImage() {
             marginTop: 8,
           }}
         >
-          Sin app, sin descargas. Solo dile Hola al bot.
+          Billetera, mapa, ranking y Club — en la app pasajero.
         </div>
 
         {/* Footer */}

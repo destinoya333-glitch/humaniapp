@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ECODRIVE_WA_E164, waUrl } from "@/lib/activosya/contact";
 
 export const metadata: Metadata = {
-  title: "EcoDrive+ — Intermediación rideshare por WhatsApp · sin app",
+  title: "EcoDrive+ — Rideshare híbrido WhatsApp + app",
   description:
-    "Plataforma rideshare tipo InDrive 100% por WhatsApp. Cliente nombra su precio, conductores aceptan. Sin descargar app, sin comisión escandalosa. Activo digital de ActivosYA.",
+    "Plataforma rideshare tipo InDrive con modelo híbrido: pasajero pide por WhatsApp en 12 segundos, gestiona billetera/mapa/ranking/Club desde la app. Conductor opera desde la app conductor. Activo digital de ActivosYA.",
 };
 
 const features = [
-  { icon: "📱", title: "Sin app que descargar", desc: "Pasajero y conductor operan 100% por WhatsApp. Cero descargas, cero registros engorrosos." },
-  { icon: "💸", title: "Cero comisión por viaje", desc: "El operador cobra membresía mensual al conductor (modelo predecible). Conductor gana 100% del viaje." },
+  { icon: "📱", title: "Pedir por WhatsApp", desc: "El pasajero pide su taxi por WhatsApp en 12 segundos. Sin abrir app, sin registros, sin esperas." },
+  { icon: "💸", title: "Comisión 6.3% — la más baja del Perú", desc: "vs InDrive/DiDi 25%. Conductor gana 93.7% del viaje. App propia con BilleteraEco." },
   { icon: "🤝", title: "Modelo InDrive: tú nombras precio", desc: "Pasajero sugiere precio, conductor acepta o contraoferta. Sin tarifas dinámicas abusivas." },
   { icon: "📍", title: "Matching geolocalizado", desc: "Sistema notifica solo a conductores cercanos. Tiempo de respuesta promedio: 90 segundos." },
   { icon: "🚗", title: "Multi-categoría", desc: "Auto, moto, mototaxi, encomienda. Cada categoría con su tarifa base por ciudad." },
@@ -68,7 +69,7 @@ export default function EcoDrivePlusPage() {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <a
-              href="https://wa.me/51961347233?text=Quiero%20probar%20EcoDrive%2B"
+              href={waUrl(ECODRIVE_WA_E164, "Quiero probar EcoDrive+")}
               target="_blank"
               rel="noopener noreferrer"
               className="w-full sm:w-auto px-8 py-4 text-base font-semibold bg-amber-500 text-black rounded-full hover:bg-amber-400 transition-all glow-gold"

@@ -2,7 +2,7 @@ import LeadForm from "./LeadForm";
 
 export const metadata = {
   title: "Sé chofer EcoDrive+ — Inscripción rápida",
-  description: "Únete como chofer EcoDrive+. Inscripción 100% por WhatsApp. Manejas tu horario, conoces a tu pasajero antes.",
+  description: "Únete como chofer EcoDrive+. Inscripción rápida desde la app conductor o por WhatsApp. Manejas tu horario, conoces a tu pasajero antes.",
 };
 
 export default function SeChoferEcoPage() {
