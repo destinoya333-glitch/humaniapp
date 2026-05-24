@@ -357,6 +357,31 @@ async function handleMessage(m: {
   if (m.type === "text") {
     const text = (m.text?.body || "").toLowerCase().trim();
 
+    // Marketing opt-out / opt-in (debe ir antes de cualquier otro handler).
+    // STOP -> registra en marketing_opt_out; broadcasts futuros excluyen al numero.
+    // EMPEZAR/START/REACTIVAR -> remueve del opt-out.
+    if (/^(stop|baja|cancelar suscripcion|no recibir|no enviar|no quiero recibir)\b/.test(text)) {
+      await db()
+        .from("marketing_opt_out")
+        .upsert(
+          { whatsapp: from, source: "user_stop", opted_out_at: new Date().toISOString() },
+          { onConflict: "whatsapp" },
+        );
+      await sendText(
+        from,
+        "Listo, te dimos de baja de nuestros mensajes promocionales. No vas a recibir mas campañas marketing.\n\nSi cambias de idea, escribe *EMPEZAR* para volver a recibirlas.\n\nLos mensajes operativos (estado de viaje, sorteos donde participas, confirmaciones de pago) siguen activos."
+      );
+      return;
+    }
+    if (/^(empezar|start|reactivar|si quiero recibir|reanudar)\b/.test(text)) {
+      await db().from("marketing_opt_out").delete().eq("whatsapp", from);
+      await sendText(
+        from,
+        "Reactivado. Volveras a recibir nuestras promociones y novedades. Gracias por seguir con EcoDrive+ Club."
+      );
+      return;
+    }
+
     if (
       /^(hola|buenas|buenos dias|buenas tardes|buenas noches|hi|hey|menu|inicio)/.test(text)
     ) {
@@ -496,12 +521,43 @@ export async function GET(request: Request) {
   return new Response("Forbidden", { status: 403 });
 }
 
+// Phone IDs de otros bots que comparten este endpoint (app EcoDriveBot)
+const PHONE_ID_ACTIVOSYA = "1028883620318867";
+
 export async function POST(request: Request) {
   let payload: unknown = null;
+  let rawBody = "";
   try {
-    payload = await request.json();
+    rawBody = await request.text();
+    payload = JSON.parse(rawBody);
   } catch {
     return NextResponse.json({ ok: true });
+  }
+
+  // ─── Dispatcher: si el phone_id es de ActivosYA, reenviar a su endpoint ───
+  try {
+    const p = payload as {
+      entry?: Array<{ changes?: Array<{ value?: { metadata?: { phone_number_id?: string } } }> }>;
+    };
+    const recipientPhoneId =
+      p?.entry?.[0]?.changes?.[0]?.value?.metadata?.phone_number_id;
+    if (recipientPhoneId === PHONE_ID_ACTIVOSYA) {
+      // Reenviar al endpoint ActivosYA (fire-and-forget)
+      after(async () => {
+        try {
+          await fetch("https://activosya.com/api/whatsapp/activosya-meta", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: rawBody,
+          });
+        } catch (e) {
+          console.error("[dispatcher activosya]", (e as Error).message);
+        }
+      });
+      return NextResponse.json({ ok: true });
+    }
+  } catch {
+    // si falla el routing, sigue como Eco
   }
 
   // ack rápido a Meta + procesar en background

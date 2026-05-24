@@ -43,6 +43,14 @@
     {
       "path": "/api/cron/club-cerrar-edicion-completa",
       "schedule": "0 7 * * *"
+    },
+    {
+      "path": "/api/cron/club-progreso-milestone",
+      "schedule": "0 12 * * *"
+    },
+    {
+      "path": "/api/cron/club-ultimos-100",
+      "schedule": "0 13 * * *"
     }
   ]
 }
