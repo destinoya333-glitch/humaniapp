@@ -93,19 +93,28 @@ export default function ClubPhotoCarousel({ photos, alt }: Props) {
     <div tabIndex={0} onKeyDown={onKey} className="outline-none">
       {/* Foto grande */}
       <div
-        className="relative rounded-3xl overflow-hidden aspect-[4/3] bg-[var(--eco-bg-soft)]"
+        className="relative rounded-3xl overflow-hidden aspect-[16/10] sm:aspect-[4/3] bg-black"
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
+        {/* Fondo difuminado: misma foto en blur llenando el contenedor */}
+        <img
+          aria-hidden
+          src={currentUrl}
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover blur-2xl scale-110 opacity-50 will-change-transform"
+          loading="eager"
+        />
+        {/* Foto principal: object-contain para que se vea completa */}
         <img
           ref={imgRef}
           key={currentUrl}
           src={currentUrl}
           alt={`${alt} — foto ${index + 1} de ${total}`}
-          className="absolute inset-0 w-full h-full object-cover eco-cinematic will-change-transform"
+          className="absolute inset-0 w-full h-full object-contain eco-cinematic will-change-transform"
           loading="eager"
         />
-        <div aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(180deg, transparent 0%, rgba(10,9,8,0.45) 100%)" }} />
+        <div aria-hidden className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(180deg, transparent 0%, rgba(10,9,8,0.30) 100%)" }} />
 
         {/* Contador foto N de T */}
         <div className="absolute top-4 left-4 px-3 py-1.5 rounded-full bg-[var(--eco-bg)]/70 backdrop-blur eco-mono text-[var(--eco-flame)]">
