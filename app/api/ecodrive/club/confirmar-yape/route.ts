@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getClubClient } from "@/lib/ecodrive/club";
-import { sendImage, sendText, isMetaConfigured } from "@/lib/ecodrive/wa-send";
+import { sendImage, sendText, sendTemplate, isMetaConfigured } from "@/lib/ecodrive/wa-send";
 
 export const dynamic = "force-dynamic";
 
@@ -52,15 +52,30 @@ async function notifyPassReady(opts: {
 }): Promise<void> {
   if (!isMetaConfigured()) return;
   const base = publicBase(opts.req);
+  const primerNombre = opts.nombre.split(" ")[0] ?? "";
+
+  // Paso 1: Template Meta APPROVED para abrir/refrescar la ventana 24h
+  // (necesario porque el socio nunca habló con el bot antes de yapear)
+  try {
+    await sendTemplate(
+      opts.whatsapp,
+      "club_pass_confirmado_v2",
+      "es",
+      [primerNombre, opts.fechaFin], // {{1}} nombre, {{2}} fecha_fin
+    );
+  } catch (e) {
+    console.warn("[club/confirmar-yape] sendTemplate club_pass_confirmado_v2 falló", e);
+    return; // sin template no abrimos ventana, no podemos seguir
+  }
+
+  // Paso 2: Dentro de la ventana 24h (recién abierta), mandar imagen del boleto bonus + link a mi-cuenta
   const lines = [
-    `¡Bienvenido al Club EcoDrive+, ${opts.nombre.split(" ")[0] ?? ""}!`,
-    ``,
-    `Tu Pass anual N° ${opts.numeroPass} está activo hasta ${opts.fechaFin}. Participas en TODOS los sorteos del año.`,
+    `Tu Pass anual N° ${opts.numeroPass} ya está activo.`,
   ];
   if (opts.ticketBonusId && opts.ticketBonusNumero) {
-    lines.push(``, `Tu primer boleto: #${String(opts.ticketBonusNumero).padStart(4, "0")}.`);
+    lines.push(``, `Tu primer Número de Socio: #${String(opts.ticketBonusNumero).padStart(4, "0")}.`);
   }
-  lines.push(``, `Ver tu cuenta: ${base}/ecodriveplus/club/mi-cuenta`);
+  lines.push(``, `Mirá tu cuenta: ${base}/ecodriveplus/club/mi-cuenta`);
   try {
     if (opts.ticketBonusId) {
       const imageUrl = `${base}/api/ecodrive/club/ticket-image/${opts.ticketBonusId}`;
@@ -69,7 +84,7 @@ async function notifyPassReady(opts: {
       await sendText(opts.whatsapp, lines.join("\n"));
     }
   } catch (e) {
-    console.warn("[club/confirmar-yape] notifyPass falló", e);
+    console.warn("[club/confirmar-yape] follow-up image/text falló (template SI se envió)", e);
   }
 }
 

@@ -93,6 +93,66 @@ export async function sendDocument(
   }
 }
 
+/**
+ * Envía un template Meta WhatsApp (aprobado previamente).
+ * Necesario cuando se manda fuera de la ventana 24h del cliente.
+ * @param to - número WhatsApp del destinatario
+ * @param templateName - nombre exacto del template (ej. "club_pass_confirmado_v2")
+ * @param languageCode - código BCP-47 (ej. "es", "es_PE")
+ * @param bodyParameters - array de strings que reemplazan {{1}}, {{2}}, ... en el BODY
+ * @param headerParameters - array de strings que reemplazan {{1}}, ... en el HEADER (si aplica)
+ */
+export async function sendTemplate(
+  to: string,
+  templateName: string,
+  languageCode: string = "es",
+  bodyParameters: string[] = [],
+  headerParameters: string[] = [],
+): Promise<void> {
+  const creds = getCreds();
+  if (!creds) throw new Error("Meta WhatsApp Cloud API no configurada");
+  const recipient = normalizePhone(to);
+
+  const components: Array<{ type: string; parameters: Array<{ type: string; text: string }> }> = [];
+  if (headerParameters.length > 0) {
+    components.push({
+      type: "header",
+      parameters: headerParameters.map((p) => ({ type: "text", text: p })),
+    });
+  }
+  if (bodyParameters.length > 0) {
+    components.push({
+      type: "body",
+      parameters: bodyParameters.map((p) => ({ type: "text", text: p })),
+    });
+  }
+
+  const payload = {
+    messaging_product: "whatsapp",
+    recipient_type: "individual",
+    to: recipient,
+    type: "template",
+    template: {
+      name: templateName,
+      language: { code: languageCode },
+      ...(components.length > 0 ? { components } : {}),
+    },
+  };
+
+  const res = await fetch(`${GRAPH_BASE}/${creds.phoneId}/messages`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${creds.token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Meta sendTemplate failed (${res.status}): ${err}`);
+  }
+}
+
 export async function sendText(to: string, body: string): Promise<void> {
   const creds = getCreds();
   if (!creds) throw new Error("Meta WhatsApp Cloud API no configurada");
