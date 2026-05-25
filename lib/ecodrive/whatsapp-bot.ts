@@ -4,6 +4,7 @@
  * Usa location_request_message + interactive buttons nativos de WhatsApp Cloud.
  */
 import { createClient } from "@supabase/supabase-js";
+import { getTarifas, computeFare } from "./tarifas";
 
 const GRAPH = "https://graph.facebook.com/v22.0";
 
@@ -98,10 +99,6 @@ function distanceKm(lat1: number, lon1: number, lat2: number, lon2: number): num
     Math.sin(dLat / 2) ** 2 +
     Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
   return Math.round(R * 2 * Math.asin(Math.sqrt(a)) * 10) / 10;
-}
-
-function computeFare(km: number): number {
-  return Math.max(4, Math.round((4 + km * 1.2) * 2) / 2);
 }
 
 async function reverseGeocode(lat: number, lng: number): Promise<string> {
@@ -358,7 +355,8 @@ export async function handleIncoming(message: {
       const dm = await googleDistanceDriving(draft.origen_lat, draft.origen_lng, lat, lng);
       const km = dm?.km ?? distanceKm(draft.origen_lat, draft.origen_lng, lat, lng);
       const min = dm?.min ?? Math.max(5, Math.round(km * 3));
-      const tarifa = computeFare(km);
+      const tarifas = await getTarifas();
+      const tarifa = computeFare(km, min, tarifas);
 
       await setDraft(from, {
         step: "confirmando",

@@ -9,6 +9,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { TARIFAS_DEFAULT } from "@/lib/ecodrive/tarifas";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,25 +25,7 @@ function db() {
 }
 
 const DEFAULTS: Record<string, unknown> = {
-  tarifas: {
-    banderazo: 4.5,
-    por_km: 1.2,
-    por_min: 0.15,
-    minimo: 5.0,
-    tipos: {
-      estandar: { label: "EcoEstandar", multiplicador: 1.0 },
-      vip: { label: "EcoVIP", multiplicador: 1.4 },
-      xl: { label: "EcoXL", multiplicador: 1.5 },
-      auto_nuevo: { label: "EcoAutoNuevo", multiplicador: 1.2 },
-    },
-    hora_pico: {
-      enabled: false,
-      multiplicador: 1.25,
-      horas: ["07:00-09:30", "17:30-20:00"],
-    },
-    comision_pct: 6.3,
-    service_fee: 0.5,
-  },
+  tarifas: TARIFAS_DEFAULT,
 };
 
 export async function GET(req: NextRequest) {

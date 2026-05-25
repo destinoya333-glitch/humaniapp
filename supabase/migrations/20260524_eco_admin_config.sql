@@ -34,5 +34,5 @@ values (
 )
 on conflict (key) do nothing;
 
--- RLS off: solo service_role accede via API admin
-alter table eco_admin_config disable row level security;
+-- RLS on sin policies: anon/authenticated bloqueados, solo service_role (endpoint admin) accede
+alter table eco_admin_config enable row level security;
