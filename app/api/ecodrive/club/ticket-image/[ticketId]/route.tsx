@@ -115,7 +115,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ ticketId: s
             "radial-gradient(70% 60% at 12% 18%, rgba(224, 136, 33, 0.30), transparent 60%), radial-gradient(80% 70% at 50% 95%, rgba(184, 106, 18, 0.40), transparent 70%), #0A0908",
           padding: "48px 56px",
           color: "#F5EFE7",
-          fontFamily: "serif",
+          fontFamily: "system-ui, sans-serif",
           position: "relative",
         }}
       >
@@ -135,7 +135,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ ticketId: s
                 letterSpacing: "0.18em",
                 textTransform: "uppercase",
                 marginTop: 8,
-                fontFamily: "monospace",
+                fontFamily: "system-ui, sans-serif",
               }}
             >
               Boleto Oficial · Edicion #{edicionN}
@@ -148,7 +148,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ ticketId: s
                 color: "#7A7367",
                 letterSpacing: "0.2em",
                 textTransform: "uppercase",
-                fontFamily: "monospace",
+                fontFamily: "system-ui, sans-serif",
               }}
             >
               N° boleto
@@ -159,7 +159,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ ticketId: s
                 color: "#E08821",
                 letterSpacing: "0.18em",
                 marginTop: 4,
-                fontFamily: "monospace",
+                fontFamily: "system-ui, sans-serif",
               }}
             >
               {t.id.slice(0, 8).toUpperCase()}
@@ -186,7 +186,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ ticketId: s
               color: "#7A7367",
               letterSpacing: "0.22em",
               textTransform: "uppercase",
-              fontFamily: "monospace",
+              fontFamily: "system-ui, sans-serif",
               marginBottom: 8,
             }}
           >
@@ -240,7 +240,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ ticketId: s
                 color: "#7A7367",
                 letterSpacing: "0.18em",
                 textTransform: "uppercase",
-                fontFamily: "monospace",
+                fontFamily: "system-ui, sans-serif",
                 marginBottom: 6,
               }}
             >
@@ -255,7 +255,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ ticketId: s
                 fontSize: 11,
                 color: "#E08821",
                 marginTop: 8,
-                fontFamily: "monospace",
+                fontFamily: "system-ui, sans-serif",
                 letterSpacing: "0.16em",
               }}
             >
@@ -290,7 +290,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ ticketId: s
             padding: "6px 16px",
             fontSize: 18,
             letterSpacing: "0.22em",
-            fontFamily: "monospace",
+            fontFamily: "system-ui, sans-serif",
             textTransform: "uppercase",
             display: "flex",
           }}
@@ -315,7 +315,7 @@ function Row({ label, value, mono = false }: { label: string; value: string; mon
           color: "#7A7367",
           letterSpacing: "0.20em",
           textTransform: "uppercase",
-          fontFamily: "monospace",
+          fontFamily: "system-ui, sans-serif",
           width: 140,
         }}
       >
@@ -325,7 +325,7 @@ function Row({ label, value, mono = false }: { label: string; value: string; mon
         style={{
           fontSize: 26,
           color: "#F5EFE7",
-          fontFamily: mono ? "monospace" : "serif",
+          fontFamily: "system-ui, sans-serif",
           letterSpacing: mono ? "0.10em" : "-0.01em",
           flex: 1,
         }}

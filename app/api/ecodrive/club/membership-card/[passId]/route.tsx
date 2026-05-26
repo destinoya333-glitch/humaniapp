@@ -5,8 +5,6 @@ import { NextRequest } from "next/server";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// Datos demo para previsualizar el carnet sin necesidad de un Pass real en BD.
-// Activar con ?demo=1 en la URL.
 const DEMO = {
   nombre: "Percy Manuel Rojas Rubio",
   dni: "18213129",
@@ -15,7 +13,6 @@ const DEMO = {
   fecha_fin: "2027-05-25",
   estado: "activo" as const,
   tipo_perfil: "interno_conductor" as const,
-  ediciones_consumidas: 0,
 };
 
 type PassData = {
@@ -23,7 +20,6 @@ type PassData = {
   fecha_inicio: string;
   fecha_fin: string;
   estado: string;
-  ediciones_consumidas: number;
   miembro: { nombre: string; dni: string; tipo_perfil: string } | null;
 };
 
@@ -31,9 +27,7 @@ async function getPass(passId: string): Promise<PassData | null> {
   const sb = getClubClient();
   const { data } = await sb
     .from("club_pass")
-    .select(
-      "numero_pass_en_dni,fecha_inicio,fecha_fin,estado,ediciones_consumidas,club_miembros(nombre,dni,tipo_perfil)",
-    )
+    .select("numero_pass_en_dni,fecha_inicio,fecha_fin,estado,club_miembros(nombre,dni,tipo_perfil)")
     .eq("id", passId)
     .maybeSingle();
   if (!data) return null;
@@ -43,33 +37,29 @@ async function getPass(passId: string): Promise<PassData | null> {
     fecha_inicio: d.fecha_inicio,
     fecha_fin: d.fecha_fin,
     estado: d.estado,
-    ediciones_consumidas: d.ediciones_consumidas,
     miembro: d.club_miembros,
   };
 }
 
 function fmtFecha(iso: string): string {
   try {
-    return new Date(iso).toLocaleDateString("es-PE", {
-      day: "2-digit",
-      month: "long",
-      year: "numeric",
-    });
+    return new Date(iso).toLocaleDateString("es-PE", { day: "2-digit", month: "long", year: "numeric" });
   } catch {
     return iso;
   }
 }
 
 function tipoLabel(tipo: string): string {
-  if (tipo === "interno_conductor") return "Socio Conductor EcoDrive+";
-  if (tipo === "interno_pasajero") return "Socio Pasajero EcoDrive+";
+  if (tipo === "interno_conductor") return "Socio Conductor";
+  if (tipo === "interno_pasajero") return "Socio Pasajero";
   return "Socio del Club";
 }
+
+const FONT = "system-ui, -apple-system, sans-serif";
 
 export async function GET(req: NextRequest, ctx: { params: Promise<{ passId: string }> }) {
   const { passId } = await ctx.params;
   const isDemo = req.nextUrl.searchParams.get("demo") === "1";
-  const origin = req.nextUrl.origin;
 
   let pass: PassData | null = null;
   if (isDemo) {
@@ -78,7 +68,6 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ passId: str
       fecha_inicio: DEMO.fecha_inicio,
       fecha_fin: DEMO.fecha_fin,
       estado: DEMO.estado,
-      ediciones_consumidas: DEMO.ediciones_consumidas,
       miembro: { nombre: DEMO.nombre, dni: DEMO.dni, tipo_perfil: DEMO.tipo_perfil },
     };
   } else {
@@ -86,203 +75,148 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ passId: str
   }
   if (!pass || !pass.miembro) return new Response("pass not found", { status: 404 });
 
-  const verifyUrl = `${origin}/club/mi-cuenta?pass=${isDemo ? "demo" : passId.slice(0, 8)}`;
-  const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(verifyUrl)}&bgcolor=ffffff&color=0a0908`;
+  const origin = req.nextUrl.origin;
+  const verifyUrl = `${origin}/club/mi-cuenta`;
+  const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(verifyUrl)}&bgcolor=ffffff&color=0a0908`;
   const perfilLabel = tipoLabel(pass.miembro.tipo_perfil);
-  const isInterno = pass.miembro.tipo_perfil !== "publico";
+  const tipo = pass.miembro.tipo_perfil;
 
   return new ImageResponse(
     (
       <div
         style={{
-          display: "flex",
-          flexDirection: "column",
           width: "100%",
           height: "100%",
-          background:
-            "radial-gradient(85% 70% at 18% 18%, rgba(255, 168, 74, 0.40), transparent 60%), radial-gradient(80% 70% at 85% 95%, rgba(184, 106, 18, 0.55), transparent 70%), linear-gradient(135deg, #1a0f05 0%, #0A0908 100%)",
-          padding: 56,
+          display: "flex",
+          flexDirection: "column",
+          background: "linear-gradient(135deg, #1a0f05 0%, #2a1500 50%, #0A0908 100%)",
+          padding: 60,
           color: "#F5EFE7",
-          fontFamily: "serif",
-          position: "relative",
+          fontFamily: FONT,
         }}
       >
         {/* HEADER */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ display: "flex", flexDirection: "column" }}>
-            <div style={{ fontSize: 44, fontWeight: 700, color: "#F5EFE7", letterSpacing: "-0.01em" }}>
+            <div style={{ display: "flex", fontSize: 52, fontWeight: 700, letterSpacing: -1 }}>
               EcoDrive<span style={{ color: "#E08821" }}>+</span>
             </div>
-            <div style={{ fontSize: 18, color: "#E08821", fontStyle: "italic", marginTop: 4 }}>Club</div>
+            <div style={{ display: "flex", fontSize: 22, color: "#E08821", marginTop: 4, fontStyle: "italic" }}>
+              Club
+            </div>
           </div>
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "flex-end",
-              fontFamily: "monospace",
-            }}
-          >
-            <div style={{ fontSize: 12, color: "#7A7367", letterSpacing: "0.22em", textTransform: "uppercase" }}>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+            <div style={{ display: "flex", fontSize: 14, color: "#9a8f7a", letterSpacing: 3 }}>
               CARNET DE SOCIO
             </div>
-            <div
-              style={{
-                fontSize: 14,
-                color: "#E08821",
-                letterSpacing: "0.18em",
-                marginTop: 4,
-              }}
-            >
+            <div style={{ display: "flex", fontSize: 16, color: "#E08821", marginTop: 6, letterSpacing: 2 }}>
               N° {String(pass.numero_pass_en_dni).padStart(3, "0")} · {String(pass.miembro.dni).slice(-4)}
             </div>
           </div>
         </div>
 
-        {/* SEPARADOR DORADO */}
-        <div style={{ display: "flex", height: 2, background: "linear-gradient(90deg, transparent, #E08821, transparent)", marginTop: 36, marginBottom: 36 }} />
+        {/* SEPARADOR */}
+        <div style={{ display: "flex", height: 2, background: "#E08821", marginTop: 40, marginBottom: 40, opacity: 0.7 }} />
 
-        {/* NOMBRE GRANDE */}
+        {/* NOMBRE */}
         <div style={{ display: "flex", flexDirection: "column" }}>
-          <div
-            style={{
-              fontSize: 13,
-              color: "#7A7367",
-              letterSpacing: "0.24em",
-              textTransform: "uppercase",
-              fontFamily: "monospace",
-              marginBottom: 8,
-            }}
-          >
-            Socio del Club EcoDrive+
+          <div style={{ display: "flex", fontSize: 16, color: "#9a8f7a", letterSpacing: 3, marginBottom: 14 }}>
+            SOCIO ACREDITADO
           </div>
-          <div
-            style={{
-              fontSize: 64,
-              fontWeight: 700,
-              color: "#F5EFE7",
-              lineHeight: 1.0,
-              letterSpacing: "-0.02em",
-              maxWidth: 920,
-            }}
-          >
+          <div style={{ display: "flex", fontSize: 68, fontWeight: 700, lineHeight: 1, letterSpacing: -1 }}>
             {pass.miembro.nombre}
           </div>
-          <div
-            style={{
-              marginTop: 16,
-              fontSize: 22,
-              color: "#E08821",
-              fontFamily: "serif",
-              fontStyle: "italic",
-            }}
-          >
-            {perfilLabel}
+          <div style={{ display: "flex", fontSize: 28, color: "#E08821", marginTop: 18, fontStyle: "italic" }}>
+            {perfilLabel} · EcoDrive+
           </div>
         </div>
 
-        {/* CHIPS BENEFICIOS */}
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginTop: 32 }}>
-          {isInterno && pass.miembro.tipo_perfil === "interno_conductor" && (
-            <div style={{ display: "flex", background: "rgba(224,136,33,0.18)", border: "1px solid rgba(224,136,33,0.55)", borderRadius: 999, padding: "8px 18px", color: "#FFA84A", fontSize: 16, fontFamily: "monospace" }}>
-              ◆ 18 viajes/mes con 0% comisión
-            </div>
-          )}
-          {isInterno && pass.miembro.tipo_perfil === "interno_pasajero" && (
-            <div style={{ display: "flex", background: "rgba(224,136,33,0.18)", border: "1px solid rgba(224,136,33,0.55)", borderRadius: 999, padding: "8px 18px", color: "#FFA84A", fontSize: 16, fontFamily: "monospace" }}>
-              ◆ Cashback 10% por 1 mes
-            </div>
-          )}
-          <div style={{ display: "flex", background: "rgba(245,239,231,0.06)", border: "1px solid rgba(245,239,231,0.18)", borderRadius: 999, padding: "8px 18px", color: "#C8C0B5", fontSize: 16, fontFamily: "monospace" }}>
-            ◆ Sorteo BYD Yuan Pro
+        {/* BENEFICIOS */}
+        <div style={{ display: "flex", flexDirection: "column", marginTop: 50, gap: 12 }}>
+          <div style={{ display: "flex", fontSize: 16, color: "#9a8f7a", letterSpacing: 3 }}>
+            BENEFICIOS INCLUIDOS
           </div>
-          <div style={{ display: "flex", background: "rgba(245,239,231,0.06)", border: "1px solid rgba(245,239,231,0.18)", borderRadius: 999, padding: "8px 18px", color: "#C8C0B5", fontSize: 16, fontFamily: "monospace" }}>
-            ◆ Bonus lealtad +1 N° por edición
+          {tipo === "interno_conductor" && (
+            <div style={{ display: "flex", fontSize: 22, color: "#FFA84A" }}>
+              ✦  18 primeros viajes del mes con 0% comisión
+            </div>
+          )}
+          {tipo === "interno_pasajero" && (
+            <div style={{ display: "flex", fontSize: 22, color: "#FFA84A" }}>
+              ✦  Cashback al 10% durante 1 mes
+            </div>
+          )}
+          <div style={{ display: "flex", fontSize: 22, color: "#C8C0B5" }}>
+            ✦  Participación en sorteo de auto eléctrico
+          </div>
+          <div style={{ display: "flex", fontSize: 22, color: "#C8C0B5" }}>
+            ✦  Bonus de lealtad: +1 N° por edición consumida
+          </div>
+          <div style={{ display: "flex", fontSize: 22, color: "#C8C0B5" }}>
+            ✦  Acceso a Pichanga Eco (fútbol/vóley/billar)
           </div>
         </div>
 
-        {/* VIGENCIA + QR */}
+        {/* FOOTER: vigencia + QR */}
         <div
           style={{
             display: "flex",
             marginTop: "auto",
-            paddingTop: 36,
-            borderTop: "1px solid rgba(245,239,231,0.10)",
-            alignItems: "flex-end",
+            paddingTop: 40,
+            borderTop: "1px solid #3a2a18",
             justifyContent: "space-between",
+            alignItems: "flex-end",
           }}
         >
-          <div style={{ display: "flex", flexDirection: "column", maxWidth: 600 }}>
-            <div style={{ display: "flex", gap: 48 }}>
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <div style={{ display: "flex", gap: 60 }}>
               <div style={{ display: "flex", flexDirection: "column" }}>
-                <div style={{ fontSize: 12, color: "#7A7367", letterSpacing: "0.22em", textTransform: "uppercase", fontFamily: "monospace", marginBottom: 6 }}>
-                  Activo desde
+                <div style={{ display: "flex", fontSize: 14, color: "#9a8f7a", letterSpacing: 2, marginBottom: 6 }}>
+                  ACTIVO DESDE
                 </div>
-                <div style={{ fontSize: 22, color: "#F5EFE7", fontFamily: "serif" }}>
+                <div style={{ display: "flex", fontSize: 22, color: "#F5EFE7" }}>
                   {fmtFecha(pass.fecha_inicio)}
                 </div>
               </div>
               <div style={{ display: "flex", flexDirection: "column" }}>
-                <div style={{ fontSize: 12, color: "#7A7367", letterSpacing: "0.22em", textTransform: "uppercase", fontFamily: "monospace", marginBottom: 6 }}>
-                  Válido hasta
+                <div style={{ display: "flex", fontSize: 14, color: "#9a8f7a", letterSpacing: 2, marginBottom: 6 }}>
+                  VALIDO HASTA
                 </div>
-                <div style={{ fontSize: 22, color: "#E08821", fontFamily: "serif", fontWeight: 600 }}>
+                <div style={{ display: "flex", fontSize: 22, color: "#E08821", fontWeight: 600 }}>
                   {fmtFecha(pass.fecha_fin)}
                 </div>
               </div>
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                <div style={{ display: "flex", fontSize: 14, color: "#9a8f7a", letterSpacing: 2, marginBottom: 6 }}>
+                  ESTADO
+                </div>
+                <div style={{ display: "flex", fontSize: 22, color: "#4ade80", fontWeight: 600, textTransform: "uppercase" }}>
+                  {pass.estado}
+                </div>
+              </div>
             </div>
-            <div style={{ marginTop: 24, fontSize: 12, color: "#7A7367", letterSpacing: "0.18em", textTransform: "uppercase", fontFamily: "monospace" }}>
-              Eco Drive Plus S.A.C. · RUC 20613413228 · ecodriveplus.com/club
+            <div style={{ display: "flex", marginTop: 30, fontSize: 13, color: "#7a6f5a", letterSpacing: 2 }}>
+              ECO DRIVE PLUS S.A.C. · RUC 20613413228
+            </div>
+            <div style={{ display: "flex", marginTop: 6, fontSize: 13, color: "#7a6f5a", letterSpacing: 2 }}>
+              ECODRIVEPLUS.COM/CLUB
             </div>
           </div>
 
-          {/* QR + sello */}
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-            <div style={{ display: "flex", padding: 8, background: "#F5EFE7", borderRadius: 12 }}>
+            <div style={{ display: "flex", padding: 10, background: "#F5EFE7", borderRadius: 12 }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={qrSrc} width={110} height={110} alt="" />
+              <img src={qrSrc} width={130} height={130} alt="" />
             </div>
-            <div style={{ marginTop: 10, fontSize: 11, color: "#7A7367", letterSpacing: "0.20em", fontFamily: "monospace", textTransform: "uppercase" }}>
-              Verificar socio
+            <div style={{ display: "flex", marginTop: 8, fontSize: 12, color: "#9a8f7a", letterSpacing: 2 }}>
+              VERIFICAR SOCIO
             </div>
           </div>
-        </div>
-
-        {/* SELLO ESQUINA - estado */}
-        <div
-          style={{
-            display: "flex",
-            position: "absolute",
-            top: 56,
-            right: 80,
-            transform: "rotate(8deg)",
-            border: "3px solid rgba(74, 222, 128, 0.45)",
-            color: "rgba(74, 222, 128, 0.85)",
-            padding: "8px 22px",
-            fontSize: 22,
-            letterSpacing: "0.28em",
-            fontFamily: "monospace",
-            textTransform: "uppercase",
-            background: "rgba(0,0,0,0.20)",
-          }}
-        >
-          {pass.estado}
         </div>
 
         {isDemo && (
-          <div
-            style={{
-              display: "flex",
-              position: "absolute",
-              bottom: 24,
-              right: 24,
-              fontSize: 11,
-              color: "rgba(245,239,231,0.35)",
-              letterSpacing: "0.2em",
-              fontFamily: "monospace",
-            }}
-          >
-            DEMO · NO ES UN CARNET REAL
+          <div style={{ display: "flex", position: "absolute", top: 18, left: 0, right: 0, justifyContent: "center", fontSize: 12, color: "#9a8f7a", letterSpacing: 4 }}>
+            DEMO · MOCKUP DE PREVIEW
           </div>
         )}
       </div>
