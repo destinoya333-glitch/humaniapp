@@ -90,7 +90,8 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ ticketId: s
   if (!t) {
     return new Response("ticket not found", { status: 404 });
   }
-  const starDataUri = await loadStarDataUri(origin);
+  const starDataUri = "";
+  void loadStarDataUri;
   const verifyUrl = `${origin}/ecodriveplus/club?verify=${t.id}`;
   const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(verifyUrl)}`;
 
