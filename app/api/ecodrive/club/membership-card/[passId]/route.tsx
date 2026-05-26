@@ -27,32 +27,6 @@ type PassData = {
   miembro: { nombre: string; dni: string; tipo_perfil: string } | null;
 };
 
-async function loadLogoDataUri(origin: string): Promise<string> {
-  try {
-    const r = await fetch(
-      "https://rfpmvnoaqibqiqxrmheb.supabase.co/storage/v1/object/public/brand-assets/ecodrive/logo-final-naranja-trim.png",
-      { cache: "force-cache" },
-    );
-    if (!r.ok) return "";
-    const buf = await r.arrayBuffer();
-    return `data:image/png;base64,${Buffer.from(buf).toString("base64")}`;
-  } catch {
-    void origin;
-    return "";
-  }
-}
-
-async function loadStarDataUri(origin: string): Promise<string> {
-  try {
-    const r = await fetch(`${origin}/ecodriveplus/icon.png`, { cache: "force-cache" });
-    if (!r.ok) return "";
-    const buf = await r.arrayBuffer();
-    return `data:image/png;base64,${Buffer.from(buf).toString("base64")}`;
-  } catch {
-    return "";
-  }
-}
-
 async function getPass(passId: string): Promise<PassData | null> {
   const sb = getClubClient();
   const { data } = await sb
@@ -112,7 +86,6 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ passId: str
   }
   if (!pass || !pass.miembro) return new Response("pass not found", { status: 404 });
 
-  const [logoData, starData] = await Promise.all([loadLogoDataUri(origin), loadStarDataUri(origin)]);
   const verifyUrl = `${origin}/club/mi-cuenta?pass=${isDemo ? "demo" : passId.slice(0, 8)}`;
   const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(verifyUrl)}&bgcolor=ffffff&color=0a0908`;
   const perfilLabel = tipoLabel(pass.miembro.tipo_perfil);
@@ -134,30 +107,14 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ passId: str
           position: "relative",
         }}
       >
-        {/* Estrella sigilo de fondo */}
-        {starData && (
-          <img
-            src={starData}
-            alt=""
-            width={500}
-            height={500}
-            style={{
-              position: "absolute",
-              top: "30%",
-              left: "50%",
-              transform: "translate(-50%, -50%) rotate(15deg)",
-              opacity: 0.08,
-            }}
-          />
-        )}
-
-        {/* HEADER con logo */}
+        {/* HEADER */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          {logoData ? (
-            <img src={logoData} alt="" width={300} height={70} style={{ objectFit: "contain" }} />
-          ) : (
-            <div style={{ fontSize: 36, fontWeight: 700, color: "#E08821" }}>EcoDrive+ Club</div>
-          )}
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <div style={{ fontSize: 44, fontWeight: 700, color: "#F5EFE7", letterSpacing: "-0.01em" }}>
+              EcoDrive<span style={{ color: "#E08821" }}>+</span>
+            </div>
+            <div style={{ fontSize: 18, color: "#E08821", fontStyle: "italic", marginTop: 4 }}>Club</div>
+          </div>
           <div
             style={{
               display: "flex",
