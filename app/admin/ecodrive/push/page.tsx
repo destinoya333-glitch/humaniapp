@@ -1,12 +1,14 @@
 "use client";
 import { useState } from "react";
+import AdminNav from "../AdminNav";
+import { useAdminPass } from "../useAdminPass";
 
 type Result =
   | { ok: true; sent?: number; total?: number; results?: Array<{ telefono: string; zona: string | null; ok: boolean }>; detail?: unknown }
   | { error: string; detail?: unknown };
 
 export default function PushAdminPage() {
-  const [passcode, setPasscode] = useState("");
+  const { passcode, setPasscode, remember } = useAdminPass();
   const [mode, setMode] = useState<"uno" | "broadcast">("uno");
   const [waId, setWaId] = useState("51994810242");
   const [zona, setZona] = useState("");
@@ -40,6 +42,7 @@ export default function PushAdminPage() {
 
   return (
     <div className="min-h-screen bg-zinc-50 p-6">
+      <AdminNav />
       <div className="max-w-2xl mx-auto">
         <h1 className="text-3xl font-bold text-[#E1811B] mb-1">EcoDrive+ Admin</h1>
         <p className="text-zinc-600 mb-6">Mensaje directo via WhatsApp a chofer(es)</p>
@@ -51,6 +54,7 @@ export default function PushAdminPage() {
               type="password"
               value={passcode}
               onChange={(e) => setPasscode(e.target.value)}
+              onBlur={() => passcode && remember(passcode)}
               className="w-full border rounded-lg px-3 py-2"
               placeholder="ECODRIVE_ADMIN_PASSCODE"
             />

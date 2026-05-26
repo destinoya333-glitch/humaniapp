@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
+import AdminNav from "../AdminNav";
+import { useAdminPass } from "../useAdminPass";
 
 type Chofer = {
   id: string;
@@ -28,22 +30,24 @@ type Action =
   | "force_off_duty";
 
 export default function ChoferesAdminPage() {
-  const [passcode, setPasscode] = useState("");
+  const { passcode, setPasscode, remember, booted } = useAdminPass();
   const [authed, setAuthed] = useState(false);
   const [status, setStatus] = useState("pending");
   const [list, setList] = useState<Chofer[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const load = async (st: string) => {
+  const load = async (st: string, pass: string = passcode) => {
+    if (!pass) return;
     setLoading(true);
     try {
       const res = await fetch(`/api/ecodrive/admin/choferes?status=${st}`, {
-        headers: { "x-admin-passcode": passcode },
+        headers: { "x-admin-passcode": pass },
       });
       const json = await res.json();
       if (res.ok) {
         setList(json.data || []);
         setAuthed(true);
+        remember(pass);
       } else if (res.status === 401) {
         setAuthed(false);
       }
@@ -52,8 +56,15 @@ export default function ChoferesAdminPage() {
     }
   };
 
+  // auto-login si ya hay passcode en sessionStorage
+  useEffect(() => {
+    if (booted && passcode && !authed) load(status, passcode);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [booted]);
+
   useEffect(() => {
     if (authed) load(status);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, authed]);
 
   const action = async (id: string, act: Action) => {
@@ -113,6 +124,7 @@ export default function ChoferesAdminPage() {
 
   return (
     <div className="min-h-screen bg-zinc-50 p-6">
+      <AdminNav />
       <div className="max-w-5xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold text-[#E1811B]">Choferes</h1>

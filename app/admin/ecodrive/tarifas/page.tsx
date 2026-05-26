@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
+import AdminNav from "../AdminNav";
+import { useAdminPass } from "../useAdminPass";
 
 type Tipo = { label: string; multiplicador: number };
 type Tarifas = {
@@ -14,16 +16,17 @@ type Tarifas = {
 };
 
 export default function TarifasAdminPage() {
-  const [passcode, setPasscode] = useState("");
+  const { passcode, setPasscode, remember, booted } = useAdminPass();
   const [authed, setAuthed] = useState(false);
   const [t, setT] = useState<Tarifas | null>(null);
   const [meta, setMeta] = useState<{ source?: string; updated_at?: string; warning?: string }>({});
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<string>("");
 
-  const load = async () => {
+  const load = async (pass: string = passcode) => {
+    if (!pass) return;
     const res = await fetch("/api/ecodrive/admin/config?key=tarifas", {
-      headers: { "x-admin-passcode": passcode },
+      headers: { "x-admin-passcode": pass },
     });
     if (res.status === 401) {
       setAuthed(false);
@@ -33,12 +36,13 @@ export default function TarifasAdminPage() {
     setT(j.value as Tarifas);
     setMeta({ source: j.source, updated_at: j.updated_at, warning: j.warning });
     setAuthed(true);
+    remember(pass);
   };
 
   useEffect(() => {
-    if (authed) void load();
+    if (booted && passcode && !authed) void load(passcode);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authed]);
+  }, [booted]);
 
   const save = async () => {
     if (!t) return;
@@ -75,7 +79,7 @@ export default function TarifasAdminPage() {
             className="w-full border rounded-lg px-3 py-2 mb-3"
           />
           <button
-            onClick={() => load()}
+            onClick={() => load(passcode)}
             className="w-full bg-[#E1811B] text-white font-semibold py-2 rounded-lg"
           >
             Entrar
@@ -104,6 +108,7 @@ export default function TarifasAdminPage() {
 
   return (
     <div className="min-h-screen bg-zinc-50 p-6">
+      <AdminNav />
       <div className="max-w-3xl mx-auto">
         <h1 className="text-3xl font-bold text-[#E1811B] mb-1">Tarifas</h1>
         <p className="text-zinc-600 mb-2">

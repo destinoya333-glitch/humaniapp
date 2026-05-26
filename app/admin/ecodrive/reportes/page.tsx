@@ -1,5 +1,7 @@
 "use client";
 import { useState } from "react";
+import AdminNav from "../AdminNav";
+import { useAdminPass } from "../useAdminPass";
 
 const TYPES = [
   { key: "viajes", label: "Viajes" },
@@ -9,7 +11,7 @@ const TYPES = [
 ];
 
 export default function ReportesAdminPage() {
-  const [passcode, setPasscode] = useState("");
+  const { passcode, setPasscode, remember } = useAdminPass();
   const today = new Date().toISOString().slice(0, 10);
   const firstOfMonth =
     new Date().toISOString().slice(0, 7) + "-01";
@@ -23,6 +25,7 @@ export default function ReportesAdminPage() {
 
   return (
     <div className="min-h-screen bg-zinc-50 p-6">
+      <AdminNav />
       <div className="max-w-2xl mx-auto">
         <h1 className="text-3xl font-bold text-[#E1811B] mb-1">Reportes CSV</h1>
         <p className="text-zinc-600 mb-6">
@@ -36,6 +39,7 @@ export default function ReportesAdminPage() {
               type="password"
               value={passcode}
               onChange={(e) => setPasscode(e.target.value)}
+              onBlur={() => passcode && remember(passcode)}
               className="w-full border rounded-lg px-3 py-2"
               placeholder="ECODRIVE_ADMIN_PASSCODE"
             />

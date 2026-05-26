@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
+import AdminNav from "../AdminNav";
+import { useAdminPass } from "../useAdminPass";
 
 type Trip = {
   id: number;
@@ -30,16 +32,17 @@ const fmt = (iso: string) =>
   new Date(iso).toLocaleString("es-PE", { dateStyle: "short", timeStyle: "short" });
 
 export default function IncidenciasAdminPage() {
-  const [passcode, setPasscode] = useState("");
+  const { passcode, setPasscode, remember, booted } = useAdminPass();
   const [authed, setAuthed] = useState(false);
   const [d, setD] = useState<Incidencias | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const load = async () => {
+  const load = async (pass: string = passcode) => {
+    if (!pass) return;
     setLoading(true);
     try {
       const res = await fetch("/api/ecodrive/admin/incidencias", {
-        headers: { "x-admin-passcode": passcode },
+        headers: { "x-admin-passcode": pass },
       });
       if (res.status === 401) {
         setAuthed(false);
@@ -48,15 +51,16 @@ export default function IncidenciasAdminPage() {
       const j = await res.json();
       setD(j);
       setAuthed(true);
+      remember(pass);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (authed) void load();
+    if (booted && passcode && !authed) void load(passcode);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authed]);
+  }, [booted]);
 
   if (!authed) {
     return (
@@ -71,7 +75,7 @@ export default function IncidenciasAdminPage() {
             className="w-full border rounded-lg px-3 py-2 mb-3"
           />
           <button
-            onClick={() => load()}
+            onClick={() => load(passcode)}
             className="w-full bg-[#E1811B] text-white font-semibold py-2 rounded-lg"
           >
             Entrar
@@ -83,6 +87,7 @@ export default function IncidenciasAdminPage() {
 
   return (
     <div className="min-h-screen bg-zinc-50 p-6">
+      <AdminNav />
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold text-[#E1811B]">Incidencias</h1>
