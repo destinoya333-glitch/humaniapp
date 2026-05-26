@@ -59,15 +59,59 @@ def supa(method: str, path: str, params: dict | None = None, body: dict | list |
 def load_recipients(service: str) -> list[dict]:
     """Devuelve lista de {whatsapp, nombre} del servicio, excluye opt-outs."""
     opted_out = {r["whatsapp"] for r in supa("GET", "/marketing_opt_out", {"select": "whatsapp"})}
+
     if service == "club":
         # Solo miembros con Pass activo. Workaround: pull miembros + pull pass activos + join in-memory.
         miembros = supa("GET", "/club_miembros", {"select": "id,nombre,whatsapp"})
         pass_activos = supa("GET", "/club_pass", {"select": "miembro_id", "estado": "eq.activo"})
         ids_activos = {p["miembro_id"] for p in pass_activos}
-        out = [m for m in miembros if m["id"] in ids_activos and m["whatsapp"] not in opted_out]
-        return out
-    if service in ("sofia", "destino", "operadores"):
-        fail(f"servicio '{service}' aún no implementado — pendiente mapear tabla")
+        return [m for m in miembros if m["id"] in ids_activos and m["whatsapp"] not in opted_out]
+
+    if service == "eco":
+        # Pasajeros + choferes EcoDrive+ (deduplica por whatsapp)
+        pas = supa("GET", "/eco_pasajeros", {"select": "nombre,whatsapp", "whatsapp": "not.is.null"})
+        cho = supa("GET", "/eco_choferes", {"select": "nombre,whatsapp", "whatsapp": "not.is.null"})
+        merged: dict[str, dict] = {}
+        for r in (pas + cho):
+            wa = r.get("whatsapp")
+            if wa and wa not in opted_out and wa not in merged:
+                merged[wa] = {"nombre": r.get("nombre", ""), "whatsapp": wa}
+        return list(merged.values())
+
+    if service == "eco-pasajeros":
+        rows = supa("GET", "/eco_pasajeros", {"select": "nombre,whatsapp", "whatsapp": "not.is.null"})
+        return [r for r in rows if r.get("whatsapp") and r["whatsapp"] not in opted_out]
+
+    if service == "eco-choferes":
+        rows = supa("GET", "/eco_choferes", {"select": "nombre,whatsapp", "whatsapp": "not.is.null"})
+        return [r for r in rows if r.get("whatsapp") and r["whatsapp"] not in opted_out]
+
+    if service == "sofia":
+        # Sofia leads + alumnos confirmados (deduplica)
+        leads = supa("GET", "/mse_whatsapp_leads", {"select": "nombre,phone_e164", "phone_e164": "not.is.null"})
+        alumnos = supa("GET", "/sofia_alumnos", {"select": "nombre,whatsapp", "whatsapp": "not.is.null"})
+        merged: dict[str, dict] = {}
+        for r in leads:
+            wa = r.get("phone_e164")
+            if wa and wa not in opted_out and wa not in merged:
+                merged[wa] = {"nombre": r.get("nombre", ""), "whatsapp": wa}
+        for r in alumnos:
+            wa = r.get("whatsapp")
+            if wa and wa not in opted_out and wa not in merged:
+                merged[wa] = {"nombre": r.get("nombre", ""), "whatsapp": wa}
+        return list(merged.values())
+
+    if service == "operadores":
+        rows = supa("GET", "/operadores_leads", {"select": "nombre,whatsapp", "whatsapp": "not.is.null"})
+        return [r for r in rows if r.get("whatsapp") and r["whatsapp"] not in opted_out]
+
+    if service == "novia":
+        rows = supa("GET", "/novia_users", {"select": "nombre,whatsapp", "whatsapp": "not.is.null"})
+        return [r for r in rows if r.get("whatsapp") and r["whatsapp"] not in opted_out]
+
+    if service in ("destino", "cuento", "choferya"):
+        fail(f"servicio '{service}' aún no implementado — pendiente mapear tabla con columna whatsapp en Supabase")
+
     fail(f"servicio desconocido: {service}")
     return []
 
@@ -100,7 +144,11 @@ def send_template(to: str, template: str, body_params: list[str], header_params:
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("--service", required=True, choices=["club", "sofia", "destino", "operadores"])
+    p.add_argument(
+        "--service",
+        required=True,
+        choices=["club", "eco", "eco-pasajeros", "eco-choferes", "sofia", "destino", "cuento", "choferya", "operadores", "novia"],
+    )
     p.add_argument("--template", required=True, help="Nombre exacto del template Meta APPROVED")
     p.add_argument("--body-params", nargs="*", default=[], help="Parámetros del BODY ({{1}}, {{2}}, ...)")
     p.add_argument("--header-params", nargs="*", default=[], help="Parámetros del HEADER (si aplica)")
