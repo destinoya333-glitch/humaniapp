@@ -63,10 +63,30 @@ async function getTicket(ticketId: string): Promise<TicketData | null> {
   };
 }
 
+// Mock data para demo (preview del boleto sin necesidad de ticket real en BD).
+// Activar con ?demo=1
+const DEMO_TICKET: TicketData = {
+  id: "00000000-0000-0000-0000-000000000042",
+  numero_correlativo: 42,
+  paid_at: new Date().toISOString(),
+  created_at: new Date().toISOString(),
+  edicion: {
+    numero_edicion: 1,
+    nombre: "BYD Yuan Pro 2023 — 320 km autonomía",
+    premio_descripcion: "BYD Yuan Pro 2023, SUV 100% eléctrica, autonomía 320 km",
+  },
+  miembro: {
+    nombre: "Percy Manuel Rojas Rubio",
+    dni: "18213129",
+    whatsapp: "51998102258",
+  },
+};
+
 export async function GET(req: NextRequest, ctx: { params: Promise<{ ticketId: string }> }) {
   const { ticketId } = await ctx.params;
+  const isDemo = req.nextUrl.searchParams.get("demo") === "1";
   const origin = req.nextUrl.origin;
-  const t = await getTicket(ticketId);
+  const t = isDemo ? DEMO_TICKET : await getTicket(ticketId);
   if (!t) {
     return new Response("ticket not found", { status: 404 });
   }
