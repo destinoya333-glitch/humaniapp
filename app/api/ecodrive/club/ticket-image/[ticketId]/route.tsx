@@ -5,34 +5,30 @@ import { NextRequest } from "next/server";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// Carga el logo estrella como data URL para embeber en ImageResponse
-async function loadStarDataUri(origin: string): Promise<string> {
-  try {
-    const r = await fetch(`${origin}/ecodriveplus/icon.png`);
-    if (!r.ok) return "";
-    const buf = await r.arrayBuffer();
-    const b64 = Buffer.from(buf).toString("base64");
-    return `data:image/png;base64,${b64}`;
-  } catch {
-    return "";
-  }
-}
-
 type TicketData = {
   id: string;
   numero_correlativo: number;
   paid_at: string | null;
   created_at: string;
+  edicion: { numero_edicion: number; nombre: string; premio_descripcion: string | null } | null;
+  miembro: { nombre: string; dni: string; whatsapp: string } | null;
+};
+
+const DEMO_TICKET: TicketData = {
+  id: "00000000-0000-0000-0000-000000000042",
+  numero_correlativo: 42,
+  paid_at: new Date().toISOString(),
+  created_at: new Date().toISOString(),
   edicion: {
-    numero_edicion: number;
-    nombre: string;
-    premio_descripcion: string | null;
-  } | null;
+    numero_edicion: 1,
+    nombre: "BYD Yuan Pro 2023",
+    premio_descripcion: "SUV 100% eléctrica · 320 km autonomía",
+  },
   miembro: {
-    nombre: string;
-    dni: string;
-    whatsapp: string;
-  } | null;
+    nombre: "Percy Manuel Rojas Rubio",
+    dni: "18213129",
+    whatsapp: "51998102258",
+  },
 };
 
 async function getTicket(ticketId: string): Promise<TicketData | null> {
@@ -63,44 +59,23 @@ async function getTicket(ticketId: string): Promise<TicketData | null> {
   };
 }
 
-// Mock data para demo (preview del boleto sin necesidad de ticket real en BD).
-// Activar con ?demo=1
-const DEMO_TICKET: TicketData = {
-  id: "00000000-0000-0000-0000-000000000042",
-  numero_correlativo: 42,
-  paid_at: new Date().toISOString(),
-  created_at: new Date().toISOString(),
-  edicion: {
-    numero_edicion: 1,
-    nombre: "BYD Yuan Pro 2023 — 320 km autonomía",
-    premio_descripcion: "BYD Yuan Pro 2023, SUV 100% eléctrica, autonomía 320 km",
-  },
-  miembro: {
-    nombre: "Percy Manuel Rojas Rubio",
-    dni: "18213129",
-    whatsapp: "51998102258",
-  },
-};
+const FONT = "system-ui, -apple-system, sans-serif";
 
 export async function GET(req: NextRequest, ctx: { params: Promise<{ ticketId: string }> }) {
   const { ticketId } = await ctx.params;
   const isDemo = req.nextUrl.searchParams.get("demo") === "1";
-  const origin = req.nextUrl.origin;
   const t = isDemo ? DEMO_TICKET : await getTicket(ticketId);
-  if (!t) {
-    return new Response("ticket not found", { status: 404 });
-  }
-  const starDataUri = "";
-  void loadStarDataUri;
-  const verifyUrl = `${origin}/ecodriveplus/club?verify=${t.id}`;
-  const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(verifyUrl)}`;
+  if (!t) return new Response("ticket not found", { status: 404 });
+
+  const origin = req.nextUrl.origin;
+  const verifyUrl = `${origin}/club?verify=${t.id}`;
+  const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(verifyUrl)}&bgcolor=ffffff&color=0a0908`;
 
   const fechaCompra = new Date(t.paid_at ?? t.created_at).toLocaleDateString("es-PE", {
     day: "2-digit",
     month: "long",
     year: "numeric",
   });
-
   const numero = String(t.numero_correlativo).padStart(4, "0");
   const edicionN = String(t.edicion?.numero_edicion ?? 1).padStart(2, "0");
 
@@ -108,230 +83,126 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ ticketId: s
     (
       <div
         style={{
-          display: "flex",
-          flexDirection: "column",
           width: "100%",
           height: "100%",
-          background:
-            "radial-gradient(70% 60% at 12% 18%, rgba(224, 136, 33, 0.30), transparent 60%), radial-gradient(80% 70% at 50% 95%, rgba(184, 106, 18, 0.40), transparent 70%), #0A0908",
-          padding: "48px 56px",
+          display: "flex",
+          flexDirection: "column",
+          background: "linear-gradient(135deg, #1a0f05 0%, #2a1500 50%, #0A0908 100%)",
+          padding: 60,
           color: "#F5EFE7",
-          fontFamily: "system-ui, sans-serif",
-          position: "relative",
+          fontFamily: FONT,
         }}
       >
-        {/* Header */}
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          {starDataUri && (
-            <img src={starDataUri} alt="" width={68} height={68} style={{ objectFit: "contain" }} />
-          )}
-          <div style={{ display: "flex", flexDirection: "column", lineHeight: 1 }}>
-            <div style={{ fontSize: 32, fontWeight: 600 }}>
-              EcoDrive<span style={{ color: "#E08821" }}>+</span> Club
+        {/* HEADER */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <div style={{ display: "flex", fontSize: 52, fontWeight: 700, letterSpacing: -1 }}>
+              EcoDrive<span style={{ color: "#E08821" }}>+</span>
             </div>
-            <div
-              style={{
-                fontSize: 13,
-                color: "#7A7367",
-                letterSpacing: "0.18em",
-                textTransform: "uppercase",
-                marginTop: 8,
-                fontFamily: "system-ui, sans-serif",
-              }}
-            >
-              Boleto Oficial · Edicion #{edicionN}
+            <div style={{ display: "flex", fontSize: 22, color: "#E08821", marginTop: 4, fontStyle: "italic" }}>
+              Club
             </div>
           </div>
-          <div style={{ marginLeft: "auto", display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
-            <div
-              style={{
-                fontSize: 11,
-                color: "#7A7367",
-                letterSpacing: "0.2em",
-                textTransform: "uppercase",
-                fontFamily: "system-ui, sans-serif",
-              }}
-            >
-              N° boleto
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+            <div style={{ display: "flex", fontSize: 14, color: "#9a8f7a", letterSpacing: 3 }}>
+              BOLETO OFICIAL · EDICION #{edicionN}
             </div>
-            <div
-              style={{
-                fontSize: 13,
-                color: "#E08821",
-                letterSpacing: "0.18em",
-                marginTop: 4,
-                fontFamily: "system-ui, sans-serif",
-              }}
-            >
-              {t.id.slice(0, 8).toUpperCase()}
+            <div style={{ display: "flex", fontSize: 16, color: "#E08821", marginTop: 6, letterSpacing: 2 }}>
+              N° BOLETO {t.id.slice(0, 8).toUpperCase()}
             </div>
           </div>
         </div>
 
-        {/* Linea separadora */}
-        <div
-          style={{
-            display: "flex",
-            height: 1,
-            background: "rgba(224,136,33,0.5)",
-            marginTop: 32,
-            marginBottom: 32,
-          }}
-        />
+        {/* SEPARADOR */}
+        <div style={{ display: "flex", height: 2, background: "#E08821", marginTop: 40, marginBottom: 50, opacity: 0.7 }} />
 
         {/* NUMERO GIGANTE */}
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          <div
-            style={{
-              fontSize: 14,
-              color: "#7A7367",
-              letterSpacing: "0.22em",
-              textTransform: "uppercase",
-              fontFamily: "system-ui, sans-serif",
-              marginBottom: 8,
-            }}
-          >
-            Tu numero de la suerte
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <div style={{ display: "flex", fontSize: 18, color: "#9a8f7a", letterSpacing: 4 }}>
+            TU NUMERO DE SOCIO
           </div>
-          <div
-            style={{
-              fontSize: 220,
-              fontWeight: 700,
-              color: "#E08821",
-              letterSpacing: "-0.04em",
-              lineHeight: 1,
-              marginTop: -8,
-            }}
-          >
+          <div style={{ display: "flex", fontSize: 240, fontWeight: 800, color: "#E08821", lineHeight: 1, marginTop: 12, letterSpacing: -8 }}>
             #{numero}
           </div>
         </div>
 
-        {/* Datos del titular */}
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            marginTop: 32,
-            gap: 14,
-          }}
-        >
-          <Row label="Titular" value={t.miembro?.nombre ?? "—"} />
-          <Row label="DNI" value={t.miembro?.dni ?? "—"} mono />
-          <Row label="Premio" value={t.edicion?.nombre ?? "BYD Yuan Pro 2023"} />
-          <Row label="Compra" value={fechaCompra} />
-          <Row label="Entrega" value="Trujillo, La Libertad - Peru" />
+        {/* DATOS */}
+        <div style={{ display: "flex", flexDirection: "column", marginTop: 50, gap: 18 }}>
+          <div style={{ display: "flex", flexDirection: "row", gap: 24 }}>
+            <div style={{ display: "flex", width: 200, fontSize: 14, color: "#9a8f7a", letterSpacing: 2 }}>
+              TITULAR
+            </div>
+            <div style={{ display: "flex", fontSize: 28, color: "#F5EFE7", fontWeight: 600 }}>
+              {t.miembro?.nombre ?? "—"}
+            </div>
+          </div>
+          <div style={{ display: "flex", flexDirection: "row", gap: 24 }}>
+            <div style={{ display: "flex", width: 200, fontSize: 14, color: "#9a8f7a", letterSpacing: 2 }}>
+              DNI
+            </div>
+            <div style={{ display: "flex", fontSize: 24, color: "#F5EFE7", letterSpacing: 2 }}>
+              {t.miembro?.dni ?? "—"}
+            </div>
+          </div>
+          <div style={{ display: "flex", flexDirection: "row", gap: 24 }}>
+            <div style={{ display: "flex", width: 200, fontSize: 14, color: "#9a8f7a", letterSpacing: 2 }}>
+              PREMIO
+            </div>
+            <div style={{ display: "flex", fontSize: 24, color: "#FFA84A" }}>
+              {t.edicion?.nombre ?? "BYD Yuan Pro 2023"}
+            </div>
+          </div>
+          <div style={{ display: "flex", flexDirection: "row", gap: 24 }}>
+            <div style={{ display: "flex", width: 200, fontSize: 14, color: "#9a8f7a", letterSpacing: 2 }}>
+              COMPRA
+            </div>
+            <div style={{ display: "flex", fontSize: 22, color: "#F5EFE7" }}>{fechaCompra}</div>
+          </div>
+          <div style={{ display: "flex", flexDirection: "row", gap: 24 }}>
+            <div style={{ display: "flex", width: 200, fontSize: 14, color: "#9a8f7a", letterSpacing: 2 }}>
+              ENTREGA
+            </div>
+            <div style={{ display: "flex", fontSize: 22, color: "#F5EFE7" }}>
+              Trujillo, La Libertad
+            </div>
+          </div>
         </div>
 
-        {/* Footer con QR + RUC */}
+        {/* FOOTER + QR */}
         <div
           style={{
             display: "flex",
             marginTop: "auto",
-            paddingTop: 24,
-            borderTop: "1px solid rgba(245,239,231,0.08)",
-            alignItems: "flex-end",
+            paddingTop: 30,
+            borderTop: "1px solid #3a2a18",
             justifyContent: "space-between",
+            alignItems: "flex-end",
           }}
         >
-          <div style={{ display: "flex", flexDirection: "column", maxWidth: 540 }}>
-            <div
-              style={{
-                fontSize: 12,
-                color: "#7A7367",
-                letterSpacing: "0.18em",
-                textTransform: "uppercase",
-                fontFamily: "system-ui, sans-serif",
-                marginBottom: 6,
-              }}
-            >
-              Eco Drive Plus S.A.C. · RUC 20613413228
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <div style={{ display: "flex", fontSize: 13, color: "#7a6f5a", letterSpacing: 2 }}>
+              ECO DRIVE PLUS S.A.C. · RUC 20613413228
             </div>
-            <div style={{ fontSize: 14, color: "#C8C0B5", lineHeight: 1.4 }}>
-              Sorteo presencial certificado por notario y fedatario.
-              Trujillo, La Libertad. Conserva este boleto - vale para reclamar el premio.
+            <div style={{ display: "flex", marginTop: 8, fontSize: 14, color: "#C8C0B5", maxWidth: 600 }}>
+              Sorteo presencial con notario público y casino oficial. Conserva este boleto.
             </div>
-            <div
-              style={{
-                fontSize: 11,
-                color: "#E08821",
-                marginTop: 8,
-                fontFamily: "system-ui, sans-serif",
-                letterSpacing: "0.16em",
-              }}
-            >
-              ecodriveplus.com/club
+            <div style={{ display: "flex", marginTop: 12, fontSize: 13, color: "#E08821", letterSpacing: 2 }}>
+              ECODRIVEPLUS.COM/CLUB
             </div>
           </div>
-          {/* QR */}
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              padding: 8,
-              background: "#F5EFE7",
-              borderRadius: 8,
-            }}
-          >
+          <div style={{ display: "flex", padding: 10, background: "#F5EFE7", borderRadius: 12 }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={qrSrc} width={120} height={120} alt="" />
+            <img src={qrSrc} width={130} height={130} alt="" />
           </div>
         </div>
 
-        {/* Sello esquina (sin rotate — ImageResponse falla con transform en algunos casos) */}
-        <div
-          style={{
-            position: "absolute",
-            bottom: 40,
-            right: 60,
-            border: "3px solid rgba(224,136,33,0.45)",
-            color: "rgba(224,136,33,0.65)",
-            padding: "6px 16px",
-            fontSize: 18,
-            letterSpacing: "0.22em",
-            fontFamily: "system-ui, sans-serif",
-            textTransform: "uppercase",
-            display: "flex",
-          }}
-        >
-          Confirmado
-        </div>
+        {isDemo && (
+          <div style={{ display: "flex", position: "absolute", top: 18, left: 0, right: 0, justifyContent: "center", fontSize: 12, color: "#9a8f7a", letterSpacing: 4 }}>
+            DEMO · MOCKUP DE PREVIEW
+          </div>
+        )}
       </div>
     ),
-    {
-      width: 1080,
-      height: 1350,
-    },
-  );
-}
-
-function Row({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
-  return (
-    <div style={{ display: "flex", alignItems: "baseline", gap: 18 }}>
-      <div
-        style={{
-          fontSize: 12,
-          color: "#7A7367",
-          letterSpacing: "0.20em",
-          textTransform: "uppercase",
-          fontFamily: "system-ui, sans-serif",
-          width: 140,
-        }}
-      >
-        {label}
-      </div>
-      <div
-        style={{
-          fontSize: 26,
-          color: "#F5EFE7",
-          fontFamily: "system-ui, sans-serif",
-          letterSpacing: mono ? "0.10em" : "-0.01em",
-          flex: 1,
-        }}
-      >
-        {value}
-      </div>
-    </div>
+    { width: 1080, height: 1350 },
   );
 }
