@@ -279,15 +279,14 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ ticketId: s
           </div>
         </div>
 
-        {/* Sello esquina */}
+        {/* Sello esquina (sin rotate — ImageResponse falla con transform en algunos casos) */}
         <div
           style={{
             position: "absolute",
             bottom: 40,
-            right: 200,
-            transform: "rotate(-12deg)",
+            right: 60,
             border: "3px solid rgba(224,136,33,0.45)",
-            color: "rgba(224,136,33,0.55)",
+            color: "rgba(224,136,33,0.65)",
             padding: "6px 16px",
             fontSize: 18,
             letterSpacing: "0.22em",
