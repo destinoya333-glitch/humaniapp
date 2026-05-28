@@ -11,13 +11,11 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { isAdmin } from "@/lib/ecodrive/admin-auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-function authed(req: NextRequest): boolean {
-  return req.headers.get("x-admin-passcode") === process.env.ECODRIVE_ADMIN_PASSCODE;
-}
 function db() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -28,7 +26,7 @@ function db() {
 const FLAG_WORDS = ["queja", "problema", "robo", "incidente", "accidente", "estafa", "asalto"];
 
 export async function GET(req: NextRequest) {
-  if (!authed(req)) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!isAdmin(req)) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const sb = db();
   const now = Date.now();
   const h48 = new Date(now - 48 * 3600 * 1000).toISOString();

@@ -16,7 +16,7 @@ type Tarifas = {
 };
 
 export default function TarifasAdminPage() {
-  const { passcode, setPasscode, remember, booted } = useAdminPass();
+  const { passcode, setPasscode, remember, booted, cookieAuthed } = useAdminPass();
   const [authed, setAuthed] = useState(false);
   const [t, setT] = useState<Tarifas | null>(null);
   const [meta, setMeta] = useState<{ source?: string; updated_at?: string; warning?: string }>({});
@@ -24,7 +24,6 @@ export default function TarifasAdminPage() {
   const [msg, setMsg] = useState<string>("");
 
   const load = async (pass: string = passcode) => {
-    if (!pass) return;
     const res = await fetch("/api/ecodrive/admin/config?key=tarifas", {
       headers: { "x-admin-passcode": pass },
     });
@@ -40,9 +39,9 @@ export default function TarifasAdminPage() {
   };
 
   useEffect(() => {
-    if (booted && passcode && !authed) void load(passcode);
+    if (booted && (passcode || cookieAuthed) && !authed) void load(passcode);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [booted]);
+  }, [booted, cookieAuthed]);
 
   const save = async () => {
     if (!t) return;

@@ -14,14 +14,13 @@ type Pasajero = {
 };
 
 export default function PasajerosAdminPage() {
-  const { passcode, setPasscode, remember, booted } = useAdminPass();
+  const { passcode, setPasscode, remember, booted, cookieAuthed } = useAdminPass();
   const [authed, setAuthed] = useState(false);
   const [status, setStatus] = useState("pending");
   const [list, setList] = useState<Pasajero[]>([]);
   const [loading, setLoading] = useState(false);
 
   const load = async (st: string, pass: string = passcode) => {
-    if (!pass) return;
     setLoading(true);
     try {
       const res = await fetch(`/api/ecodrive/admin/pasajeros?status=${st}`, {
@@ -39,9 +38,9 @@ export default function PasajerosAdminPage() {
   };
 
   useEffect(() => {
-    if (booted && passcode && !authed) load(status, passcode);
+    if (booted && (passcode || cookieAuthed) && !authed) load(status, passcode);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [booted]);
+  }, [booted, cookieAuthed]);
 
   useEffect(() => {
     if (authed) load(status);

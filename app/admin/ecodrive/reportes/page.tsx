@@ -11,13 +11,15 @@ const TYPES = [
 ];
 
 export default function ReportesAdminPage() {
-  const { passcode, setPasscode, remember } = useAdminPass();
+  const { passcode, setPasscode, remember, cookieAuthed } = useAdminPass();
   const today = new Date().toISOString().slice(0, 10);
   const firstOfMonth =
     new Date().toISOString().slice(0, 7) + "-01";
   const [from, setFrom] = useState(firstOfMonth);
   const [to, setTo] = useState(today);
+  const canDownload = !!passcode || cookieAuthed;
 
+  // p="" cuando la sesion es por cookie del dashboard; la ruta acepta la cookie.
   const link = (type: string) =>
     `/api/ecodrive/admin/export?type=${type}&from=${from}&to=${to}&p=${encodeURIComponent(
       passcode
@@ -41,7 +43,7 @@ export default function ReportesAdminPage() {
               onChange={(e) => setPasscode(e.target.value)}
               onBlur={() => passcode && remember(passcode)}
               className="w-full border rounded-lg px-3 py-2"
-              placeholder="ECODRIVE_ADMIN_PASSCODE"
+              placeholder={cookieAuthed ? "sesion activa (dashboard)" : "ECODRIVE_ADMIN_PASSCODE"}
             />
           </div>
 
@@ -70,15 +72,15 @@ export default function ReportesAdminPage() {
             {TYPES.map((t) => (
               <a
                 key={t.key}
-                href={passcode ? link(t.key) : undefined}
+                href={canDownload ? link(t.key) : undefined}
                 onClick={(e) => {
-                  if (!passcode) {
+                  if (!canDownload) {
                     e.preventDefault();
                     alert("Ingresa el passcode primero.");
                   }
                 }}
                 className={`text-center py-3 rounded-lg font-semibold ${
-                  passcode
+                  canDownload
                     ? "bg-[#E1811B] text-white hover:bg-[#c46b0e]"
                     : "bg-zinc-200 text-zinc-500 cursor-not-allowed"
                 }`}

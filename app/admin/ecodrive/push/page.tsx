@@ -8,7 +8,7 @@ type Result =
   | { error: string; detail?: unknown };
 
 export default function PushAdminPage() {
-  const { passcode, setPasscode, remember } = useAdminPass();
+  const { passcode, setPasscode, remember, cookieAuthed } = useAdminPass();
   const [mode, setMode] = useState<"uno" | "broadcast">("uno");
   const [waId, setWaId] = useState("51994810242");
   const [zona, setZona] = useState("");
@@ -56,7 +56,7 @@ export default function PushAdminPage() {
               onChange={(e) => setPasscode(e.target.value)}
               onBlur={() => passcode && remember(passcode)}
               className="w-full border rounded-lg px-3 py-2"
-              placeholder="ECODRIVE_ADMIN_PASSCODE"
+              placeholder={cookieAuthed ? "sesion activa (dashboard)" : "ECODRIVE_ADMIN_PASSCODE"}
             />
           </div>
 
@@ -125,7 +125,7 @@ export default function PushAdminPage() {
 
           <button
             onClick={submit}
-            disabled={loading || !passcode || !mensaje.trim()}
+            disabled={loading || (!passcode && !cookieAuthed) || !mensaje.trim()}
             className="w-full bg-[#E1811B] text-white font-semibold py-3 rounded-lg hover:bg-[#c46b0e] disabled:opacity-50"
           >
             {loading ? "Enviando..." : "Enviar"}

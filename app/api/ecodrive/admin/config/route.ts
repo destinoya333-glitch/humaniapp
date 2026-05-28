@@ -10,13 +10,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { TARIFAS_DEFAULT } from "@/lib/ecodrive/tarifas";
+import { isAdmin } from "@/lib/ecodrive/admin-auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-function authed(req: NextRequest): boolean {
-  return req.headers.get("x-admin-passcode") === process.env.ECODRIVE_ADMIN_PASSCODE;
-}
 function db() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -29,7 +27,7 @@ const DEFAULTS: Record<string, unknown> = {
 };
 
 export async function GET(req: NextRequest) {
-  if (!authed(req)) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!isAdmin(req)) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const key = req.nextUrl.searchParams.get("key") || "tarifas";
   try {
     const { data, error } = await db()
@@ -64,7 +62,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
-  if (!authed(req)) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!isAdmin(req)) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const body = (await req.json()) as { key: string; value: unknown };
   if (!body.key || body.value === undefined) {
     return NextResponse.json({ error: "key_and_value_required" }, { status: 400 });

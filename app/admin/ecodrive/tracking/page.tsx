@@ -1,12 +1,14 @@
 "use client";
 import { useState } from "react";
+import AdminNav from "../AdminNav";
+import { useAdminPass } from "../useAdminPass";
 
 type Result =
   | { ok: true; session_id: string; meta_message_id?: string }
   | { error: string; detail?: unknown };
 
 export default function EnviarTrackingPage() {
-  const [passcode, setPasscode] = useState("");
+  const { passcode, setPasscode, remember, cookieAuthed } = useAdminPass();
   const [form, setForm] = useState({
     wa_id: "51998102258",
     chofer_nombre: "Pepe Garcia",
@@ -58,8 +60,9 @@ export default function EnviarTrackingPage() {
 
   return (
     <div className="min-h-screen bg-zinc-50 p-6">
+      <AdminNav />
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-3xl font-bold text-[#E1811B] mb-1">EcoDrive+ Admin</h1>
+        <h1 className="text-3xl font-bold text-[#E1811B] mb-1">Tracking</h1>
         <p className="text-zinc-600 mb-6">Iniciar tracking real para un pasajero</p>
 
         <div className="bg-white rounded-xl shadow p-6 space-y-4">
@@ -69,8 +72,9 @@ export default function EnviarTrackingPage() {
               type="password"
               value={passcode}
               onChange={(e) => setPasscode(e.target.value)}
+              onBlur={() => passcode && remember(passcode)}
               className="w-full border rounded-lg px-3 py-2"
-              placeholder="ECODRIVE_ADMIN_PASSCODE"
+              placeholder={cookieAuthed ? "sesion activa (dashboard)" : "ECODRIVE_ADMIN_PASSCODE"}
             />
           </div>
 
@@ -141,7 +145,7 @@ export default function EnviarTrackingPage() {
 
           <button
             onClick={submit}
-            disabled={loading || !passcode}
+            disabled={loading || (!passcode && !cookieAuthed)}
             className="w-full bg-[#E1811B] text-white font-semibold py-3 rounded-lg hover:bg-[#c46b0e] disabled:opacity-50"
           >
             {loading ? "Enviando..." : "Enviar tracking por WhatsApp"}

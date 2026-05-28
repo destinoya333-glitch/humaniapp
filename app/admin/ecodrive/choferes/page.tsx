@@ -30,14 +30,13 @@ type Action =
   | "force_off_duty";
 
 export default function ChoferesAdminPage() {
-  const { passcode, setPasscode, remember, booted } = useAdminPass();
+  const { passcode, setPasscode, remember, booted, cookieAuthed } = useAdminPass();
   const [authed, setAuthed] = useState(false);
   const [status, setStatus] = useState("pending");
   const [list, setList] = useState<Chofer[]>([]);
   const [loading, setLoading] = useState(false);
 
   const load = async (st: string, pass: string = passcode) => {
-    if (!pass) return;
     setLoading(true);
     try {
       const res = await fetch(`/api/ecodrive/admin/choferes?status=${st}`, {
@@ -56,11 +55,11 @@ export default function ChoferesAdminPage() {
     }
   };
 
-  // auto-login si ya hay passcode en sessionStorage
+  // auto-login: passcode en sessionStorage o cookie del dashboard
   useEffect(() => {
-    if (booted && passcode && !authed) load(status, passcode);
+    if (booted && (passcode || cookieAuthed) && !authed) load(status, passcode);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [booted]);
+  }, [booted, cookieAuthed]);
 
   useEffect(() => {
     if (authed) load(status);

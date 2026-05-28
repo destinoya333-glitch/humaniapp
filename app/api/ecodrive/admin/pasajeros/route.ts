@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { isAdmin } from "@/lib/ecodrive/admin-auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-function authed(req: NextRequest): boolean {
-  return req.headers.get("x-admin-passcode") === process.env.ECODRIVE_ADMIN_PASSCODE;
-}
 function db() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -15,7 +13,7 @@ function db() {
 }
 
 export async function GET(req: NextRequest) {
-  if (!authed(req)) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!isAdmin(req)) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const status = req.nextUrl.searchParams.get("status") || "pending";
   const { data, error } = await db()
     .from("eco_pasajeros")
@@ -28,7 +26,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  if (!authed(req)) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!isAdmin(req)) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const body = (await req.json()) as {
     id: string;
     action: "approve" | "reject" | "suspend" | "reactivate" | "refund";

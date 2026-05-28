@@ -32,13 +32,12 @@ const fmt = (iso: string) =>
   new Date(iso).toLocaleString("es-PE", { dateStyle: "short", timeStyle: "short" });
 
 export default function IncidenciasAdminPage() {
-  const { passcode, setPasscode, remember, booted } = useAdminPass();
+  const { passcode, setPasscode, remember, booted, cookieAuthed } = useAdminPass();
   const [authed, setAuthed] = useState(false);
   const [d, setD] = useState<Incidencias | null>(null);
   const [loading, setLoading] = useState(false);
 
   const load = async (pass: string = passcode) => {
-    if (!pass) return;
     setLoading(true);
     try {
       const res = await fetch("/api/ecodrive/admin/incidencias", {
@@ -58,9 +57,9 @@ export default function IncidenciasAdminPage() {
   };
 
   useEffect(() => {
-    if (booted && passcode && !authed) void load(passcode);
+    if (booted && (passcode || cookieAuthed) && !authed) void load(passcode);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [booted]);
+  }, [booted, cookieAuthed]);
 
   if (!authed) {
     return (
