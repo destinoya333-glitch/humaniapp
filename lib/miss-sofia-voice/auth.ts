@@ -36,6 +36,45 @@ export async function getAuthedUser(): Promise<AuthedUser | null> {
 }
 
 /**
+ * Get the authed user from a Bearer access_token (for the MOBILE app, which
+ * has no cookies). Verifies the JWT via the service client. Returns null if
+ * the token is invalid.
+ */
+export async function getAuthedUserFromBearer(token: string): Promise<AuthedUser | null> {
+  if (!token) return null;
+  const service = getServiceClient();
+  const {
+    data: { user },
+  } = await service.auth.getUser(token);
+  if (!user) return null;
+
+  const { data: mseUser } = await service
+    .from("mse_users")
+    .select("id, name")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  return {
+    id: user.id,
+    email: user.email ?? "",
+    needsOnboarding: !mseUser || !(mseUser as { name?: string }).name,
+  };
+}
+
+/**
+ * Hybrid auth: web sends cookies, mobile sends `Authorization: Bearer <token>`.
+ * Tries Bearer first, falls back to the cookie session.
+ */
+export async function getAuthedUserHybrid(req: Request): Promise<AuthedUser | null> {
+  const authHeader = req.headers.get("authorization") ?? req.headers.get("Authorization");
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    const fromBearer = await getAuthedUserFromBearer(authHeader.slice(7).trim());
+    if (fromBearer) return fromBearer;
+  }
+  return getAuthedUser();
+}
+
+/**
  * Service-role client (server-side only) for privileged operations.
  */
 export function getServiceClient() {

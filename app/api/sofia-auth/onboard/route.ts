@@ -17,13 +17,13 @@
  *   - Bridges any prior WhatsApp lead with this phone
  */
 import { NextRequest, NextResponse } from "next/server";
-import { getAuthedUser, getServiceClient } from "@/lib/miss-sofia-voice/auth";
+import { getAuthedUserHybrid, getServiceClient } from "@/lib/miss-sofia-voice/auth";
 import { convertLeadToUser } from "@/lib/miss-sofia-voice/whatsapp-leads";
 
 const VALID_MINUTES: ReadonlySet<number> = new Set([5, 10, 20]);
 
 export async function POST(req: NextRequest) {
-  const authed = await getAuthedUser();
+  const authed = await getAuthedUserHybrid(req);
   if (!authed) return NextResponse.json({ error: "not_authenticated" }, { status: 401 });
 
   const body = await req.json();
