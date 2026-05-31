@@ -12,7 +12,7 @@ import CinematicImage from "./_design/CinematicImage";
 export const metadata: Metadata = {
   title: "EcoDrive+ — La app de Trujillo con agente IA",
   description:
-    "EcoDrive+ Trujillo: app de última generación con agente IA Eco. Pass Club anual S/.99 para sorteos y beneficios. WhatsApp también disponible. Comisión 6.3% para choferes — la más baja del Perú.",
+    "EcoDrive+ Trujillo: app de última generación con agente IA Eco. Pass Club anual S/.30 para sorteos y beneficios. WhatsApp también disponible. Comisión 6.3% para choferes — la más baja del Perú.",
   alternates: { canonical: "https://ecodriveplus.com" },
   keywords: [
     "app taxi Trujillo",
@@ -89,7 +89,7 @@ const TESTIMONIOS = [
 
 const FAQS: Array<[string, React.ReactNode]> = [
   ["¿Necesito descargar la app?", <>Sí — la <strong>app es el producto principal</strong>: ahí vive el agente IA Eco, el mapa GPS en vivo, BilleteraEco, ranking, sorteos del Pass Club. Si solo querés pedir un viaje rápido, también podés hablarle al <strong className="text-[var(--eco-flame)]">994 810 242</strong> por WhatsApp — el bot te atiende 24/7, pero la experiencia completa pide la app. Para choferes, la <strong>app chofer es obligatoria</strong>.</>],
-  ["¿Qué es el Pass EcoDrive+ Club?", <>Una <strong>membresía anual</strong> de <strong className="text-[var(--eco-flame)]">S/.99</strong> (S/.69 si ya sos pasajero o chofer activo). Con un solo pago participás en <strong>cada sorteo del año</strong> — la Edición #1 es un BYD Yuan Pro 2023. Además sumás tickets bonus por cada viaje, descuento del 2 % en BilleteraEco y prioridad en zonas con demanda alta. <Link href="/ecodriveplus/club" className="text-[var(--eco-flame)] underline underline-offset-2">Ver Pass</Link>.</>],
+  ["¿Qué es el Pass EcoDrive+ Club?", <>Una <strong>membresía anual única</strong> de <strong className="text-[var(--eco-flame)]">S/.30</strong>. Con un solo pago participás en <strong>cada sorteo del año</strong> — la Edición #1 es un BYD Yuan Pro 2023. Además sumás tickets bonus por cada viaje, descuento del 2 % en BilleteraEco y prioridad en zonas con demanda alta. <Link href="/ecodriveplus/club" className="text-[var(--eco-flame)] underline underline-offset-2">Ver Pass</Link>.</>],
   ["¿Cómo pago el viaje?", <>Tres opciones: <strong>Yape</strong> (al toque al chofer), <strong>BilleteraEco</strong> en la app (con bono S/.5 al primer viaje) o <strong>efectivo</strong>. Tú eliges.</>],
   ["¿Qué pasa si el chofer no llega?", <>Eco rastrea cada viaje. Si demora o cancela, te reasignamos otro y enviamos compensación a tu BilleteraEco automáticamente.</>],
   ["¿Cómo me registro como chofer?", <>Descargá la <strong>app chofer EcoDrive+</strong> y completá tu perfil: DNI, foto vehículo, SOAT y revisión técnica. Aprobación 24–48 horas. Si preferís, escribí al WhatsApp <strong>994 810 242</strong> y te guiamos el proceso.</>],
@@ -246,7 +246,7 @@ export default function EcoDrivePlusPage() {
 
             <Reveal delay={1.2} className="mt-12 flex flex-wrap gap-x-8 gap-y-2 eco-mono text-[var(--eco-ink-mute)]">
               <span>⌗ Agente IA Eco</span>
-              <span>⌗ Pass Club S/.99/año</span>
+              <span>⌗ Pass Club S/.30/año</span>
               <span>⌗ Yape al toque</span>
               <span>⌗ WhatsApp 24/7</span>
             </Reveal>
@@ -447,7 +447,7 @@ export default function EcoDrivePlusPage() {
       </section>
 
       {/* === BANDA CINEMÁTICA — HUANCHACO === */}
-      <section className="relative h-[60vh] md:h-[75vh] min-h-[420px] border-y border-[var(--eco-line)]">
+      <section className="relative isolate h-[60vh] md:h-[75vh] min-h-[420px] border-y border-[var(--eco-line)] overflow-hidden">
         <CinematicImage src="/ecodriveplus/huanchaco.jpg" alt="Playa de Huanchaco, Trujillo" motion="both" parallaxRange={120} objectPosition="center 45%" className="absolute inset-0">
           <div aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(10,9,8,0.45) 0%, rgba(10,9,8,0.20) 50%, rgba(10,9,8,0.85) 100%)" }} />
           <div aria-hidden className="absolute inset-0" style={{ background: "radial-gradient(80% 60% at 50% 60%, rgba(224,136,33,0.18), transparent 70%)" }} />
@@ -529,7 +529,7 @@ export default function EcoDrivePlusPage() {
       </section>
 
       {/* === BANDA CINEMÁTICA — AUTO MODERNO === */}
-      <section className="relative h-[52vh] md:h-[68vh] min-h-[380px] border-y border-[var(--eco-line)]">
+      <section className="relative isolate h-[52vh] md:h-[68vh] min-h-[380px] border-y border-[var(--eco-line)] overflow-hidden">
         <CinematicImage src="/ecodriveplus/auto-moderno.jpg" motion="both" parallaxRange={120} className="absolute inset-0">
           <div aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(90deg, rgba(10,9,8,0.92) 0%, rgba(10,9,8,0.55) 45%, transparent 100%)" }} />
         </CinematicImage>
@@ -794,7 +794,7 @@ export default function EcoDrivePlusPage() {
       </section>
 
       {/* === BANDA CINEMÁTICA — CIUDAD AÉREA NOCTURNA === */}
-      <section className="relative h-[55vh] md:h-[68vh] min-h-[380px] border-y border-[var(--eco-line)]">
+      <section className="relative isolate h-[55vh] md:h-[68vh] min-h-[380px] border-y border-[var(--eco-line)] overflow-hidden">
         <CinematicImage src="/ecodriveplus/ciudad-aerial.jpg" motion="both" parallaxRange={140} className="absolute inset-0">
           <div aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(10,9,8,0.45) 0%, rgba(10,9,8,0.20) 45%, rgba(10,9,8,0.85) 100%)" }} />
           <div aria-hidden className="absolute inset-0" style={{ background: "radial-gradient(60% 50% at 30% 60%, rgba(224,136,33,0.20), transparent 70%)" }} />
@@ -813,8 +813,11 @@ export default function EcoDrivePlusPage() {
       </section>
 
       {/* === PASS ECODRIVE+ CLUB · MEMBRESÍA === */}
-      <section id="pass" className="relative py-32 md:py-40 border-t border-[var(--eco-line)] overflow-hidden">
-        <div aria-hidden className="absolute inset-0 pointer-events-none">
+      <section
+        id="pass"
+        className="relative isolate py-32 md:py-40 border-t border-[var(--eco-line)] overflow-hidden bg-[var(--eco-bg-deep)]"
+      >
+        <div aria-hidden className="absolute inset-0 pointer-events-none -z-10">
           <div className="absolute -top-1/4 right-1/4 w-[60vw] h-[60vw] rounded-full" style={{ background: "radial-gradient(closest-side, rgba(224,136,33,0.18), transparent 70%)", filter: "blur(140px)" }} />
         </div>
 
@@ -839,42 +842,49 @@ export default function EcoDrivePlusPage() {
             </p>
           </Reveal>
 
-          {/* Tarjetas precio */}
-          <div className="grid md:grid-cols-2 gap-6 mb-16">
-            <Reveal>
-              <div className="relative border border-[var(--eco-line-strong)] rounded-3xl p-8 md:p-10 h-full bg-[var(--eco-bg)]/60 eco-card">
-                <div className="eco-mono text-[var(--eco-ink-mute)] mb-4">— Pass público</div>
-                <div className="flex items-baseline gap-3">
-                  <div className="eco-display text-[80px] md:text-[112px] text-[var(--eco-ink)] leading-none">S/.99</div>
-                  <div className="eco-mono text-[var(--eco-ink-soft)]">/ año</div>
+          {/* Tarjeta precio única S/.30 */}
+          <div className="grid lg:grid-cols-12 gap-6 mb-12 items-stretch">
+            <Reveal className="lg:col-span-7">
+              <div className="relative border-2 border-[var(--eco-flame)] rounded-3xl p-8 md:p-12 h-full bg-[var(--eco-bg-deep)] eco-card overflow-hidden shadow-[0_20px_60px_-20px_rgba(224,136,33,0.4)]">
+                <div aria-hidden className="absolute -top-16 -right-16 w-72 h-72 eco-sigil opacity-15 eco-spin-slow" />
+                <div className="relative z-10">
+                  <div className="eco-mono text-[var(--eco-flame)] mb-6 flex items-center gap-3 flex-wrap">
+                    <span className="inline-block h-2 w-2 rounded-full bg-[var(--eco-flame)] animate-pulse" />
+                    — Pass anual
+                    <span className="text-[10px] uppercase px-2 py-0.5 rounded-full bg-[var(--eco-flame)] text-[var(--eco-bg-deep)] tracking-wider">precio único</span>
+                  </div>
+                  <div className="flex items-baseline gap-4 flex-wrap">
+                    <div className="eco-display text-[96px] md:text-[144px] xl:text-[176px] text-[var(--eco-flame)] leading-none">S/.30</div>
+                    <div className="eco-mono text-[var(--eco-ink-soft)] text-lg">/ año</div>
+                  </div>
+                  <p className="mt-4 eco-mono text-[var(--eco-ink-mute)]">
+                    Un solo pago. Una sola membresía. Todos los beneficios. Todo el año.
+                  </p>
+                  <div className="mt-10">
+                    <Magnetic strength={0.3}>
+                      <Link
+                        href={CLUB_URL}
+                        className="inline-flex items-center gap-3 px-8 py-4 rounded-full bg-[var(--eco-flame)] text-[var(--eco-bg-deep)] font-semibold eco-mono hover:bg-[var(--eco-flame-soft)] transition-colors shadow-[0_8px_32px_-8px_rgba(224,136,33,0.7)]"
+                      >
+                        Activar mi Pass
+                        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+                      </Link>
+                    </Magnetic>
+                  </div>
                 </div>
-                <ul className="mt-8 space-y-3 eco-mono text-[var(--eco-ink-soft)]">
-                  <li className="flex items-start gap-3"><span className="text-[var(--eco-flame)] mt-1">✦</span>Participás en TODAS las ediciones del año</li>
-                  <li className="flex items-start gap-3"><span className="text-[var(--eco-flame)] mt-1">✦</span>Tickets bonus por cada viaje EcoDrive+</li>
-                  <li className="flex items-start gap-3"><span className="text-[var(--eco-flame)] mt-1">✦</span>Descuento 2 % en BilleteraEco</li>
-                  <li className="flex items-start gap-3"><span className="text-[var(--eco-flame)] mt-1">✦</span>Prioridad asignación en zonas con demanda alta</li>
-                </ul>
               </div>
             </Reveal>
 
-            <Reveal delay={0.1}>
-              <div className="relative border-2 border-[var(--eco-flame)] rounded-3xl p-8 md:p-10 h-full bg-gradient-to-br from-[var(--eco-flame)]/10 to-transparent eco-card overflow-hidden">
-                <div aria-hidden className="absolute -top-12 -right-12 w-48 h-48 eco-sigil opacity-20 eco-spin-slow" />
-                <div className="relative">
-                  <div className="eco-mono text-[var(--eco-flame)] mb-4 flex items-center gap-2">
-                    — Pass interno <span className="text-[10px] uppercase px-2 py-0.5 rounded-full bg-[var(--eco-flame)] text-[var(--eco-bg-deep)]">para choferes y pasajeros activos</span>
-                  </div>
-                  <div className="flex items-baseline gap-3">
-                    <div className="eco-display text-[80px] md:text-[112px] text-[var(--eco-flame)] leading-none">S/.69</div>
-                    <div className="eco-mono text-[var(--eco-ink-soft)]">/ año</div>
-                  </div>
-                  <ul className="mt-8 space-y-3 eco-mono text-[var(--eco-ink-soft)]">
-                    <li className="flex items-start gap-3"><span className="text-[var(--eco-flame)] mt-1">✦</span>Todo lo del Pass público</li>
-                    <li className="flex items-start gap-3"><span className="text-[var(--eco-flame)] mt-1">✦</span>Descuento exclusivo S/.30 vs. público</li>
-                    <li className="flex items-start gap-3"><span className="text-[var(--eco-flame)] mt-1">✦</span>2x boletos en la primera edición</li>
-                    <li className="flex items-start gap-3"><span className="text-[var(--eco-flame)] mt-1">✦</span>Activos digitales ActivosYA incluidos (selección)</li>
-                  </ul>
-                </div>
+            <Reveal delay={0.1} className="lg:col-span-5">
+              <div className="relative border border-[var(--eco-line-strong)] rounded-3xl p-8 md:p-10 h-full bg-[var(--eco-bg-deep)] eco-card">
+                <div className="eco-mono text-[var(--eco-ink-mute)] mb-6">— Qué incluye</div>
+                <ul className="space-y-4 eco-mono text-[var(--eco-ink-soft)] text-[15px] leading-relaxed">
+                  <li className="flex items-start gap-3"><span className="text-[var(--eco-flame)] mt-0.5 text-lg leading-none">✦</span>Participás en TODAS las ediciones del año (auto, moto, electrodomésticos)</li>
+                  <li className="flex items-start gap-3"><span className="text-[var(--eco-flame)] mt-0.5 text-lg leading-none">✦</span>Tickets bonus por cada viaje EcoDrive+ que tomás</li>
+                  <li className="flex items-start gap-3"><span className="text-[var(--eco-flame)] mt-0.5 text-lg leading-none">✦</span>Descuento 2 % en BilleteraEco</li>
+                  <li className="flex items-start gap-3"><span className="text-[var(--eco-flame)] mt-0.5 text-lg leading-none">✦</span>Prioridad en zonas con demanda alta</li>
+                  <li className="flex items-start gap-3"><span className="text-[var(--eco-flame)] mt-0.5 text-lg leading-none">✦</span>Activos digitales ActivosYA (selección)</li>
+                </ul>
               </div>
             </Reveal>
           </div>
@@ -903,7 +913,7 @@ export default function EcoDrivePlusPage() {
                         href={CLUB_URL}
                         className="inline-flex items-center gap-3 px-7 py-4 rounded-full bg-[var(--eco-flame)] text-[var(--eco-bg-deep)] font-semibold eco-mono hover:bg-[var(--eco-flame-soft)] transition-colors whitespace-nowrap shadow-[0_8px_32px_-8px_rgba(224,136,33,0.7)]"
                       >
-                        Activar mi Pass
+                        Ver Edición #1
                         <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
                       </Link>
                     </Magnetic>
@@ -987,7 +997,7 @@ export default function EcoDrivePlusPage() {
               </Magnetic>
               <Magnetic strength={0.25}>
                 <Link href={CLUB_URL} className="inline-flex items-center justify-center gap-2 px-8 py-5 rounded-full border border-[var(--eco-flame)] text-[var(--eco-flame)] hover:bg-[var(--eco-flame)]/10 eco-mono transition-colors">
-                  Activar mi Pass S/.99
+                  Activar mi Pass S/.30
                 </Link>
               </Magnetic>
               <Magnetic strength={0.2}>

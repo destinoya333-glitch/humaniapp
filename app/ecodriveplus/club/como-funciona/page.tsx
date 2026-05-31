@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 const FAQ: Array<{ q: string; a: string }> = [
   {
     q: "¿Qué es Club Pass?",
-    a: "Es la membresía anual del programa EcoDrive+ Club. Pagás una sola vez S/.99 (o S/.69 si sos pasajero/chofer EcoDrive+) y quedás activo 12 meses. Durante esos 12 meses participás en cada edición del sorteo que se ejecute, con número(s) asignados a tu nombre. El programa NO vende tickets sueltos — la única forma de participar es haciéndose Pass.",
+    a: "Es la membresía anual del programa EcoDrive+ Club. Pagás una sola vez S/.30 (precio único) y quedás activo 12 meses. Durante esos 12 meses participás en cada edición del sorteo que se ejecute, con número(s) asignados a tu nombre. El programa NO vende tickets sueltos — la única forma de participar es haciéndose Pass.",
   },
   {
     q: "¿Cómo se ejecuta el sorteo?",

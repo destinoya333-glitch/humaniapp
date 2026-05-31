@@ -37,7 +37,7 @@ export default function BasesPage() {
           <Clause n={3} t="Modalidad de participación">
             <ul>
               <li>
-                <strong>Club Pass anual</strong>: S/.99 (público) o S/.69 (interno EcoDrive+). Vigencia 12 meses
+                <strong>Club Pass anual</strong>: S/.30 (precio único). Vigencia 12 meses
                 desde la fecha de compra. Otorga 1 número en cada edición que se ejecute durante la vigencia,
                 más bonus por lealtad (1 número adicional por cada edición consumida, hasta 5 totales por Pass por edición).
               </li>

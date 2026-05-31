@@ -16,12 +16,12 @@ const LOCAL_HERO = "/ecodriveplus/byd-yuan-pro.jpg";
 export const metadata: Metadata = {
   title: "EcoDrive+ Club — Membresía anual que sortea un BYD Yuan Pro 2023",
   description:
-    "Programa de membresía con bonificación de sorteo. Club Pass anual S/.99 (S/.69 interno EcoDrive+). Participás en cada edición del año + bonus por lealtad.",
+    "Programa de membresía con bonificación de sorteo. Club Pass anual S/.30 único. Participás en cada edición del año + bonus por lealtad.",
   alternates: { canonical: "https://ecodriveplus.com/club" },
   openGraph: {
     type: "website",
     title: "Membresía Club EcoDrive+ — Gana un BYD Yuan Pro 2023",
-    description: "Pass anual S/.99 (S/.69 interno). Participás en todos los sorteos del año. Notario público + acta blockchain.",
+    description: "Pass anual S/.30. Participás en todos los sorteos del año. Notario público + acta blockchain.",
     url: "https://ecodriveplus.com/club",
     siteName: "EcoDrive+",
     images: [{ url: HERO_IMG, width: 1200, height: 800, alt: "BYD Yuan Pro 2023 — EcoDrive+ Club" }],
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Membresía Club EcoDrive+ — Gana un BYD Yuan Pro 2023",
-    description: "Pass anual desde S/.69. Sorteo presencial con notario. Participás en cada edición del año.",
+    description: "Pass anual S/.30. Sorteo presencial con notario. Participás en cada edición del año.",
     images: [HERO_IMG],
   },
 };
@@ -182,7 +182,7 @@ export default async function ClubPage() {
             </Reveal>
 
             <Reveal delay={1.05} className="mt-12 flex flex-wrap gap-x-6 gap-y-3 eco-mono text-[var(--eco-ink-mute)]">
-              <span>⌗ Pass anual S/. 99</span>
+              <span>⌗ Pass anual S/. 30</span>
               <span>⌗ Interno EcoDrive+ S/. 69</span>
               <span>⌗ Hasta 5 Pass por DNI</span>
               <span>⌗ RUC 20613413228</span>
@@ -244,8 +244,8 @@ export default async function ClubPage() {
                   edicionId={actual.edicion_id}
                   ticketPublico={Number(actual.precio_publico)}
                   ticketInterno={Number(actual.precio_interno)}
-                  passPublico={Number(programa?.pass_precio_publico ?? 99)}
-                  passInterno={Number(programa?.pass_precio_interno ?? 69)}
+                  passPublico={Number(programa?.pass_precio_publico ?? 30)}
+                  passInterno={Number(programa?.pass_precio_interno ?? 30)}
                   meta={actual.meta}
                 />
               </div>
@@ -266,8 +266,8 @@ export default async function ClubPage() {
                   </Link>
                 </Magnetic>
                 <p className="eco-mono text-[var(--eco-ink-mute)]">
-                  Club Pass anual <strong className="text-[var(--eco-ink)]">S/. {Number(programa?.pass_precio_publico ?? 99)}</strong>{" "}
-                  (S/. {Number(programa?.pass_precio_interno ?? 69)} interno EcoDrive+) · Meta {preview.meta_tickets.toLocaleString("es-PE")} por edición
+                  Club Pass anual <strong className="text-[var(--eco-ink)]">S/. {Number(programa?.pass_precio_publico ?? 30)}</strong>{" "}
+                  · Meta {preview.meta_tickets.toLocaleString("es-PE")} por edición
                 </p>
               </div>
             </Reveal>
@@ -301,7 +301,7 @@ export default async function ClubPage() {
           <div className="grid md:grid-cols-3 gap-8 relative">
             <div aria-hidden className="hidden md:block absolute top-12 left-[8%] right-[8%] h-px bg-gradient-to-r from-transparent via-[var(--eco-flame)] to-transparent opacity-40" />
             {[
-              ["01", "Te haces Pass", "Club Pass anual S/. 99 (S/. 69 si sos pasajero o chofer EcoDrive+). Vigencia 12 meses desde la compra."],
+              ["01", "Te haces Pass", "Club Pass anual S/. 30. Vigencia 12 meses desde la compra."],
               ["02", "Pagas", "Yape al 998 102 258. En menos de 2 minutos tu Pass queda activado y recibís número por WhatsApp."],
               ["03", "Participás todo el año", "En cada edición que se ejecuta durante tu vigencia participás con número(s). Bonus de lealtad +1 por edición consumida (cap 5)."],
             ].map(([code, title, desc], i) => (
