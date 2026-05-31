@@ -10,15 +10,17 @@ import ChatMockup from "./_design/ChatMockup";
 import CinematicImage from "./_design/CinematicImage";
 
 export const metadata: Metadata = {
-  title: "EcoDrive+ — Pides tu carro como pides delivery",
+  title: "EcoDrive+ — La app de Trujillo con agente IA",
   description:
-    "EcoDrive+ Trujillo: pide tu taxi por WhatsApp en 12 segundos. App pasajero y conductor para billetera, mapa GPS, ranking y Club EcoDrive+. Comisión 6.3% para choferes — la más baja del Perú.",
+    "EcoDrive+ Trujillo: app de última generación con agente IA Eco. Pass Club anual S/.99 para sorteos y beneficios. WhatsApp también disponible. Comisión 6.3% para choferes — la más baja del Perú.",
   alternates: { canonical: "https://ecodriveplus.com" },
   keywords: [
-    "taxi Trujillo WhatsApp",
     "app taxi Trujillo",
+    "app taxi inteligente Peru",
+    "agente IA taxi",
     "EcoDrive Trujillo",
-    "pedir taxi por WhatsApp",
+    "membresia taxi sorteo BYD",
+    "Club EcoDrive Pass",
     "app conductor Trujillo",
     "chofer Trujillo comisión baja",
     "InDrive alternativa Perú",
@@ -29,6 +31,8 @@ export const metadata: Metadata = {
 const PASAJERO_WA = "https://wa.me/51994810242?text=Hola,%20quiero%20pedir%20un%20taxi";
 // CHOFER_WA queda como punto de entrada para info inicial; el uso operativo del chofer es en la app.
 const CHOFER_WA = "https://wa.me/51994810242?text=Hola,%20quiero%20info%20de%20la%20app%20conductor%20EcoDrive%2B";
+const APP_DOWNLOAD = "/ecodriveplus/descargar-app";
+const CLUB_URL = "/ecodriveplus/club";
 
 const META_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID;
 const GA4_ID = process.env.NEXT_PUBLIC_GA4_ID;
@@ -84,7 +88,8 @@ const TESTIMONIOS = [
 ];
 
 const FAQS: Array<[string, React.ReactNode]> = [
-  ["¿Necesito descargar la app?", <>Para <strong>pedir un taxi</strong> no — basta con WhatsApp al <strong className="text-[var(--eco-flame)]">994 810 242</strong>. Si querés mapa GPS en vivo, BilleteraEco, ranking, sorteos del Club y todos los beneficios, descargá la <strong>app pasajero EcoDrive+</strong>. Si te registrás como conductor, la <strong>app chofer es obligatoria</strong> para operar.</>],
+  ["¿Necesito descargar la app?", <>Sí — la <strong>app es el producto principal</strong>: ahí vive el agente IA Eco, el mapa GPS en vivo, BilleteraEco, ranking, sorteos del Pass Club. Si solo querés pedir un viaje rápido, también podés hablarle al <strong className="text-[var(--eco-flame)]">994 810 242</strong> por WhatsApp — el bot te atiende 24/7, pero la experiencia completa pide la app. Para choferes, la <strong>app chofer es obligatoria</strong>.</>],
+  ["¿Qué es el Pass EcoDrive+ Club?", <>Una <strong>membresía anual</strong> de <strong className="text-[var(--eco-flame)]">S/.99</strong> (S/.69 si ya sos pasajero o chofer activo). Con un solo pago participás en <strong>cada sorteo del año</strong> — la Edición #1 es un BYD Yuan Pro 2023. Además sumás tickets bonus por cada viaje, descuento del 2 % en BilleteraEco y prioridad en zonas con demanda alta. <Link href="/ecodriveplus/club" className="text-[var(--eco-flame)] underline underline-offset-2">Ver Pass</Link>.</>],
   ["¿Cómo pago el viaje?", <>Tres opciones: <strong>Yape</strong> (al toque al chofer), <strong>BilleteraEco</strong> en la app (con bono S/.5 al primer viaje) o <strong>efectivo</strong>. Tú eliges.</>],
   ["¿Qué pasa si el chofer no llega?", <>Eco rastrea cada viaje. Si demora o cancela, te reasignamos otro y enviamos compensación a tu BilleteraEco automáticamente.</>],
   ["¿Cómo me registro como chofer?", <>Descargá la <strong>app chofer EcoDrive+</strong> y completá tu perfil: DNI, foto vehículo, SOAT y revisión técnica. Aprobación 24–48 horas. Si preferís, escribí al WhatsApp <strong>994 810 242</strong> y te guiamos el proceso.</>],
@@ -122,7 +127,7 @@ export default function EcoDrivePlusPage() {
           name: "EcoDrive+",
           url: "https://ecodriveplus.com",
           logo: "https://rfpmvnoaqibqiqxrmheb.supabase.co/storage/v1/object/public/brand-assets/ecodrive/logo-final-naranja-trim.png",
-          description: "Servicio de transporte híbrido: pides por WhatsApp, gestionás desde la app. Comisión 6.3% para choferes — la más baja del Perú.",
+          description: "App de transporte de última generación con agente IA. Membresía Pass Club anual para sorteos y beneficios. WhatsApp también disponible. Comisión 6.3% para choferes — la más baja del Perú.",
           areaServed: { "@type": "City", name: "Trujillo, Perú" },
           contactPoint: {
             "@type": "ContactPoint",
@@ -151,8 +156,9 @@ export default function EcoDrivePlusPage() {
             />
           </Link>
 
-          <nav className="hidden lg:flex items-center gap-10 eco-mono text-[var(--eco-ink-soft)]">
-            <a href="#manifesto" className="hover:text-[var(--eco-flame)] transition-colors">Manifiesto</a>
+          <nav className="hidden lg:flex items-center gap-7 xl:gap-9 eco-mono text-[var(--eco-ink-soft)] text-sm">
+            <a href="#ia" className="hover:text-[var(--eco-flame)] transition-colors">IA</a>
+            <a href="#pass" className="hover:text-[var(--eco-flame)] transition-colors">Pass</a>
             <a href="#como" className="hover:text-[var(--eco-flame)] transition-colors">Cómo opera</a>
             <a href="#niveles" className="hover:text-[var(--eco-flame)] transition-colors">Niveles</a>
             <a href="#contra" className="hover:text-[var(--eco-flame)] transition-colors">Contraste</a>
@@ -160,13 +166,13 @@ export default function EcoDrivePlusPage() {
           </nav>
 
           <Magnetic strength={0.3}>
-            <a
-              href={PASAJERO_WA}
-              className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[var(--eco-flame)] hover:bg-[var(--eco-flame-soft)] text-[var(--eco-bg-deep)] eco-mono font-semibold transition-colors"
+            <Link
+              href={APP_DOWNLOAD}
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[var(--eco-flame)] hover:bg-[var(--eco-flame-soft)] text-[var(--eco-bg-deep)] eco-mono font-semibold transition-colors shadow-[0_6px_24px_-6px_rgba(224,136,33,0.6)]"
             >
               <span className="h-2 w-2 rounded-full bg-[var(--eco-bg-deep)] animate-pulse" />
-              Hablar con Eco
-            </a>
+              Descargar app
+            </Link>
           </Magnetic>
         </div>
       </header>
@@ -192,55 +198,57 @@ export default function EcoDrivePlusPage() {
               <span className="eco-mono text-[var(--eco-flame)]">N° 001 / VOLUMEN ÚNICO</span>
             </Reveal>
 
-            <h1 className="eco-display text-[64px] sm:text-[88px] md:text-[120px] xl:text-[152px] text-[var(--eco-ink)]">
+            <h1 className="eco-display text-[56px] sm:text-[80px] md:text-[104px] xl:text-[128px] leading-[0.92] text-[var(--eco-ink)] break-words">
               <span className="block">
-                <WordReveal text="Pides" />
+                <WordReveal text="La app" />
               </span>
-              <span className="block -mt-2 md:-mt-4">
-                <WordReveal text="tu carro" delay={0.18} />
+              <span className="block -mt-1 md:-mt-3">
+                <WordReveal text="de Trujillo." delay={0.18} />
               </span>
-              <span className="block eco-display-italic text-[var(--eco-flame)] -mt-2 md:-mt-4 pl-[18%]">
-                <WordReveal text="como pides" delay={0.34} />
+              <span className="block eco-display-italic text-[var(--eco-flame)] -mt-1 md:-mt-3 pl-[6%] sm:pl-[10%]">
+                <WordReveal text="Con agente IA" delay={0.34} />
               </span>
-              <span className="block eco-display-italic text-[var(--eco-flame)] -mt-2 md:-mt-4 pl-[36%]">
-                <WordReveal text="delivery." delay={0.5} />
+              <span className="block eco-display-italic text-[var(--eco-flame)] -mt-1 md:-mt-3 pl-[12%] sm:pl-[18%]">
+                <WordReveal text="que te conoce." delay={0.5} />
               </span>
             </h1>
 
-            <Reveal delay={0.85} className="mt-10 max-w-md text-[17px] md:text-[18px] text-[var(--eco-ink-soft)] leading-[1.55]">
+            <Reveal delay={0.85} className="mt-10 max-w-lg text-[17px] md:text-[18px] text-[var(--eco-ink-soft)] leading-[1.55]">
               <p>
-                Pedís tu taxi por <strong className="text-[var(--eco-ink)]">WhatsApp</strong> en 12 segundos.
-                Tu billetera, mapa GPS, ranking y sorteo del Club viven en la{" "}
-                <strong className="text-[var(--eco-ink)]">app pasajero</strong>.{" "}
-                <span className="eco-display-italic text-[var(--eco-flame-soft)]">Lo mejor de ambos mundos.</span>
+                Descargás la <strong className="text-[var(--eco-ink)]">app EcoDrive+</strong> y tu agente IA{" "}
+                <span className="eco-display-italic text-[var(--eco-flame-soft)]">Eco</span> aprende tus lugares,
+                te sugiere viajes y te avisa de zonas seguras. Billetera, mapa GPS en vivo, sorteos del{" "}
+                <strong className="text-[var(--eco-ink)]">Pass Club</strong> — todo dentro.
+                ¿Apurado? Hablale a Eco por <strong className="text-[var(--eco-ink)]">WhatsApp</strong> y listo.
               </p>
             </Reveal>
 
             <Reveal delay={1.05} className="mt-12 flex flex-col sm:flex-row gap-4">
               <Magnetic strength={0.35}>
-                <a
-                  href={PASAJERO_WA}
-                  className="group inline-flex items-center justify-center gap-3 px-9 py-5 rounded-full bg-[var(--eco-flame)] text-[var(--eco-bg-deep)] font-semibold eco-mono hover:bg-[var(--eco-flame-soft)] transition-colors"
+                <Link
+                  href={APP_DOWNLOAD}
+                  className="group inline-flex items-center justify-center gap-3 px-9 py-5 rounded-full bg-[var(--eco-flame)] text-[var(--eco-bg-deep)] font-semibold eco-mono hover:bg-[var(--eco-flame-soft)] transition-colors shadow-[0_8px_32px_-8px_rgba(224,136,33,0.6)]"
                 >
-                  Pedir mi primer viaje
-                  <svg viewBox="0 0 24 24" className="h-4 w-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
-                </a>
+                  Descargar la app
+                  <svg viewBox="0 0 24 24" className="h-4 w-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12l7 7 7-7" /></svg>
+                </Link>
               </Magnetic>
               <Magnetic strength={0.25}>
                 <a
-                  href={CHOFER_WA}
+                  href={PASAJERO_WA}
                   className="inline-flex items-center justify-center gap-2 px-8 py-5 rounded-full border border-[var(--eco-line-strong)] text-[var(--eco-ink-soft)] eco-mono hover:border-[var(--eco-flame)] hover:text-[var(--eco-flame)] transition-colors"
                 >
-                  Ser chofer
+                  <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4" aria-hidden><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884"/></svg>
+                  WhatsApp directo
                 </a>
               </Magnetic>
             </Reveal>
 
             <Reveal delay={1.2} className="mt-12 flex flex-wrap gap-x-8 gap-y-2 eco-mono text-[var(--eco-ink-mute)]">
-              <span>⌗ WhatsApp para pedir</span>
-              <span>⌗ App para todo lo demás</span>
+              <span>⌗ Agente IA Eco</span>
+              <span>⌗ Pass Club S/.99/año</span>
               <span>⌗ Yape al toque</span>
-              <span>⌗ 24 / 7</span>
+              <span>⌗ WhatsApp 24/7</span>
             </Reveal>
           </div>
 
@@ -337,6 +345,107 @@ export default function EcoDrivePlusPage() {
         </div>
       </section>
 
+      {/* === INTELIGENCIA ECO AI === */}
+      <section id="ia" className="relative py-32 md:py-40 border-t border-[var(--eco-line)] overflow-hidden">
+        <div aria-hidden className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-1/4 -left-1/4 w-[55vw] h-[55vw] rounded-full" style={{ background: "radial-gradient(closest-side, rgba(224,136,33,0.16), transparent 70%)", filter: "blur(120px)" }} />
+          <div className="absolute bottom-0 right-0 w-[45vw] h-[45vw] rounded-full" style={{ background: "radial-gradient(closest-side, rgba(184,106,18,0.18), transparent 70%)", filter: "blur(140px)" }} />
+        </div>
+
+        <div aria-hidden className="hidden lg:block absolute left-6 top-32 eco-label-vertical">
+          02b — INTELIGENCIA · AGENTES IA
+        </div>
+
+        <div className="relative mx-auto max-w-[1400px] px-6 lg:px-24">
+          <Reveal className="mb-16 md:mb-24 max-w-4xl">
+            <div className="eco-mono text-[var(--eco-flame)] mb-4 flex items-center gap-3">
+              <span className="inline-block h-2 w-2 rounded-full bg-[var(--eco-flame)] animate-pulse" />
+              — 02b / Inteligencia
+            </div>
+            <h2 className="eco-display text-[52px] md:text-[88px] xl:text-[112px] leading-[0.92] text-[var(--eco-ink)]">
+              No es un taxi.<br />
+              <span className="eco-display-italic text-[var(--eco-flame)]">Es un cerebro</span> que te lleva.
+            </h2>
+            <p className="mt-8 max-w-2xl text-[var(--eco-ink-soft)] leading-relaxed text-[17px] md:text-[19px]">
+              EcoDrive+ corre con <strong className="text-[var(--eco-ink)]">agentes IA</strong> que aprenden de cada viaje. Tu app
+              te conoce más cada semana. Tus choferes ven la ciudad como un equipo. Y cuando algo sale del libreto,
+              <span className="eco-display-italic text-[var(--eco-flame-soft)]"> Eco improvisa</span>.
+            </p>
+          </Reveal>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-px bg-[var(--eco-line)] border border-[var(--eco-line)]">
+            {[
+              {
+                code: "01",
+                title: "Eco — agente conversacional",
+                desc: "Pedís en lenguaje natural: 'lleva a mi mamá al hospital'. Eco entiende contexto, intención y prioridad. Multi-paso y multi-persona.",
+                badge: "Claude · GPT",
+              },
+              {
+                code: "02",
+                title: "Audio que entiende jergas",
+                desc: "Mandás nota de voz con 'ya pe' o 'mañita' y Eco transcribe perfecto. Para los apurados, los abuelos, los que escriben con un dedo.",
+                badge: "Whisper",
+              },
+              {
+                code: "03",
+                title: "Memoria de tus lugares",
+                desc: "Después del primer viaje Eco recuerda 'casa', 'oficina', 'pollería de los viernes'. No vuelves a explicar dónde vives.",
+                badge: "Vectores",
+              },
+              {
+                code: "04",
+                title: "Sugerencias proactivas",
+                desc: "Lunes 7:50am: '¿Vas a la oficina? Tu chofer Carlos está a 3 minutos.' Aprende tu agenda sin que te lo pidan.",
+                badge: "Patrones",
+              },
+              {
+                code: "05",
+                title: "Anti-zona peligrosa",
+                desc: "Scrapea noticias locales y bloquea rutas de riesgo en tiempo real. Si te toca pasar por ahí, te avisa antes.",
+                badge: "Live web",
+              },
+              {
+                code: "06",
+                title: "Mapa GPS + tracking",
+                desc: "Ves al chofer acercándose. Compartís el link de viaje en vivo. Tu mamá te ve llegar.",
+                badge: "Realtime",
+              },
+            ].map((c, i) => (
+              <Reveal key={c.code} delay={i * 0.08} className="bg-[var(--eco-bg)] p-7 md:p-9 eco-card cursor-default group">
+                <div className="flex items-start justify-between gap-4 mb-6">
+                  <div className="eco-mono text-[var(--eco-flame)] text-sm">{c.code}</div>
+                  <span className="text-[10px] uppercase tracking-wider px-2 py-1 rounded-full border border-[var(--eco-flame)]/40 text-[var(--eco-flame-soft)] eco-mono">
+                    {c.badge}
+                  </span>
+                </div>
+                <h3 className="eco-display text-[26px] md:text-[30px] leading-tight text-[var(--eco-ink)] group-hover:text-[var(--eco-flame-soft)] transition-colors">
+                  {c.title}
+                </h3>
+                <p className="mt-4 text-[var(--eco-ink-soft)] leading-relaxed text-[15px]">
+                  {c.desc}
+                </p>
+              </Reveal>
+            ))}
+          </div>
+
+          <Reveal delay={0.3} className="mt-16 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border-t border-[var(--eco-line)] pt-10">
+            <div className="eco-mono text-[var(--eco-ink-mute)] leading-relaxed max-w-xl">
+              ⌗ Toda la inteligencia vive dentro de la app. WhatsApp sigue siendo la puerta rápida, pero la experiencia premium se desbloquea con la app.
+            </div>
+            <Magnetic strength={0.3}>
+              <Link
+                href={APP_DOWNLOAD}
+                className="inline-flex items-center gap-3 px-7 py-4 rounded-full bg-[var(--eco-flame)] text-[var(--eco-bg-deep)] font-semibold eco-mono hover:bg-[var(--eco-flame-soft)] transition-colors whitespace-nowrap shadow-[0_8px_32px_-8px_rgba(224,136,33,0.6)]"
+              >
+                Descargar la app
+                <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12l7 7 7-7" /></svg>
+              </Link>
+            </Magnetic>
+          </Reveal>
+        </div>
+      </section>
+
       {/* === BANDA CINEMÁTICA — HUANCHACO === */}
       <section className="relative h-[60vh] md:h-[75vh] min-h-[420px] border-y border-[var(--eco-line)]">
         <CinematicImage src="/ecodriveplus/huanchaco.jpg" alt="Playa de Huanchaco, Trujillo" motion="both" parallaxRange={120} objectPosition="center 45%" className="absolute inset-0">
@@ -366,8 +475,9 @@ export default function EcoDrivePlusPage() {
               Cuatro pasos. <span className="eco-display-italic text-[var(--eco-flame)]">Doce segundos.</span> Tu carro en camino.
             </h2>
             <p className="mt-8 max-w-2xl text-[var(--eco-ink-soft)] leading-relaxed">
-              El pasajero pide por WhatsApp. La app pasajero suma billetera, mapa GPS en vivo, ranking, sorteos del Club.
-              Los conductores operan desde la app chofer.
+              Pedís desde la <strong className="text-[var(--eco-ink)]">app EcoDrive+</strong> con el agente IA Eco —
+              mapa GPS en vivo, BilleteraEco, ranking, sorteos del Pass Club. ¿Sin app? Hablale a Eco
+              por WhatsApp, el bot también te atiende. Los conductores operan desde la app chofer.
             </p>
           </Reveal>
 
@@ -600,11 +710,11 @@ export default function EcoDrivePlusPage() {
                 <div className="text-right">{pa}</div>
               </Reveal>
             ))}
-            <Reveal className="grid grid-cols-5 py-8 items-center text-[var(--eco-ink)] eco-mono-md bg-[var(--eco-flame)]/[0.04]">
+            <Reveal className="grid grid-cols-5 py-8 items-center text-[var(--eco-ink)] eco-mono-md bg-[var(--eco-flame)]/[0.08] border-y border-[var(--eco-flame)]/30">
               <div className="col-span-1 eco-display text-[28px] md:text-[40px] text-[var(--eco-flame)]">EcoDrive+</div>
               <div className="text-right text-[var(--eco-flame)] font-semibold">6.3 %</div>
               <div className="text-right text-[var(--eco-flame)] font-semibold">12 s</div>
-              <div className="text-right">WhatsApp + app</div>
+              <div className="text-right">App + WhatsApp + IA</div>
               <div className="text-right">Yape al toque</div>
             </Reveal>
           </div>
@@ -702,50 +812,112 @@ export default function EcoDrivePlusPage() {
         </div>
       </section>
 
-      {/* === BANDA CLUB — Sorteo BYD Yuan Pro === */}
-      <section className="relative py-32 border-t border-[var(--eco-line)] overflow-hidden">
-        <div className="mx-auto max-w-[1400px] px-6 lg:px-24 grid lg:grid-cols-12 gap-y-16 lg:gap-x-12 items-start">
-          <Reveal className="lg:col-span-5">
-            <div className="eco-mono text-[var(--eco-flame)] mb-4">— EcoDrive+ Club</div>
-            <h2 className="eco-display text-[56px] md:text-[88px] leading-[0.95] text-[var(--eco-ink)]">
-              Gana un <span className="eco-display-italic text-[var(--eco-flame)]">auto eléctrico.</span>
+      {/* === PASS ECODRIVE+ CLUB · MEMBRESÍA === */}
+      <section id="pass" className="relative py-32 md:py-40 border-t border-[var(--eco-line)] overflow-hidden">
+        <div aria-hidden className="absolute inset-0 pointer-events-none">
+          <div className="absolute -top-1/4 right-1/4 w-[60vw] h-[60vw] rounded-full" style={{ background: "radial-gradient(closest-side, rgba(224,136,33,0.18), transparent 70%)", filter: "blur(140px)" }} />
+        </div>
+
+        <div aria-hidden className="hidden lg:block absolute left-6 top-32 eco-label-vertical">
+          09 — PASS · MEMBRESÍA · CLUB
+        </div>
+
+        <div className="relative mx-auto max-w-[1400px] px-6 lg:px-24">
+          <Reveal className="mb-16 max-w-4xl">
+            <div className="eco-mono text-[var(--eco-flame)] mb-4 flex items-center gap-3">
+              <span className="inline-block h-2 w-2 rounded-full bg-[var(--eco-flame)] animate-pulse" />
+              — 09 / Pass anual
+            </div>
+            <h2 className="eco-display text-[52px] md:text-[88px] xl:text-[112px] leading-[0.92] text-[var(--eco-ink)]">
+              Una <span className="eco-display-italic text-[var(--eco-flame)]">membresía.</span><br />
+              Todo el año <span className="eco-display-italic text-[var(--eco-flame)]">jugando.</span>
             </h2>
-            <p className="mt-8 max-w-md text-[var(--eco-ink-soft)] leading-relaxed">
-              Edición #1: <strong className="text-[var(--eco-ink)]">BYD Yuan Pro 2023</strong>. Sorteo presencial con notario público y casino oficial. Ticket S/.40 (S/.30 si eres pasajero o chofer EcoDrive+). Pass anual S/.99 participa en todos los sorteos del año.
+            <p className="mt-8 max-w-2xl text-[var(--eco-ink-soft)] leading-relaxed text-[17px] md:text-[19px]">
+              El <strong className="text-[var(--eco-ink)]">Pass EcoDrive+ Club</strong> es la única forma de entrar a los sorteos.
+              Pagás una vez al año y participás en <strong className="text-[var(--eco-ink)]">cada edición</strong>: autos, motos, electrodomésticos.
+              Más bonus por cada viaje, prioridad en zonas y descuentos del 2 % en BilleteraEco.
             </p>
-            <div className="mt-10 flex flex-wrap gap-x-8 gap-y-2 eco-mono text-[var(--eco-ink-mute)]">
-              <span>⌗ Notario público</span>
-              <span>⌗ Casino oficial</span>
-              <span>⌗ Acta blockchain</span>
-            </div>
-            <div className="mt-10">
-              <Magnetic strength={0.3}>
-                <Link href="/ecodriveplus/club" className="inline-flex items-center gap-3 px-8 py-5 rounded-full bg-[var(--eco-flame)] text-[var(--eco-bg-deep)] font-semibold eco-mono hover:bg-[var(--eco-flame-soft)] transition-colors">
-                  Ver el sorteo en vivo
-                  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
-                </Link>
-              </Magnetic>
-            </div>
           </Reveal>
 
-          <Reveal delay={0.15} className="lg:col-span-7">
-            <CinematicImage src="/ecodriveplus/trujillo-skyline.jpg" alt="Vista panorámica de Trujillo" motion="both" parallaxRange={70} objectPosition="center 40%" className="rounded-3xl aspect-[4/3]">
-              <div aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(10,9,8,0.10) 0%, rgba(10,9,8,0.45) 60%, rgba(10,9,8,0.90) 100%)" }} />
-              <div className="relative z-10 h-full flex flex-col justify-end p-8 md:p-10">
-                <div className="flex items-end justify-between gap-6 flex-wrap">
-                  <div>
-                    <div className="eco-mono text-[var(--eco-flame)] mb-2">EDICIÓN #1 · ABIERTA</div>
-                    <div className="eco-display text-[32px] md:text-[48px] text-[var(--eco-ink)] leading-[1.0]">
-                      BYD Yuan Pro
+          {/* Tarjetas precio */}
+          <div className="grid md:grid-cols-2 gap-6 mb-16">
+            <Reveal>
+              <div className="relative border border-[var(--eco-line-strong)] rounded-3xl p-8 md:p-10 h-full bg-[var(--eco-bg)]/60 eco-card">
+                <div className="eco-mono text-[var(--eco-ink-mute)] mb-4">— Pass público</div>
+                <div className="flex items-baseline gap-3">
+                  <div className="eco-display text-[80px] md:text-[112px] text-[var(--eco-ink)] leading-none">S/.99</div>
+                  <div className="eco-mono text-[var(--eco-ink-soft)]">/ año</div>
+                </div>
+                <ul className="mt-8 space-y-3 eco-mono text-[var(--eco-ink-soft)]">
+                  <li className="flex items-start gap-3"><span className="text-[var(--eco-flame)] mt-1">✦</span>Participás en TODAS las ediciones del año</li>
+                  <li className="flex items-start gap-3"><span className="text-[var(--eco-flame)] mt-1">✦</span>Tickets bonus por cada viaje EcoDrive+</li>
+                  <li className="flex items-start gap-3"><span className="text-[var(--eco-flame)] mt-1">✦</span>Descuento 2 % en BilleteraEco</li>
+                  <li className="flex items-start gap-3"><span className="text-[var(--eco-flame)] mt-1">✦</span>Prioridad asignación en zonas con demanda alta</li>
+                </ul>
+              </div>
+            </Reveal>
+
+            <Reveal delay={0.1}>
+              <div className="relative border-2 border-[var(--eco-flame)] rounded-3xl p-8 md:p-10 h-full bg-gradient-to-br from-[var(--eco-flame)]/10 to-transparent eco-card overflow-hidden">
+                <div aria-hidden className="absolute -top-12 -right-12 w-48 h-48 eco-sigil opacity-20 eco-spin-slow" />
+                <div className="relative">
+                  <div className="eco-mono text-[var(--eco-flame)] mb-4 flex items-center gap-2">
+                    — Pass interno <span className="text-[10px] uppercase px-2 py-0.5 rounded-full bg-[var(--eco-flame)] text-[var(--eco-bg-deep)]">para choferes y pasajeros activos</span>
+                  </div>
+                  <div className="flex items-baseline gap-3">
+                    <div className="eco-display text-[80px] md:text-[112px] text-[var(--eco-flame)] leading-none">S/.69</div>
+                    <div className="eco-mono text-[var(--eco-ink-soft)]">/ año</div>
+                  </div>
+                  <ul className="mt-8 space-y-3 eco-mono text-[var(--eco-ink-soft)]">
+                    <li className="flex items-start gap-3"><span className="text-[var(--eco-flame)] mt-1">✦</span>Todo lo del Pass público</li>
+                    <li className="flex items-start gap-3"><span className="text-[var(--eco-flame)] mt-1">✦</span>Descuento exclusivo S/.30 vs. público</li>
+                    <li className="flex items-start gap-3"><span className="text-[var(--eco-flame)] mt-1">✦</span>2x boletos en la primera edición</li>
+                    <li className="flex items-start gap-3"><span className="text-[var(--eco-flame)] mt-1">✦</span>Activos digitales ActivosYA incluidos (selección)</li>
+                  </ul>
+                </div>
+              </div>
+            </Reveal>
+          </div>
+
+          {/* BYD edition card */}
+          <Reveal delay={0.15}>
+            <CinematicImage src="/ecodriveplus/trujillo-skyline.jpg" alt="EcoDrive+ Club · Edición #1 BYD Yuan Pro" motion="both" parallaxRange={70} objectPosition="center 40%" className="rounded-3xl aspect-[16/8] md:aspect-[16/6]">
+              <div aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(10,9,8,0.20) 0%, rgba(10,9,8,0.55) 60%, rgba(10,9,8,0.92) 100%)" }} />
+              <div className="relative z-10 h-full flex flex-col justify-end p-8 md:p-12">
+                <div className="grid md:grid-cols-3 gap-6 items-end">
+                  <div className="md:col-span-2">
+                    <div className="eco-mono text-[var(--eco-flame)] mb-3 flex items-center gap-3">
+                      <span className="inline-block h-2 w-2 rounded-full bg-[var(--eco-flame)] animate-pulse" />
+                      EDICIÓN #1 · ABIERTA AHORA
+                    </div>
+                    <div className="eco-display text-[36px] md:text-[64px] xl:text-[80px] text-[var(--eco-ink)] leading-[0.95]">
+                      BYD Yuan Pro <span className="eco-display-italic text-[var(--eco-flame)]">2023.</span>
+                    </div>
+                    <div className="mt-4 eco-mono text-[var(--eco-ink-soft)]">
+                      Auto eléctrico · Sorteo presencial · Notario público · Casino oficial · Acta blockchain.
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="eco-mono text-[var(--eco-ink-mute)]">desde</div>
-                    <div className="eco-display text-[36px] md:text-[56px] text-[var(--eco-flame)] leading-none">S/. 30</div>
+                  <div className="flex md:justify-end">
+                    <Magnetic strength={0.3}>
+                      <Link
+                        href={CLUB_URL}
+                        className="inline-flex items-center gap-3 px-7 py-4 rounded-full bg-[var(--eco-flame)] text-[var(--eco-bg-deep)] font-semibold eco-mono hover:bg-[var(--eco-flame-soft)] transition-colors whitespace-nowrap shadow-[0_8px_32px_-8px_rgba(224,136,33,0.7)]"
+                      >
+                        Activar mi Pass
+                        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+                      </Link>
+                    </Magnetic>
                   </div>
                 </div>
               </div>
             </CinematicImage>
+          </Reveal>
+
+          <Reveal delay={0.25} className="mt-8 eco-mono text-[var(--eco-ink-mute)] flex flex-wrap gap-x-8 gap-y-2">
+            <span>⌗ Notario público oficial</span>
+            <span>⌗ Acta blockchain pública</span>
+            <span>⌗ Bases sobre acuerdo MINCETUR (en trámite)</span>
+            <span>⌗ Reembolso si no se cumple meta</span>
           </Reveal>
         </div>
       </section>
@@ -799,22 +971,28 @@ export default function EcoDrivePlusPage() {
         <div className="relative mx-auto max-w-[1400px] px-6 lg:px-24 text-center">
           <Reveal>
             <div className="eco-mono text-[var(--eco-flame)] mb-8">— Fin del prólogo</div>
-            <h2 className="eco-display text-[64px] md:text-[120px] xl:text-[160px] leading-[0.9] text-[var(--eco-ink)]">
-              Tu próximo viaje<br />
-              empieza con un <span className="eco-display-italic text-[var(--eco-flame)]">Hola.</span>
+            <h2 className="eco-display text-[56px] md:text-[104px] xl:text-[136px] leading-[0.9] text-[var(--eco-ink)]">
+              Tu próxima ciudad<br />
+              empieza con un <span className="eco-display-italic text-[var(--eco-flame)]">tap.</span>
             </h2>
-            <p className="mt-12 text-[var(--eco-ink-soft)] eco-mono">
-              Pedís por WhatsApp · La app suma billetera, mapa y Club · Trujillo hoy · Lima pronto.
+            <p className="mt-12 text-[var(--eco-ink-soft)] eco-mono max-w-3xl mx-auto">
+              App con agente IA · Pass Club anual · WhatsApp 24/7 · Trujillo hoy · Lima pronto.
             </p>
             <div className="mt-12 flex flex-col sm:flex-row gap-4 justify-center">
               <Magnetic strength={0.35}>
-                <a href={PASAJERO_WA} className="inline-flex items-center justify-center gap-3 px-9 py-5 rounded-full bg-[var(--eco-flame)] hover:bg-[var(--eco-flame-soft)] text-[var(--eco-bg-deep)] font-semibold eco-mono transition-colors">
-                  Pedir mi primer viaje
-                </a>
+                <Link href={APP_DOWNLOAD} className="inline-flex items-center justify-center gap-3 px-9 py-5 rounded-full bg-[var(--eco-flame)] hover:bg-[var(--eco-flame-soft)] text-[var(--eco-bg-deep)] font-semibold eco-mono transition-colors shadow-[0_8px_32px_-8px_rgba(224,136,33,0.7)]">
+                  Descargar la app
+                  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12l7 7 7-7" /></svg>
+                </Link>
               </Magnetic>
               <Magnetic strength={0.25}>
-                <a href={CHOFER_WA} className="inline-flex items-center justify-center gap-2 px-8 py-5 rounded-full border border-[var(--eco-flame)] text-[var(--eco-flame)] hover:bg-[var(--eco-flame)]/10 eco-mono transition-colors">
-                  Ser chofer
+                <Link href={CLUB_URL} className="inline-flex items-center justify-center gap-2 px-8 py-5 rounded-full border border-[var(--eco-flame)] text-[var(--eco-flame)] hover:bg-[var(--eco-flame)]/10 eco-mono transition-colors">
+                  Activar mi Pass S/.99
+                </Link>
+              </Magnetic>
+              <Magnetic strength={0.2}>
+                <a href={PASAJERO_WA} className="inline-flex items-center justify-center gap-2 px-7 py-5 rounded-full border border-[var(--eco-line-strong)] text-[var(--eco-ink-soft)] hover:border-[var(--eco-flame)] hover:text-[var(--eco-flame)] eco-mono transition-colors">
+                  WhatsApp directo
                 </a>
               </Magnetic>
             </div>
@@ -838,11 +1016,12 @@ export default function EcoDrivePlusPage() {
           <div className="text-center">
             <TrujilloClock />
           </div>
-          <div className="flex items-center justify-end gap-8 eco-mono">
-            <Link href="/" className="text-[var(--eco-ink-soft)] hover:text-[var(--eco-flame)] transition-colors">ActivosYA</Link>
-            <Link href="/ecodriveplus/club" className="text-[var(--eco-ink-soft)] hover:text-[var(--eco-flame)] transition-colors">Club</Link>
+          <div className="flex items-center justify-end gap-6 eco-mono flex-wrap">
+            <Link href={APP_DOWNLOAD} className="text-[var(--eco-flame)] hover:text-[var(--eco-flame-soft)] transition-colors font-semibold">Descargar app</Link>
+            <Link href={CLUB_URL} className="text-[var(--eco-ink-soft)] hover:text-[var(--eco-flame)] transition-colors">Pass · Club</Link>
             <Link href="/ecodriveplus/sorteos" className="text-[var(--eco-ink-soft)] hover:text-[var(--eco-flame)] transition-colors">Sorteos</Link>
-            <a href={PASAJERO_WA} className="text-[var(--eco-ink-soft)] hover:text-[var(--eco-flame)] transition-colors">Soporte</a>
+            <Link href="/" className="text-[var(--eco-ink-soft)] hover:text-[var(--eco-flame)] transition-colors">ActivosYA</Link>
+            <a href={PASAJERO_WA} className="text-[var(--eco-ink-soft)] hover:text-[var(--eco-flame)] transition-colors">Soporte WSP</a>
           </div>
         </div>
       </footer>
