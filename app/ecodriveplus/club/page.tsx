@@ -176,15 +176,15 @@ export default async function ClubPage() {
 
             <Reveal delay={0.85} className="mt-10 max-w-md text-[17px] md:text-[18px] text-[var(--eco-ink-soft)] leading-[1.55]">
               <p>
-                Membresía anual S/. 99 (S/. 69 interno EcoDrive+). Participás en <strong className="text-[var(--eco-ink)]">cada sorteo del año</strong> + bonus por lealtad.{" "}
+                Membresía anual <strong className="text-[var(--eco-ink)]">S/. 30 precio único</strong>. Participás en <strong className="text-[var(--eco-ink)]">cada sorteo del año</strong> + bonus por lealtad.{" "}
                 <strong className="text-[var(--eco-ink)]">Notario público + casino oficial + acta blockchain.</strong>
               </p>
             </Reveal>
 
             <Reveal delay={1.05} className="mt-12 flex flex-wrap gap-x-6 gap-y-3 eco-mono text-[var(--eco-ink-mute)]">
-              <span>⌗ Pass anual S/. 30</span>
-              <span>⌗ Interno EcoDrive+ S/. 69</span>
+              <span>⌗ Pass anual S/. 30 único</span>
               <span>⌗ Hasta 5 Pass por DNI</span>
+              <span>⌗ Vigencia 12 meses</span>
               <span>⌗ RUC 20613413228</span>
             </Reveal>
 
