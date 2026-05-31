@@ -6,6 +6,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { revalidatePath } from "next/cache";
 import { isAdmin } from "@/lib/ecodrive/admin-auth";
 
 export const runtime = "nodejs";
@@ -56,5 +57,14 @@ export async function PATCH(req: NextRequest) {
     .select("*")
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // Invalida ISR de las paginas que leen club_programa para que reflejen el cambio en seguida.
+  try {
+    revalidatePath("/ecodriveplus/club");
+    revalidatePath("/ecodriveplus/club/como-funciona");
+    revalidatePath("/ecodriveplus/club/bases");
+    revalidatePath("/ecodriveplus");
+  } catch {}
+
   return NextResponse.json({ ok: true, programa: data });
 }
