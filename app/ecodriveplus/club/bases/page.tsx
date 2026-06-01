@@ -37,28 +37,77 @@ export default function BasesPage() {
           <Clause n={3} t="Modalidad de participación">
             <ul>
               <li>
-                <strong>Club Pass anual</strong>: S/.30 (precio único). Vigencia 12 meses
-                desde la fecha de compra. Otorga 1 número en cada edición que se ejecute durante la vigencia,
-                más bonus por lealtad (1 número adicional por cada edición consumida, hasta 5 totales por Pass por edición).
+                <strong>Club Pass</strong>: S/.30 (precio único). Cada Pass está atado a la edición vigente al momento
+                de compra y otorga <strong>1 (uno) número del sorteo</strong> del premio de esa edición específica. Una vez
+                ejecutado el sorteo de la edición, el Pass cumple su finalidad y no se traslada a ediciones posteriores.
               </li>
-              <li>Cap máximo: 5 Pass activos por DNI.</li>
+              <li>
+                <strong>Bonus de lealtad</strong>: el miembro que adquirió Pass en una edición anterior cerrada o sorteada
+                accede a un descuento de <strong>S/.3</strong> al adquirir Pass en la edición vigente (precio efectivo S/.27).
+                El descuento es fijo, sin acumulación por número de ediciones previas.
+              </li>
+              <li>
+                <strong>Cap máximo</strong>: hasta <strong>9 Pass por DNI por edición vigente</strong>. El contador se reinicia
+                cuando la edición se cierra y abre la siguiente.
+              </li>
               <li>
                 Modalidad única. El programa NO ofrece tickets sueltos ni rifas independientes — toda
                 participación deriva exclusivamente de la membresía Club Pass.
               </li>
             </ul>
           </Clause>
-          <Clause n={4} t="Beneficios in-app para miembros internos">
+          <Clause n={4} t="Beneficios reales que incluye el Pass">
+            <p>
+              Además del número del sorteo, cada Pass otorga acceso a beneficios tangibles del ecosistema
+              EcoDrive+ y ActivosYA durante un plazo de 30 días calendario contados desde la activación,
+              salvo indicación expresa de duración distinta.
+            </p>
             <ul>
               <li>
-                <strong>Conductor EcoDrive+</strong>: los primeros 18 viajes del mes de compra del Pass se ejecutan
-                con comisión 0% (exoneración total de la comisión EcoDrive+).
+                <strong>A1 — Descuento BilleteraEco 3%</strong>: durante 30 días, cualquier recarga o uso de la
+                billetera in-app EcoDrive+ recibe 3% de descuento.
               </li>
               <li>
-                <strong>Pasajero EcoDrive+</strong>: el cashback en viajes sube del 5% habitual al 10% durante
-                30 días desde la fecha de compra.
+                <strong>A2 — Cashback boost 5%</strong>: el cashback fijo del pasajero se incrementa al 5% durante
+                30 días, por encima del % de su nivel actual en EcoDrive+ (0.3% — 2.7% según nivel).
+              </li>
+              <li>
+                <strong>A3 — Exoneración de comisión (conductor)</strong>: los conductores EcoDrive+ activos
+                ejecutan los primeros 18 viajes del mes de compra del Pass con 0% de comisión.
+              </li>
+              <li>
+                <strong>B1 — Prioridad operativa</strong>: asignación prioritaria de chofer en zonas y horarios de
+                alta demanda.
+              </li>
+              <li>
+                <strong>B2 — Acceso anticipado</strong>: 24 a 48 horas de prelación para adquirir Pass en la siguiente
+                edición, antes de la apertura al público general.
+              </li>
+              <li>
+                <strong>B3 — Pre-asignación de número</strong>: posibilidad de seleccionar número específico
+                (capicúa, palíndromo, fecha personal) antes del random, dentro del pool disponible.
+              </li>
+              <li>
+                <strong>C1 — Miss Sofia 30 días</strong>: acceso completo al curso de idiomas con IA por 30 días.
+              </li>
+              <li>
+                <strong>C2 — Activos digitales beta</strong>: acceso a TuDestinoYa y TuCuentoYa durante la vigencia
+                del Pass.
+              </li>
+              <li>
+                <strong>C3 — Sorteos secundarios</strong>: participación en sorteos consuelo (cenas, viajes, vouchers)
+                ejecutados antes del sorteo principal de la edición.
+              </li>
+              <li>
+                <strong>C4 — Distintivo Pass holder</strong>: insignia y avatar exclusivos en la aplicación EcoDrive+
+                mientras el Pass se encuentre vigente.
               </li>
             </ul>
+            <p>
+              La activación efectiva de cada beneficio depende de la disponibilidad operativa de los sistemas
+              respectivos. La indisponibilidad temporal de un beneficio individual no afecta la validez del
+              Pass ni del número de sorteo asignado.
+            </p>
           </Clause>
           <Clause n={5} t="Premio y ediciones">
             <p>
@@ -91,13 +140,15 @@ export default function BasesPage() {
                   https://ecodriveplus.com/club/historial.</li>
             </ul>
           </Clause>
-          <Clause n={7} t="Re-rifa y reembolso">
+          <Clause n={7} t="Plazo de venta, re-rifa y reembolso">
             <p>
-              Si transcurren 12 meses calendario desde la apertura de la edición sin alcanzar la meta de 3,000
-              números asignados, se procede con <strong>re-rifa por hasta 6 meses adicionales</strong>. Si tras
-              dicho periodo subsiste el incumplimiento, se procede al <strong>reembolso íntegro</strong> del
-              importe pagado por cada miembro afectado, sin descuentos ni penalidades. Los miembros mantienen
-              sus números válidos durante toda la vigencia del proceso.
+              Cada edición tiene un plazo máximo de <strong>12 meses calendario</strong> desde su apertura para
+              alcanzar la meta de 3,000 números asignados. Si transcurrido ese plazo no se alcanza la meta, se
+              ejecuta una <strong>prórroga de venta de hasta 6 meses adicionales</strong>. Si tras dicha prórroga
+              subsiste el incumplimiento, se procede al <strong>reembolso íntegro del importe pagado</strong> por
+              cada miembro de esa edición, sin descuentos ni penalidades. Los Pass se anulan y los miembros
+              quedan habilitados para adquirir Pass en ediciones futuras conservando los beneficios de lealtad
+              que correspondan.
             </p>
           </Clause>
           <Clause n={8} t="Plazo de entrega del premio">

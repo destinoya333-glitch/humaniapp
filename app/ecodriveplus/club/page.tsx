@@ -14,14 +14,14 @@ const HERO_IMG = "https://rfpmvnoaqibqiqxrmheb.supabase.co/storage/v1/object/pub
 const LOCAL_HERO = "/ecodriveplus/byd-yuan-pro.jpg";
 
 export const metadata: Metadata = {
-  title: "EcoDrive+ Club — Membresía anual que sortea un BYD Yuan Pro 2023",
+  title: "EcoDrive+ Club — Membresía por sorteo, gana un BYD Yuan Pro 2023",
   description:
-    "Programa de membresía con bonificación de sorteo. Club Pass anual S/.30 único. Participás en cada edición del año + bonus por lealtad.",
+    "Programa de membresía con bonificación de sorteo. Pass S/.30 por edición — cada Pass = 1 número del carro en sorteo. Bonus de lealtad S/.27 si volvés en la siguiente edición.",
   alternates: { canonical: "https://ecodriveplus.com/club" },
   openGraph: {
     type: "website",
     title: "Membresía Club EcoDrive+ — Gana un BYD Yuan Pro 2023",
-    description: "Pass anual S/.30. Participás en todos los sorteos del año. Notario público + acta blockchain.",
+    description: "Pass S/.30 por edición = 1 número del carro en sorteo. Bonus lealtad S/.27 si volvés. Notario público + acta blockchain.",
     url: "https://ecodriveplus.com/club",
     siteName: "EcoDrive+",
     images: [{ url: HERO_IMG, width: 1200, height: 800, alt: "BYD Yuan Pro 2023 — EcoDrive+ Club" }],
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Membresía Club EcoDrive+ — Gana un BYD Yuan Pro 2023",
-    description: "Pass anual S/.30. Sorteo presencial con notario. Participás en cada edición del año.",
+    description: "Pass S/.30 por edición. Sorteo presencial con notario. Bonus lealtad para los que vuelven.",
     images: [HERO_IMG],
   },
 };
@@ -162,7 +162,7 @@ export default async function ClubPage() {
           <div className="lg:col-span-6 relative">
             <Reveal as="div" className="flex items-center gap-3 mb-10">
               <span className="h-px w-12 bg-[var(--eco-flame)]" />
-              <span className="eco-mono text-[var(--eco-flame)]">EDICIÓN 001 · MEMBRESÍA ANUAL</span>
+              <span className="eco-mono text-[var(--eco-flame)]">EDICIÓN 001 · MEMBRESÍA POR SORTEO</span>
             </Reveal>
 
             <h1 className="eco-display text-[58px] sm:text-[80px] md:text-[104px] xl:text-[128px] text-[var(--eco-ink)]">
@@ -176,15 +176,17 @@ export default async function ClubPage() {
 
             <Reveal delay={0.85} className="mt-10 max-w-md text-[17px] md:text-[18px] text-[var(--eco-ink-soft)] leading-[1.55]">
               <p>
-                Membresía anual <strong className="text-[var(--eco-ink)]">S/. 30 precio único</strong>. Participás en <strong className="text-[var(--eco-ink)]">cada sorteo del año</strong> + bonus por lealtad.{" "}
+                <strong className="text-[var(--eco-ink)]">S/.30 por Pass</strong> = 1 número del sorteo del carro de la edición vigente.
+                Cuando se sortea, abre el siguiente carro con tickets nuevos. Si ya compraste antes,{" "}
+                <strong className="text-[var(--eco-flame)]">tu próximo Pass cuesta S/.27</strong> (bonus de lealtad).{" "}
                 <strong className="text-[var(--eco-ink)]">Notario público + casino oficial + acta blockchain.</strong>
               </p>
             </Reveal>
 
             <Reveal delay={1.05} className="mt-12 flex flex-wrap gap-x-6 gap-y-3 eco-mono text-[var(--eco-ink-mute)]">
-              <span>⌗ Pass anual S/. 30 único</span>
-              <span>⌗ Hasta 5 Pass por DNI</span>
-              <span>⌗ Vigencia 12 meses</span>
+              <span>⌗ Pass S/.30 por edición</span>
+              <span>⌗ Hasta 9 por DNI / mes</span>
+              <span>⌗ Bonus lealtad S/.27</span>
               <span>⌗ RUC 20613413228</span>
             </Reveal>
 
@@ -301,7 +303,7 @@ export default async function ClubPage() {
           <div className="grid md:grid-cols-3 gap-8 relative">
             <div aria-hidden className="hidden md:block absolute top-12 left-[8%] right-[8%] h-px bg-gradient-to-r from-transparent via-[var(--eco-flame)] to-transparent opacity-40" />
             {[
-              ["01", "Te haces Pass", "Club Pass anual S/. 30. Vigencia 12 meses desde la compra."],
+              ["01", "Te haces Pass", "S/. 30 por Pass = 1 número del sorteo del carro en la edición vigente. Si comprás Pass en una edición posterior, S/. 27 (bonus de lealtad)."],
               ["02", "Pagas", "Yape al 998 102 258. En menos de 2 minutos tu Pass queda activado y recibís número por WhatsApp."],
               ["03", "Participás todo el año", "En cada edición que se ejecuta durante tu vigencia participás con número(s). Bonus de lealtad +1 por edición consumida (cap 5)."],
             ].map(([code, title, desc], i) => (
@@ -313,6 +315,84 @@ export default async function ClubPage() {
               </Reveal>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* === 10 BENEFICIOS DEL PASS === */}
+      <section className="relative py-32 border-t border-[var(--eco-line)] overflow-hidden">
+        <div aria-hidden className="absolute inset-0 pointer-events-none">
+          <div className="absolute -top-1/4 right-1/4 w-[55vw] h-[55vw] rounded-full" style={{ background: "radial-gradient(closest-side, rgba(224,136,33,0.14), transparent 70%)", filter: "blur(140px)" }} />
+        </div>
+        <div className="relative mx-auto max-w-[1400px] px-6 lg:px-24">
+          <Reveal className="mb-16 max-w-4xl">
+            <div className="eco-mono text-[var(--eco-flame)] mb-4">— 04 / Lo que incluye tu Pass</div>
+            <h2 className="eco-display text-[44px] md:text-[72px] xl:text-[96px] leading-[0.95] text-[var(--eco-ink)]">
+              Tu Pass <span className="eco-display-italic text-[var(--eco-flame)]">no es solo</span> un número.
+            </h2>
+            <p className="mt-8 max-w-2xl text-[var(--eco-ink-soft)] leading-relaxed text-[17px] md:text-[19px]">
+              Además del número del sorteo, recibís beneficios reales en EcoDrive+ y los activos digitales de ActivosYA.
+              Algunos se activan al instante, otros durante 30 días desde la compra de tu Pass.
+            </p>
+          </Reveal>
+
+          {/* Económicos */}
+          <Reveal className="mb-12">
+            <h3 className="eco-mono text-[var(--eco-flame)] mb-6">🟦 BENEFICIOS ECONÓMICOS</h3>
+            <div className="grid md:grid-cols-3 gap-px bg-[var(--eco-line)] border border-[var(--eco-line)]">
+              {[
+                ["A1", "3% descuento BilleteraEco", "Durante 30 días, cualquier recarga o uso de BilleteraEco lleva 3% off."],
+                ["A2", "Cashback boost 5% en viajes", "El cashback fijo sube al 5% por 30 días (por encima del nivel actual 0.3% — 2.7%)."],
+                ["A3", "18 viajes sin comisión (chofer)", "Para conductores EcoDrive+ activos: los primeros 18 viajes del mes de compra con 0% comisión."],
+              ].map(([code, title, desc]) => (
+                <div key={code} className="bg-[var(--eco-bg)] p-7 eco-card">
+                  <div className="eco-mono text-[var(--eco-flame)] text-sm mb-4">{code}</div>
+                  <h4 className="eco-display text-[24px] md:text-[28px] text-[var(--eco-ink)] leading-tight">{title}</h4>
+                  <p className="mt-3 text-[var(--eco-ink-soft)] leading-relaxed text-[14px]">{desc}</p>
+                </div>
+              ))}
+            </div>
+          </Reveal>
+
+          {/* Operacionales */}
+          <Reveal className="mb-12">
+            <h3 className="eco-mono text-[var(--eco-flame)] mb-6">🟩 BENEFICIOS OPERACIONALES</h3>
+            <div className="grid md:grid-cols-3 gap-px bg-[var(--eco-line)] border border-[var(--eco-line)]">
+              {[
+                ["B1", "Prioridad en zonas saturadas", "Asignación de chofer prioritaria en horarios pico y zonas con alta demanda."],
+                ["B2", "Acceso anticipado a próxima edición", "Sos primero en la fila cuando abre la siguiente edición (24-48h antes que el público)."],
+                ["B3", "Pre-asignación de número favorito", "Podés elegir tu número (capicúa, palíndromo, fecha especial) antes del random."],
+              ].map(([code, title, desc]) => (
+                <div key={code} className="bg-[var(--eco-bg)] p-7 eco-card">
+                  <div className="eco-mono text-[var(--eco-flame)] text-sm mb-4">{code}</div>
+                  <h4 className="eco-display text-[24px] md:text-[28px] text-[var(--eco-ink)] leading-tight">{title}</h4>
+                  <p className="mt-3 text-[var(--eco-ink-soft)] leading-relaxed text-[14px]">{desc}</p>
+                </div>
+              ))}
+            </div>
+          </Reveal>
+
+          {/* Premium / ActivosYA */}
+          <Reveal>
+            <h3 className="eco-mono text-[var(--eco-flame)] mb-6">🟨 PREMIUM · ACTIVOS YA</h3>
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-px bg-[var(--eco-line)] border border-[var(--eco-line)]">
+              {[
+                ["C1", "Miss Sofia · 30 días gratis", "Curso de idiomas IA — acceso completo por 30 días."],
+                ["C2", "TuDestinoYa + TuCuentoYa", "Acceso a los activos digitales beta mientras dure tu Pass."],
+                ["C3", "Premios consuelo", "Sorteo secundario antes del principal (cenas, viajes, vouchers)."],
+                ["C4", "Insignia Pass holder", "Avatar y badge exclusivos en el app EcoDrive+."],
+              ].map(([code, title, desc]) => (
+                <div key={code} className="bg-[var(--eco-bg)] p-7 eco-card">
+                  <div className="eco-mono text-[var(--eco-flame)] text-sm mb-4">{code}</div>
+                  <h4 className="eco-display text-[22px] md:text-[26px] text-[var(--eco-ink)] leading-tight">{title}</h4>
+                  <p className="mt-3 text-[var(--eco-ink-soft)] leading-relaxed text-[14px]">{desc}</p>
+                </div>
+              ))}
+            </div>
+          </Reveal>
+
+          <Reveal delay={0.2} className="mt-12 eco-mono text-[var(--eco-ink-mute)] text-sm border-t border-[var(--eco-line)] pt-6">
+            ⌗ Los beneficios cuentan desde la activación del Pass. Algunos están integrados en la app EcoDrive+ y se aplican automáticamente; otros requieren reclamarlos desde tu cuenta del Club.
+          </Reveal>
         </div>
       </section>
 

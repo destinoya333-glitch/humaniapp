@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 const FAQ: Array<{ q: string; a: string }> = [
   {
     q: "¿Qué es Club Pass?",
-    a: "Es la membresía anual del programa EcoDrive+ Club. Pagás una sola vez S/.30 (precio único) y quedás activo 12 meses. Durante esos 12 meses participás en cada edición del sorteo que se ejecute, con número(s) asignados a tu nombre. El programa NO vende tickets sueltos — la única forma de participar es haciéndose Pass.",
+    a: "Es la membresía del programa EcoDrive+ Club. Pagás S/.30 y obtenés 1 número del sorteo del carro de la edición vigente, más una lista de beneficios reales en EcoDrive+ y los activos digitales de ActivosYA (cashback boost, descuento en BilleteraEco, prioridad de chofer, Miss Sofia 30 días, etc.). El programa NO vende tickets sueltos — la única forma de participar es haciéndose Pass.",
   },
   {
     q: "¿Cómo se ejecuta el sorteo?",
@@ -18,11 +18,15 @@ const FAQ: Array<{ q: string; a: string }> = [
   },
   {
     q: "Si me hago Pass hoy y el sorteo es la próxima semana, ¿con cuántos números participo?",
-    a: "En esa edición participás con 1 número. Pero tu Pass sigue activo 12 meses, así que en las próximas ediciones (2-3 por año) participás con MÁS números gracias al bonus por lealtad: 2 en la siguiente, 3 en la subsiguiente, hasta 5.",
+    a: "Con 1 número (1 Pass = 1 número del sorteo de esa edición). Cada Pass está atado a la edición en que se compra — cuando se sortea ese carro, ese Pass ya cumplió. Para el siguiente carro arranca una edición nueva con tickets nuevos.",
+  },
+  {
+    q: "¿Y el bonus por lealtad cómo funciona?",
+    a: "Si ya tenés un Pass de una edición pasada y volvés a comprar Pass en la siguiente edición, te cobramos S/.27 en vez de S/.30 (S/.3 de descuento por ser miembro recurrente). Sin acumulación: el descuento es siempre S/.3, no importa cuántas ediciones anteriores hayas comprado. Es un agradecimiento concreto a los que vuelven.",
   },
   {
     q: "¿Puedo comprar más de un Pass?",
-    a: "Sí, hasta 5 Pass por DNI. Cada Pass extra suma 1 número más por sorteo + duplica/triplica el beneficio in-app (más viajes sin comisión / más meses de cashback boost).",
+    a: "Sí, hasta 9 Pass por DNI por mes (mientras dura la edición vigente). Cada Pass te suma 1 número distinto. El contador se resetea cuando cierra la edición y abre la siguiente.",
   },
   {
     q: "¿Qué pasa si no se completan los 3,000 números nunca?",
@@ -34,7 +38,7 @@ const FAQ: Array<{ q: string; a: string }> = [
   },
   {
     q: "Soy pasajero EcoDrive+, ¿cuál es mi beneficio extra?",
-    a: "Tu cashback en viajes sube de 5% a 10% durante el mes siguiente a tu compra del Pass. En un consumo típico ahorrás S/.10-20 extra.",
+    a: "Tu cashback en viajes salta a 5% fijo durante 30 días (por encima del % de tu nivel actual, que va de 0.3% Iniciante a 2.7% Diamante). En un consumo típico de S/.200/mes ahorrás ~S/.10 extra. Además: 3% de descuento en BilleteraEco durante esos 30 días.",
   },
   {
     q: "¿Puedo elegir mi número?",
@@ -50,7 +54,7 @@ const FAQ: Array<{ q: string; a: string }> = [
   },
   {
     q: "¿Esto es legal? ¿No necesita autorización Mincetur?",
-    a: "Sí es legal. EcoDrive+ Club es un programa de membresía con bonificación de sorteo, amparado en DS 006-2000-ITINCI Art. 2 inc. b. Como solo se vende membresía (Pass anual con beneficios reales del ecosistema EcoDrive+) y NO ticket suelto independiente, no requiere autorización Mincetur. Las bases están notariadas. Reclamos vía INDECOPI Perú.",
+    a: "Sí es legal. EcoDrive+ Club es un programa de membresía con bonificación de sorteo, amparado en DS 006-2000-ITINCI Art. 2 inc. b. Como se vende membresía (Pass con beneficios reales del ecosistema EcoDrive+ — cashback boost, descuento BilleteraEco, prioridad de chofer, activos digitales) y NO ticket suelto independiente, no requiere autorización Mincetur. Las bases están notariadas. Reclamos vía INDECOPI Perú.",
   },
   {
     q: "¿Quién está detrás del programa?",

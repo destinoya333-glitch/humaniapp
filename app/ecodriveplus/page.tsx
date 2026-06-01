@@ -12,7 +12,7 @@ import CinematicImage from "./_design/CinematicImage";
 export const metadata: Metadata = {
   title: "EcoDrive+ — La app de Trujillo con agente IA",
   description:
-    "EcoDrive+ Trujillo: app de última generación con agente IA Eco. Pass Club anual S/.30 para sorteos y beneficios. WhatsApp también disponible. Comisión 6.3% para choferes — la más baja del Perú.",
+    "EcoDrive+ Trujillo: app de última generación con agente IA Eco. Pass Club S/.30 por edición con sorteo del carro + beneficios reales. WhatsApp también disponible. Comisión 6.3% para choferes — la más baja del Perú.",
   alternates: { canonical: "https://ecodriveplus.com" },
   keywords: [
     "app taxi Trujillo",
@@ -127,7 +127,7 @@ export default function EcoDrivePlusPage() {
           name: "EcoDrive+",
           url: "https://ecodriveplus.com",
           logo: "https://rfpmvnoaqibqiqxrmheb.supabase.co/storage/v1/object/public/brand-assets/ecodrive/logo-final-naranja-trim.png",
-          description: "App de transporte de última generación con agente IA. Membresía Pass Club anual para sorteos y beneficios. WhatsApp también disponible. Comisión 6.3% para choferes — la más baja del Perú.",
+          description: "App de transporte de última generación con agente IA. Pass Club S/.30 por edición con sorteo del carro + beneficios reales. WhatsApp también disponible. Comisión 6.3% para choferes — la más baja del Perú.",
           areaServed: { "@type": "City", name: "Trujillo, Perú" },
           contactPoint: {
             "@type": "ContactPoint",
@@ -246,7 +246,7 @@ export default function EcoDrivePlusPage() {
 
             <Reveal delay={1.2} className="mt-12 flex flex-wrap gap-x-8 gap-y-2 eco-mono text-[var(--eco-ink-mute)]">
               <span>⌗ Agente IA Eco</span>
-              <span>⌗ Pass Club S/.30/año</span>
+              <span>⌗ Pass Club S/.30 por sorteo</span>
               <span>⌗ Yape al toque</span>
               <span>⌗ WhatsApp 24/7</span>
             </Reveal>
@@ -829,16 +829,18 @@ export default function EcoDrivePlusPage() {
           <Reveal className="mb-16 max-w-4xl">
             <div className="eco-mono text-[var(--eco-flame)] mb-4 flex items-center gap-3">
               <span className="inline-block h-2 w-2 rounded-full bg-[var(--eco-flame)] animate-pulse" />
-              — 09 / Pass anual
+              — 09 / Pass del sorteo
             </div>
             <h2 className="eco-display text-[52px] md:text-[88px] xl:text-[112px] leading-[0.92] text-[var(--eco-ink)]">
               Una <span className="eco-display-italic text-[var(--eco-flame)]">membresía.</span><br />
-              Todo el año <span className="eco-display-italic text-[var(--eco-flame)]">jugando.</span>
+              Un <span className="eco-display-italic text-[var(--eco-flame)]">carro</span> esperando.
             </h2>
             <p className="mt-8 max-w-2xl text-[var(--eco-ink-soft)] leading-relaxed text-[17px] md:text-[19px]">
-              El <strong className="text-[var(--eco-ink)]">Pass EcoDrive+ Club</strong> es la única forma de entrar a los sorteos.
-              Pagás una vez al año y participás en <strong className="text-[var(--eco-ink)]">cada edición</strong>: autos, motos, electrodomésticos.
-              Más bonus por cada viaje, prioridad en zonas y descuentos del 2 % en BilleteraEco.
+              El <strong className="text-[var(--eco-ink)]">Pass EcoDrive+ Club</strong> cuesta <strong className="text-[var(--eco-flame)]">S/.30</strong> y te da
+              <strong className="text-[var(--eco-ink)]"> 1 número del sorteo del carro</strong> de la edición vigente +
+              beneficios reales (cashback boost, descuento BilleteraEco, prioridad de chofer, Miss Sofia 30 días).
+              Cuando se sortea el carro, abre la siguiente edición con tickets nuevos. Si ya tenías Pass antes,
+              <strong className="text-[var(--eco-flame)]"> el próximo te cuesta S/.27</strong>.
             </p>
           </Reveal>
 
@@ -850,15 +852,15 @@ export default function EcoDrivePlusPage() {
                 <div className="relative z-10">
                   <div className="eco-mono text-[var(--eco-flame)] mb-6 flex items-center gap-3 flex-wrap">
                     <span className="inline-block h-2 w-2 rounded-full bg-[var(--eco-flame)] animate-pulse" />
-                    — Pass anual
-                    <span className="text-[10px] uppercase px-2 py-0.5 rounded-full bg-[var(--eco-flame)] text-[var(--eco-bg-deep)] tracking-wider">precio único</span>
+                    — Pass del sorteo
+                    <span className="text-[10px] uppercase px-2 py-0.5 rounded-full bg-[var(--eco-flame)] text-[var(--eco-bg-deep)] tracking-wider">por edición</span>
                   </div>
                   <div className="flex items-baseline gap-4 flex-wrap">
                     <div className="eco-display text-[96px] md:text-[144px] xl:text-[176px] text-[var(--eco-flame)] leading-none">S/.30</div>
-                    <div className="eco-mono text-[var(--eco-ink-soft)] text-lg">/ año</div>
+                    <div className="eco-mono text-[var(--eco-ink-soft)] text-lg">/ Pass</div>
                   </div>
                   <p className="mt-4 eco-mono text-[var(--eco-ink-mute)]">
-                    Un solo pago. Una sola membresía. Todos los beneficios. Todo el año.
+                    1 Pass = 1 número del sorteo. Cap 9 por DNI / mes. Bonus lealtad S/.27 si volvés.
                   </p>
                   <div className="mt-10">
                     <Magnetic strength={0.3}>
@@ -878,12 +880,17 @@ export default function EcoDrivePlusPage() {
             <Reveal delay={0.1} className="lg:col-span-5">
               <div className="relative border border-[var(--eco-line-strong)] rounded-3xl p-8 md:p-10 h-full bg-[var(--eco-bg-deep)] eco-card">
                 <div className="eco-mono text-[var(--eco-ink-mute)] mb-6">— Qué incluye</div>
-                <ul className="space-y-4 eco-mono text-[var(--eco-ink-soft)] text-[15px] leading-relaxed">
-                  <li className="flex items-start gap-3"><span className="text-[var(--eco-flame)] mt-0.5 text-lg leading-none">✦</span>Participás en TODAS las ediciones del año (auto, moto, electrodomésticos)</li>
-                  <li className="flex items-start gap-3"><span className="text-[var(--eco-flame)] mt-0.5 text-lg leading-none">✦</span>Tickets bonus por cada viaje EcoDrive+ que tomás</li>
-                  <li className="flex items-start gap-3"><span className="text-[var(--eco-flame)] mt-0.5 text-lg leading-none">✦</span>Descuento 2 % en BilleteraEco</li>
-                  <li className="flex items-start gap-3"><span className="text-[var(--eco-flame)] mt-0.5 text-lg leading-none">✦</span>Prioridad en zonas con demanda alta</li>
-                  <li className="flex items-start gap-3"><span className="text-[var(--eco-flame)] mt-0.5 text-lg leading-none">✦</span>Activos digitales ActivosYA (selección)</li>
+                <ul className="space-y-3 eco-mono text-[var(--eco-ink-soft)] text-[14px] leading-relaxed">
+                  <li className="flex items-start gap-3"><span className="text-[var(--eco-flame)] mt-0.5">✦</span>1 número del sorteo del carro de la edición vigente</li>
+                  <li className="flex items-start gap-3"><span className="text-[var(--eco-flame)] mt-0.5">✦</span>3% descuento en BilleteraEco × 30 días</li>
+                  <li className="flex items-start gap-3"><span className="text-[var(--eco-flame)] mt-0.5">✦</span>Cashback boost 5% × 30 días</li>
+                  <li className="flex items-start gap-3"><span className="text-[var(--eco-flame)] mt-0.5">✦</span>Conductor: 18 viajes sin comisión el mes</li>
+                  <li className="flex items-start gap-3"><span className="text-[var(--eco-flame)] mt-0.5">✦</span>Prioridad de chofer en zonas saturadas</li>
+                  <li className="flex items-start gap-3"><span className="text-[var(--eco-flame)] mt-0.5">✦</span>Acceso anticipado a próxima edición (24-48h)</li>
+                  <li className="flex items-start gap-3"><span className="text-[var(--eco-flame)] mt-0.5">✦</span>Pre-asignación de número favorito</li>
+                  <li className="flex items-start gap-3"><span className="text-[var(--eco-flame)] mt-0.5">✦</span>Miss Sofia 30 días gratis</li>
+                  <li className="flex items-start gap-3"><span className="text-[var(--eco-flame)] mt-0.5">✦</span>TuDestinoYa + TuCuentoYa beta</li>
+                  <li className="flex items-start gap-3"><span className="text-[var(--eco-flame)] mt-0.5">✦</span>Premios consuelo + insignia Pass holder</li>
                 </ul>
               </div>
             </Reveal>
@@ -986,7 +993,7 @@ export default function EcoDrivePlusPage() {
               empieza con un <span className="eco-display-italic text-[var(--eco-flame)]">tap.</span>
             </h2>
             <p className="mt-12 text-[var(--eco-ink-soft)] eco-mono max-w-3xl mx-auto">
-              App con agente IA · Pass Club anual · WhatsApp 24/7 · Trujillo hoy · Lima pronto.
+              App con agente IA · Pass Club S/.30 por sorteo · WhatsApp 24/7 · Trujillo hoy · Lima pronto.
             </p>
             <div className="mt-12 flex flex-col sm:flex-row gap-4 justify-center">
               <Magnetic strength={0.35}>

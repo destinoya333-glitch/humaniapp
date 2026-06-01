@@ -35,13 +35,19 @@ export async function PATCH(req: NextRequest) {
   const body = (await req.json().catch(() => ({}))) as {
     pass_precio_publico?: number;
     pass_precio_interno?: number;
+    pass_cap_por_dni?: number;
+    pass_bonus_lealtad_max?: number;
+    pass_descuento_lealtad?: number;
   };
 
   const update: Record<string, number> = {};
   if (typeof body.pass_precio_publico === "number") update.pass_precio_publico = body.pass_precio_publico;
   if (typeof body.pass_precio_interno === "number") update.pass_precio_interno = body.pass_precio_interno;
+  if (typeof body.pass_cap_por_dni === "number") update.pass_cap_por_dni = body.pass_cap_por_dni;
+  if (typeof body.pass_bonus_lealtad_max === "number") update.pass_bonus_lealtad_max = body.pass_bonus_lealtad_max;
+  if (typeof body.pass_descuento_lealtad === "number") update.pass_descuento_lealtad = body.pass_descuento_lealtad;
   if (Object.keys(update).length === 0) {
-    return NextResponse.json({ error: "no_fields", hint: "envia pass_precio_publico y/o pass_precio_interno" }, { status: 400 });
+    return NextResponse.json({ error: "no_fields", hint: "envia pass_precio_publico, pass_precio_interno, pass_cap_por_dni, pass_bonus_lealtad_max o pass_descuento_lealtad" }, { status: 400 });
   }
 
   // club_programa tiene una sola fila; lo actualizamos sin filtro (mas robusto si el id es uuid)

@@ -57,21 +57,57 @@ export async function getRandomAvailableNumbers(
   return out.sort((a, b) => a - b);
 }
 
+// Bonus por lealtad: si el DNI tuvo Pass en una edicion anterior (cerrada o sorteada),
+// el Pass de la edicion vigente lleva S/.3 de descuento. Sin tope ni acumulacion:
+// siempre S/.3, no importa cuantas ediciones anteriores hayas comprado.
+const DESCUENTO_LEALTAD = 3;
+
+async function dniTieneTicketPrevio(sb: SupabaseClient, dni: string, currentEdicionId?: string): Promise<boolean> {
+  const { data: miembro } = await sb
+    .from("club_miembros")
+    .select("id")
+    .eq("dni", dni)
+    .maybeSingle();
+  if (!miembro?.id) return false;
+
+  let q = sb
+    .from("club_tickets")
+    .select("id, club_ediciones!inner(estado)", { head: true, count: "exact" })
+    .eq("miembro_id", miembro.id)
+    .eq("estado", "confirmado")
+    .in("club_ediciones.estado", ["cerrada", "sorteada"]);
+  if (currentEdicionId) q = q.neq("edicion_id", currentEdicionId);
+
+  const { count } = await q;
+  return (count ?? 0) > 0;
+}
+
 export async function pricingFor(
   sb: SupabaseClient,
   modalidad: Modalidad,
   tipoPerfil: TipoPerfil,
-  edicionId?: string
-): Promise<{ precio: number; descripcion: string }> {
+  edicionId?: string,
+  dni?: string
+): Promise<{ precio: number; descripcion: string; descuento_lealtad?: number }> {
   const { data: prog } = await sb.from("club_programa").select("*").limit(1).single();
   const interno = tipoPerfil !== "publico";
   if (modalidad === "pass") {
-    return {
-      precio: interno ? Number(prog.pass_precio_interno) : Number(prog.pass_precio_publico),
-      descripcion: interno
-        ? "EcoDrive+ Club — Pass anual precio interno"
-        : "EcoDrive+ Club — Pass anual precio público",
-    };
+    const base = interno ? Number(prog.pass_precio_interno) : Number(prog.pass_precio_publico);
+    let descuento = 0;
+    if (dni) {
+      const previo = await dniTieneTicketPrevio(sb, dni, edicionId);
+      if (previo) descuento = Number(prog.pass_descuento_lealtad ?? DESCUENTO_LEALTAD);
+    }
+    const precio = Math.max(0, base - descuento);
+    const descripcion =
+      descuento > 0
+        ? `EcoDrive+ Club — Pass (descuento lealtad S/.${descuento})`
+        : interno
+        ? "EcoDrive+ Club — Pass precio interno"
+        : "EcoDrive+ Club — Pass precio público";
+    return descuento > 0
+      ? { precio, descripcion, descuento_lealtad: descuento }
+      : { precio, descripcion };
   }
   if (edicionId) {
     const { data: ed } = await sb

@@ -56,18 +56,36 @@ export async function POST(req: NextRequest) {
 
   if (modalidad === "pass") {
     const { data: prog } = await sb.from("club_programa").select("pass_cap_por_dni").single();
+    const cap = prog?.pass_cap_por_dni ?? 9;
+
+    // Cap por edicion vigente: contar tickets confirmados + reservas activas del mismo DNI
+    // en la edicion que se esta vendiendo. Se resetea automaticamente al cerrar la edicion
+    // (los tickets quedan vinculados a esa edicion). En la practica = "X por mes" si cada
+    // edicion dura ~1 mes.
     const { data: miembro } = await sb.from("club_miembros").select("id").eq("dni", dni!).maybeSingle();
-    if (miembro) {
-      const { count } = await sb
-        .from("club_pass")
+    let used = 0;
+    if (miembro?.id) {
+      const { count: tCount } = await sb
+        .from("club_tickets")
         .select("id", { count: "exact", head: true })
         .eq("miembro_id", miembro.id)
-        .eq("estado", "activo");
-      if ((count ?? 0) >= (prog?.pass_cap_por_dni ?? 5))
-        return NextResponse.json(
-          { error: `limite alcanzado: max ${prog?.pass_cap_por_dni ?? 5} Pass activos por DNI` },
-          { status: 400 }
-        );
+        .eq("edicion_id", edId!)
+        .eq("estado", "confirmado");
+      used += tCount ?? 0;
+    }
+    const { count: rCount } = await sb
+      .from("club_reservas")
+      .select("id", { count: "exact", head: true })
+      .eq("dni", dni!)
+      .eq("edicion_id", edId!)
+      .gt("expira_en", new Date().toISOString());
+    used += rCount ?? 0;
+
+    if (used >= cap) {
+      return NextResponse.json(
+        { error: `limite alcanzado: max ${cap} Pass por DNI en la edicion vigente (tenes ${used})` },
+        { status: 400 }
+      );
     }
   }
 
@@ -98,7 +116,7 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  const { precio, descripcion } = await pricingFor(sb, modalidad, perfil, edId);
+  const { precio, descripcion, descuento_lealtad } = await pricingFor(sb, modalidad, perfil, edId, dni);
   const expira = new Date(Date.now() + RESERVA_TTL_MIN * 60_000).toISOString();
 
   const { data: reserva, error } = await sb
@@ -127,6 +145,7 @@ export async function POST(req: NextRequest) {
     numero_correlativo: reserva.numero_correlativo,
     precio: Number(reserva.precio_esperado),
     descripcion,
+    descuento_lealtad: descuento_lealtad ?? 0,
     expira_en: reserva.expira_en,
     pagar: {
       yape: {
