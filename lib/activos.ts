@@ -25,6 +25,59 @@ export type Activo = {
 
 export const ACTIVOS: Activo[] = [
   {
+    slug: "tumozoya",
+    status: "Activo",
+    icon: "🍽️",
+    name: "TuMozoYa",
+    tagline: "Carta viva con IA · Sazón anfitrión · Salón + Delivery + Reserva",
+    shortDescription:
+      "La carta que habla, escucha y antoja. El comensal escanea un QR, pide por voz a Sazón (IA), ve el plato en su mesa y paga con un gesto. Cocina y mozo en vivo, delivery con EcoDrive+ y boleta por WhatsApp. Multi-tenant.",
+    overview:
+      "TuMozoYa convierte la carta de un restaurante en una experiencia tipo Reels con un anfitrión IA llamado Sazón que conversa, recomienda y arma el pedido. Tres modos en un solo producto: salón en mesa (QR físico), delivery (QR en redes, logística EcoDrive+) y reserva con pre-pedido (mapa de mesas + cocina al tiempo). La cocina recibe las comandas en una pantalla en vivo (KDS) y el mozo cobra y emite boleta. Vende a la mente, no a la gente (neuromarketing Klaric).",
+    problem:
+      "Las cartas QR de hoy son listas de texto frías que no venden. Los restaurantes pierden ticket por falta de upsell, dependen de apps de delivery que cobran 25-30%, y la toma de pedidos en salón es lenta y con errores. Nadie une carta, pedido, cocina, delivery y facturación en una sola experiencia memorable.",
+    solution:
+      "Un anfitrión IA (Sazón) que entiende lenguaje natural por voz o texto y sube el ticket con upsell inteligente; un feed inmersivo de platos con AR; comandas en tiempo real a cocina y mozo; delivery con flota propia EcoDrive+ (tarifa taxi +10%, sin comisión de marketplace); reserva que arranca la cocina calculando hacia atrás para que el cliente coma a los minutos de llegar; y boleta/factura lista para SUNAT por WhatsApp.",
+    metrics: [
+      { label: "Suscripción B2B", value: "S/ 1,900/mes" },
+      { label: "Modos en 1 producto", value: "3 (salón/delivery/reserva)" },
+      { label: "Comisión por pedido", value: "0%" },
+      { label: "Uplift de ticket (upsell IA)", value: "+20-40%" },
+      { label: "Margen bruto", value: "76%" },
+      { label: "Estado plataforma", value: "LIVE" },
+    ],
+    businessModel:
+      "Suscripción mensual al restaurante (sin comisión por pedido) + margen del delivery propio (EcoDrive+). Modelo de franquicia: un operador gestiona N locales sobre la misma infra multi-tenant. Up-selling: facturación electrónica SUNAT, voz premium del anfitrión, y módulo de reservas con adelanto.",
+    stack: ["Next.js (App Router)", "React 19", "Claude Sonnet 4.6", "Vercel AI SDK", "Supabase Realtime", "ElevenLabs / Web Speech", "EcoDrive+ API (delivery)", "Framer Motion"],
+    competitors: [
+      { name: "Cartas QR (Menu.com, etc.)", weakness: "Lista de texto estática, sin IA, sin upsell, no venden" },
+      { name: "Rappi / PedidosYa", weakness: "Comisión 25-30%, el local pierde marca y al cliente" },
+      { name: "POS tradicionales (Toast, etc.)", weakness: "Caros, foco en caja, sin experiencia para el comensal ni IA" },
+      { name: "WhatsApp manual", weakness: "Lento, errores, sin carta visual, sin cocina en vivo" },
+    ],
+    pnlProjection: [
+      { month: "M1", revenue: "S/ 1,900", cost: "S/ 550", profit: "S/ 1,350" },
+      { month: "M3", revenue: "S/ 5,700", cost: "S/ 1,300", profit: "S/ 4,400" },
+      { month: "M6", revenue: "S/ 11,400", cost: "S/ 2,300", profit: "S/ 9,100" },
+      { month: "M12", revenue: "S/ 22,800", cost: "S/ 4,400", profit: "S/ 18,400" },
+    ],
+    includes: [
+      "Código fuente completo + repositorio Git",
+      "Anfitrión IA Sazón (voz + texto) con personalidad por local",
+      "Feed inmersivo de platos + visor AR + pago invisible",
+      "Cocina (KDS) y panel de mozo en tiempo real (Supabase Realtime)",
+      "3 modos: salón, delivery EcoDrive+, reserva con cocina al tiempo",
+      "Boleta/factura por WhatsApp (listo para SUNAT vía PSE)",
+      "Multi-tenant listo para franquicia",
+      "Onboarding técnico 7-14 días + Slack privado 90 días",
+    ],
+    rent: "Desde S/ 1,900/mes",
+    buy: "Compra a consultar",
+    b2cHref: "https://tumozoya.activosya.com",
+    b2cLabel: "Ver demo B2C",
+    subdomain: "tumozoya.activosya.com",
+  },
+  {
     slug: "miss-sofia",
     status: "Activo",
     icon: "◎",
@@ -330,11 +383,11 @@ export const ACTIVOS: Activo[] = [
   {
     slug: "tucuentoya",
     status: "Próximamente",
-    icon: "🦊",
+    icon: "🐕",
     name: "TuCuentoYa",
     tagline: "Cuentos infantiles personalizados · Audio IA · WhatsApp",
     shortDescription:
-      "Tu hijo es el héroe del cuento. Cliente pide por WhatsApp (texto o audio), el bot Coqui 🦊 crea el cuento personalizado y entrega audio MP3 en menos de 60 segundos. Voces peruanas neurales (Camila + Alex). 2, 3 o 5 minutos.",
+      "Tu hijo es el héroe del cuento. Cliente pide por WhatsApp (texto o audio), el bot Rex 🐕 crea el cuento personalizado y entrega audio MP3 en menos de 60 segundos. Voces peruanas neurales (Camila + Alex). 2, 3 o 5 minutos.",
     overview:
       "TuCuentoYa es una plataforma de cuentos infantiles 100% personalizados. El papá/mamá/abuelo escribe o manda audio diciendo el nombre de su peque, escenario, y duración. El sistema genera un cuento donde el niño es el protagonista, con su familia real como acompañantes, narrado en voz peruana neural. Entrega en MP3 por WhatsApp. Modelo wallet recargable + VIP mensual.",
     problem:
