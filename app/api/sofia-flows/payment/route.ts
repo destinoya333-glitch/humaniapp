@@ -146,10 +146,24 @@ export async function POST(req: NextRequest) {
     // Multi-tenant: resolver el Yape del operador correcto (o default Percy)
     const yape = await resolveYapeForAlumno(supabase, phone);
 
+    // Fix FK: solo enlazar user_id si EXISTE en mse_users. Si el usuario está
+    // logueado en auth pero aún no tiene perfil (no completó onboarding), el
+    // insert con su id violaba mse_payments_user_id_fkey. En ese caso lo
+    // dejamos null y el pago se matchea por teléfono (MacroDroid) igual.
+    let safeUserId: string | null = userId ?? null;
+    if (safeUserId) {
+      const { data: existingUser } = await supabase
+        .from("mse_users")
+        .select("id")
+        .eq("id", safeUserId)
+        .maybeSingle();
+      if (!existingUser) safeUserId = null;
+    }
+
     const { data: payment, error } = await supabase
       .from("mse_payments")
       .insert({
-        user_id: userId ?? null,
+        user_id: safeUserId,
         phone,
         plan: normalizedPlan,
         billing,
