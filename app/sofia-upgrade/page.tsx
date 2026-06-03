@@ -47,6 +47,8 @@ type Step = "offer" | "yape" | "done";
 export default function SofiaUpgradePage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [phone, setPhone] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
+  const [cardLoading, setCardLoading] = useState(false);
   const [streak, setStreak] = useState<number | null>(null);
   const [step, setStep] = useState<Step>("offer");
   const [chosenPlan, setChosenPlan] = useState<Plan>("regular");
@@ -66,6 +68,7 @@ export default function SofiaUpgradePage() {
         }
         setUserId(data.user_id);
         setPhone(data.user?.whatsapp_phone ?? "");
+        setEmail(data.email ?? data.user?.email ?? "");
         // racha — para el gatillo de pérdida; si falla, no bloquea
         fetch(`/api/sofia-progress/streak?user_id=${data.user_id}&days=90`)
           .then((r) => r.json())
@@ -100,6 +103,59 @@ export default function SofiaUpgradePage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  // Cargar Culqi.js (checkout con tarjeta)
+  useEffect(() => {
+    if (typeof document === "undefined" || document.getElementById("culqi-js")) return;
+    const s = document.createElement("script");
+    s.id = "culqi-js";
+    s.src = "https://checkout.culqi.com/js/v4";
+    s.async = true;
+    document.body.appendChild(s);
+  }, []);
+
+  function payWithCard() {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const Culqi = (window as any).Culqi;
+    if (!Culqi) {
+      setError("El pago con tarjeta está cargando, intenta en un segundo.");
+      return;
+    }
+    setError(null);
+    Culqi.publicKey = process.env.NEXT_PUBLIC_CULQI_PUBLIC_KEY;
+    Culqi.settings({ title: "Miss Sofia", currency: "PEN", amount: PRICING[chosenPlan][chosenBilling] * 100 });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (window as any).culqi = async function () {
+      if (Culqi.token) {
+        setCardLoading(true);
+        setError(null);
+        try {
+          const res = await fetch("/api/sofia-flows/culqi-charge", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              token: Culqi.token.id,
+              email: Culqi.token.email || email,
+              plan: chosenPlan,
+              billing: chosenBilling,
+              user_id: userId,
+              phone,
+            }),
+          });
+          const data = await res.json();
+          if (!res.ok || !data.ok) throw new Error(data.error || "No se pudo cobrar la tarjeta");
+          setStep("done");
+        } catch (e) {
+          setError((e as Error).message);
+        } finally {
+          setCardLoading(false);
+        }
+      } else if (Culqi.error) {
+        setError(Culqi.error.user_message || "Error con la tarjeta");
+      }
+    };
+    Culqi.open();
   }
 
   if (!userId) {
@@ -301,6 +357,19 @@ export default function SofiaUpgradePage() {
                 {loading ? "Registrando..." : "Ya yapeé"}
               </button>
             </div>
+            {/* Opción: pago al instante con tarjeta (Culqi) */}
+            <div className="mt-5 pt-4 border-t border-[#2A2A2A]">
+              <p className="text-xs text-zinc-500 text-center mb-3">o paga al instante con tarjeta</p>
+              <button
+                onClick={payWithCard}
+                disabled={cardLoading}
+                className="w-full border border-purple-400/40 bg-purple-400/10 text-purple-200 rounded-xl py-2.5 font-bold hover:bg-purple-400/20 disabled:opacity-60"
+              >
+                {cardLoading ? "Procesando..." : `💳 Pagar S/${amount} con tarjeta`}
+              </button>
+              <p className="text-[10px] text-zinc-600 text-center mt-2">Pago seguro procesado por Culqi</p>
+            </div>
+
             {error && (
               <p className="mt-3 bg-rose-500/10 border border-rose-500/30 text-rose-300 text-sm p-2 rounded-lg">
                 {error}
