@@ -4,13 +4,31 @@
  * escrituras de pago/acceso (ignora RLS). Las lecturas del catálogo también
  * pueden venir del cliente con anon-key vía RLS pública.
  */
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-export const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  { auth: { persistSession: false } }
-);
+// Cliente perezoso: se crea en el PRIMER uso (request), no al importar el módulo.
+// Evita "supabaseKey is required" durante el build cuando el entorno aún no
+// tiene las variables (p.ej. en deploys de preview).
+let _client: SupabaseClient | null = null;
+function getClient(): SupabaseClient {
+  if (!_client) {
+    _client = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { persistSession: false } }
+    );
+  }
+  return _client;
+}
+
+// Proxy para mantener el uso `supabase.from(...)` sin tocar a quienes lo importan.
+export const supabase: SupabaseClient = new Proxy({} as SupabaseClient, {
+  get(_t, prop) {
+    const c = getClient() as unknown as Record<string | symbol, unknown>;
+    const v = c[prop];
+    return typeof v === "function" ? (v as (...a: unknown[]) => unknown).bind(c) : v;
+  },
+});
 
 export type Serie = {
   id: string;
