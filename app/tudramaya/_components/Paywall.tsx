@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 type Tier = "cap" | "pack5" | "completo";
 
@@ -31,8 +32,28 @@ export default function Paywall({
 
   const precio = TIERS.find((t) => t.id === tier)!.precio;
 
-  // Mientras se muestra "Yapea…", sondea cada 4s si MacroDroid ya confirmó el
-  // pago; al detectar el acceso, recarga para mostrar el video al instante.
+  // INSTANTÁNEO (Supabase Realtime): la página se suscribe a la inserción del
+  // acceso; cuando MacroDroid confirma el pago, Supabase lo empuja al toque.
+  useEffect(() => {
+    if (step !== "yape" || !userId) return;
+    const supabase = createClient();
+    const ch = supabase
+      .channel(`tdy-acceso-${userId}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "tdy_accesos", filter: `user_id=eq.${userId}` },
+        () => {
+          setMsg("¡Pago confirmado! Desbloqueando…");
+          location.reload();
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(ch);
+    };
+  }, [step, userId]);
+
+  // RESPALDO (sondeo cada 4s): por si Realtime no está activo o se cae la conexión.
   useEffect(() => {
     if (step !== "yape" || !userId) return;
     let stop = false;
