@@ -37,19 +37,28 @@ export default function Paywall({
   useEffect(() => {
     if (step !== "yape" || !userId) return;
     const supabase = createClient();
-    const ch = supabase
-      .channel(`tdy-acceso-${userId}`)
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "tdy_accesos", filter: `user_id=eq.${userId}` },
-        () => {
-          setMsg("¡Pago confirmado! Desbloqueando…");
-          location.reload();
-        }
-      )
-      .subscribe();
+    let ch: ReturnType<typeof supabase.channel> | null = null;
+    let cancelled = false;
+    (async () => {
+      // Autorizar el canal con la sesión del usuario para que RLS le entregue SUS accesos.
+      const { data } = await supabase.auth.getSession();
+      if (data.session) await supabase.realtime.setAuth(data.session.access_token);
+      if (cancelled) return;
+      ch = supabase
+        .channel(`tdy-acceso-${userId}`)
+        .on(
+          "postgres_changes",
+          { event: "INSERT", schema: "public", table: "tdy_accesos", filter: `user_id=eq.${userId}` },
+          () => {
+            setMsg("¡Pago confirmado! Desbloqueando…");
+            location.reload();
+          }
+        )
+        .subscribe();
+    })();
     return () => {
-      supabase.removeChannel(ch);
+      cancelled = true;
+      if (ch) supabase.removeChannel(ch);
     };
   }, [step, userId]);
 
