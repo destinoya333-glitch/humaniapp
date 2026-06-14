@@ -31,25 +31,16 @@ function dividirMensaje(texto: string, maxLen = 1500): string[] {
 // Notif admin Percy (+51 998 102 258) cuando hay actividad de pago relevante.
 // Envia desde canal TuDestinoYa (+51 980 423 754) para mantener branding consistente.
 async function notifyPercy(body: string): Promise<void> {
+  // Redirige a ActivosYA central (canal unificado de notifs)
   try {
-    const META_TOKEN =
-      process.env.META_DESTINOYA_ACCESS_TOKEN ||
-      process.env.ECODRIVE_META_ACCESS_TOKEN ||
-      "";
-    if (!META_TOKEN) return;
-    const PHONE_ID_DESTINOYA = "1080734831795014";
-    await fetch(`https://graph.facebook.com/v22.0/${PHONE_ID_DESTINOYA}/messages`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${META_TOKEN}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        messaging_product: "whatsapp",
-        to: "51998102258",
-        type: "text",
-        text: { body },
-      }),
-    });
+    const { notifyActivosYA } = await import("@/lib/activosya-central/notify");
+    let tipo: "yape_confirmado" | "cliente_nuevo" | "consulta_vip" | "error_bot" = "yape_confirmado";
+    if (/error|falla/i.test(body)) tipo = "error_bot";
+    else if (/VIP|premium|plan/i.test(body)) tipo = "consulta_vip";
+    else if (/nuevo cliente|registro|primera vez/i.test(body)) tipo = "cliente_nuevo";
+    await notifyActivosYA({ tipo, servicio: "destinoya", mensaje_corto: body });
   } catch (e) {
-    console.error("[madrodroid notifyPercy]", (e as Error).message);
+    console.error("[notifyPercy->ay]", (e as Error).message);
   }
 }
 
@@ -174,6 +165,126 @@ async function handlePost(
   logEntry.result = `OK_PARSED: monto=${montoYape}, op=${operacion}, celular=${celular || 'N/A'}, nombre=${nombreRemitente || 'N/A'}`;
   await supabase.from("destinoya_debug_log").insert(logEntry);
 
+  // ─── Fan-out a Miss Sofia ───────────────────────────────────────
+  // El MacroDroid del operador postea SOLO a este endpoint (DestinoYa),
+  // pero Miss Sofia comparte la MISMA cuenta Yape (998 102 258). Por eso
+  // reenviamos la notificación íntegra a su validador cuando el monto
+  // corresponde a un plan Sofia (39/89/349/799). Cada servicio matchea
+  // contra su propia tabla, así que no hay cruce de datos (un S/39 de
+  // ChoferYa no activa Sofia salvo que exista un pago Sofia pendiente).
+  // AISLADO: cualquier fallo aquí se traga y NUNCA afecta el flujo DestinoYa.
+  if ([39, 89, 349, 799].includes(montoYape)) {
+    try {
+      const origin = `https://${req.headers.get("host") || "activosya.com"}`;
+      await fetch(`${origin}/api/sofia/macrodroid`, {
+        method: "POST",
+        headers: { "content-type": contentType || "text/plain" },
+        body: bodyRaw,
+      });
+    } catch (e) {
+      console.error("[madrodroid: fan-out a sofia]", (e as Error).message);
+    }
+  }
+
+  // ─── TuChoferYa: ¿es pago de RENTA CHOFER (S/.39/79/149)? ───
+  // Evaluado ANTES que operador para no confundir (los montos son disjuntos).
+  if ([39, 79, 149].includes(montoYape)) {
+    try {
+      const {
+        buscarChoferYaPendientePorMontoRenta,
+        activarChoferYaPorPagoRenta,
+        PLANES_CHOFERYA,
+      } = await import("@/lib/activosya/choferya");
+      const choferPendiente = await buscarChoferYaPendientePorMontoRenta(
+        montoYape,
+        240,
+        nombreRemitente
+      );
+      if (choferPendiente) {
+        const activacion = await activarChoferYaPorPagoRenta({
+          tenant_id: choferPendiente.tenant_id,
+          chofer_id: choferPendiente.chofer_id,
+          monto_pen: montoYape,
+          yape_operacion: operacion,
+          yape_remitente_nombre: nombreRemitente,
+        });
+
+        const planInfo = PLANES_CHOFERYA[choferPendiente.plan];
+        const panelUrl = `https://mi.choferya.activosya.com?token=${activacion.macrodroid_token}`;
+        const perfilUrl = `https://chofer.activosya.com/c/${choferPendiente.slug}`;
+        const venceLabel = new Date(activacion.subscription_until).toLocaleDateString("es-PE", {
+          day: "2-digit",
+          month: "long",
+        });
+
+        const choferMsg =
+          `🚖 *¡TuChoferYa ACTIVADO, ${choferPendiente.name.split(" ")[0]}!*\n\n` +
+          `Recibimos tu Yape de S/. ${montoYape} ✅\n` +
+          `Plan ${planInfo.label} activo hasta el ${venceLabel} 📅\n\n` +
+          `*🔗 Tu página pública:*\n${perfilUrl}\n\n` +
+          `*🛠️ Tu panel personal:*\n${panelUrl}\n\n` +
+          `*Primeros pasos (10 min):*\n` +
+          `1️⃣ Configura tus tarifas planas (Centro→Aeropuerto, etc.)\n` +
+          `2️⃣ Define tus horarios disponibles por día\n` +
+          `3️⃣ Descarga tu QR y pégalo en el auto\n` +
+          `4️⃣ Pídele a tus pasajeros frecuentes que reserven por ahí\n\n` +
+          `_Tus pasajeros te yapearán 100% a tu cuenta. Sin comisión por viaje. Tu renta se cobra el día 1 de cada mes._\n\n` +
+          `🚀 TuChoferYa — Tu propia agencia de taxi`;
+
+        try {
+          const META_TOKEN =
+            process.env.META_CHOFERYA_ACCESS_TOKEN ||
+            process.env.ECODRIVE_META_ACCESS_TOKEN ||
+            "";
+          const PHONE_OUT =
+            process.env.META_CHOFERYA_PHONE_ID || "1044803088721236";
+          await fetch(`https://graph.facebook.com/v22.0/${PHONE_OUT}/messages`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${META_TOKEN}`, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              messaging_product: "whatsapp",
+              to: choferPendiente.whatsapp_personal,
+              type: "text",
+              text: { body: choferMsg },
+            }),
+          });
+          // Notif Percy via ActivosYA central
+          const { notifyActivosYA } = await import("@/lib/activosya-central/notify");
+          await notifyActivosYA({
+            tipo: "plan_activado",
+            servicio: "choferya",
+            monto: montoYape,
+            cliente_nombre: choferPendiente.name,
+            cliente_phone: choferPendiente.whatsapp_personal,
+            detalle: { plan: planInfo.label, slug: choferPendiente.slug, yape_op: operacion, vence: venceLabel },
+          });
+        } catch (e) {
+          console.error("[madrodroid: WhatsApp activación choferya]", (e as Error).message);
+        }
+
+        await supabase.from("destinoya_debug_log").insert({
+          endpoint: "madrodroid",
+          headers,
+          body: bodyRaw,
+          parsed: { texto, contentType, monto: montoYape },
+          result: `CHOFERYA_ACTIVADO: ${choferPendiente.tenant_id} plan=${choferPendiente.plan}`,
+        });
+
+        return NextResponse.json({
+          ok: true,
+          action: "choferya_activado",
+          tenant_id: choferPendiente.tenant_id,
+          chofer_id: choferPendiente.chofer_id,
+          plan: choferPendiente.plan,
+          monto: montoYape,
+        });
+      }
+    } catch (e) {
+      console.error("[madrodroid: detección renta choferya]", (e as Error).message);
+      // No bloquear flujo de pagos de alumnos si esto falla
+    }
+  }
+
   // ─── ActivosYA Franquicia: ¿es pago de RENTA OPERADOR? ───
   // Si el monto coincide con un plan (S/.500/1200/2500) Y hay un operador
   // pendiente_onboarding registrado en las últimas 4h con ese mismo monto,
@@ -229,27 +340,18 @@ async function handlePost(
             }),
           });
 
-          // Notificar a Percy
-          await fetch(`https://graph.facebook.com/v22.0/1044803088721236/messages`, {
-            method: "POST",
-            headers: { Authorization: `Bearer ${META_TOKEN}`, "Content-Type": "application/json" },
-            body: JSON.stringify({
-              messaging_product: "whatsapp",
-              to: "51998102258",
-              type: "text",
-              text: {
-                body:
-                  `✅ *Operador ACTIVADO automáticamente*\n\n` +
-                  `${opPendiente.name}\n` +
-                  `Plan ${planInfo.label} (S/. ${montoYape})\n` +
-                  `WhatsApp: ${opPendiente.whatsapp_personal}\n` +
-                  `Yape op: ${operacion}\n\n` +
-                  `_Falta agregar SU chip a Meta Cloud cuando te lo envíe._`,
-              },
-            }),
+          // Notif Percy via ActivosYA central
+          const { notifyActivosYA } = await import("@/lib/activosya-central/notify");
+          await notifyActivosYA({
+            tipo: "plan_activado",
+            servicio: "activosya",
+            monto: montoYape,
+            cliente_nombre: opPendiente.name,
+            cliente_phone: opPendiente.whatsapp_personal,
+            detalle: { plan: planInfo.label, yape_op: operacion, falta_chip: true },
           });
         } catch (e) {
-          console.error("[madrodroid: WhatsApp activación operador]", (e as Error).message);
+          console.error("[madrodroid: activación operador]", (e as Error).message);
         }
 
         await supabase.from("destinoya_debug_log").insert({
@@ -272,6 +374,77 @@ async function handlePost(
       console.error("[madrodroid: detección renta operador]", (e as Error).message);
       // No bloquear el flujo de pagos de alumnos si esto falla
     }
+  }
+
+  // ─── TuDramaYa: ¿es pago de drama (S/1, S/3.30, S/12)? ────────────
+  // Se evalúa ANTES que TuCuentoYa para que el S/3.30 no caiga en la
+  // tolerancia ±0.50 del S/3 del cuento. Solo matchea si hay un pago
+  // tdy_pagos pendiente con ese monto exacto.
+  try {
+    const { procesarYapeTuDramaYa } = await import("@/lib/tudramaya/macrodroid-handler");
+    const tdyResult = await procesarYapeTuDramaYa({ monto: montoYape, operacion });
+    if (tdyResult.matched) {
+      await supabase.from("destinoya_debug_log").insert({
+        endpoint: "madrodroid",
+        headers,
+        body: bodyRaw,
+        parsed: { texto, contentType, monto: montoYape },
+        result: `TUDRAMAYA_${tdyResult.action}: ${tdyResult.user_id ?? ""} ${tdyResult.detail ?? ""}`,
+      });
+      await notifyPercy(
+        `🎬 *TuDramaYa pago detectado*\n\n` +
+          `Usuario: ${tdyResult.user_id ?? "?"}\n` +
+          `Acción: ${tdyResult.action}\n` +
+          `Monto: S/${montoYape}\n` +
+          `Operación: ${operacion}` +
+          (tdyResult.detail ? `\n${tdyResult.detail}` : "")
+      );
+      return NextResponse.json({ ok: true, action: `tudramaya_${tdyResult.action}`, monto: montoYape });
+    }
+  } catch (e) {
+    console.error("[madrodroid: detección TuDramaYa]", (e as Error).message);
+    // No bloquear — sigue al resto del router
+  }
+
+  // ─── TuCuentoYa: ¿es pago de cuento / wallet / VIP? ───────────────
+  // Antes del flujo de alumno DestinoYa: si hay conversación TuCuentoYa
+  // esperando ese monto, procesar aquí y retornar.
+  try {
+    const { procesarYapeTuCuentoYa, notifyPercyCuento } = await import(
+      "@/lib/cuentoinfantil/madrodroid-handler"
+    );
+    const tcResult = await procesarYapeTuCuentoYa({
+      monto: montoYape,
+      operacion,
+      nombre_remitente: nombreRemitente,
+      celular_hint: celular,
+    });
+    if (tcResult.matched) {
+      await supabase.from("destinoya_debug_log").insert({
+        endpoint: "madrodroid",
+        headers,
+        body: bodyRaw,
+        parsed: { texto, contentType, monto: montoYape },
+        result: `TUCUENTOYA_${tcResult.action}: ${tcResult.celular} ${tcResult.detail ?? ""}`,
+      });
+      await notifyPercyCuento(
+        `🐕 *TuCuentoYa pago detectado*\n\n` +
+          `Cliente: ${tcResult.celular}\n` +
+          `Acción: ${tcResult.action}\n` +
+          `Monto: S/${montoYape}\n` +
+          `Operación: ${operacion}\n` +
+          (tcResult.detail ? `\n${tcResult.detail}` : ""),
+      );
+      return NextResponse.json({
+        ok: true,
+        action: `tucuentoya_${tcResult.action}`,
+        celular: tcResult.celular,
+        monto: montoYape,
+      });
+    }
+  } catch (e) {
+    console.error("[madrodroid: detección TuCuentoYa]", (e as Error).message);
+    // No bloquear si falla — sigue al flujo DestinoYa abajo
   }
 
   // Estrategia de matching:
@@ -432,7 +605,11 @@ async function handlePost(
         flowDatos = "datos_carta_astral";
       } else if (/feng shui/i.test(subServicio)) {
         flowDatos = "datos_feng_shui";
-      } else if (/numerolog/i.test(subServicio) || /futuro/i.test(subServicio)) {
+      } else if (/futuro/i.test(subServicio)) {
+        // "Tu Futuro 30/60/90" necesita nombre + fecha + ciudad.
+        // datos_numerologia NO tiene ciudad → usamos datos_carta_astral que sí la tiene.
+        flowDatos = "datos_carta_astral";
+      } else if (/numerolog/i.test(subServicio)) {
         flowDatos = "datos_numerologia";
       } else {
         flowDatos = "datos_numerologia";
