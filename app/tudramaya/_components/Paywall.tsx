@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 type Tier = "cap" | "pack5" | "completo";
 
@@ -30,6 +30,35 @@ export default function Paywall({
   const [err, setErr] = useState<string | null>(null);
 
   const precio = TIERS.find((t) => t.id === tier)!.precio;
+
+  // Mientras se muestra "Yapea…", sondea cada 4s si MacroDroid ya confirmó el
+  // pago; al detectar el acceso, recarga para mostrar el video al instante.
+  useEffect(() => {
+    if (step !== "yape" || !userId) return;
+    let stop = false;
+    const t = setInterval(async () => {
+      try {
+        const r = await fetch("/api/tudramaya/acceso-estado", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ user_id: userId, serie_id: serieId, numero: episodioNumero }),
+        });
+        const j = await r.json();
+        if (j.desbloqueado && !stop) {
+          stop = true;
+          clearInterval(t);
+          setMsg("¡Pago confirmado! Desbloqueando…");
+          location.reload();
+        }
+      } catch {
+        /* reintenta en el próximo tick */
+      }
+    }, 4000);
+    return () => {
+      stop = true;
+      clearInterval(t);
+    };
+  }, [step, userId, serieId, episodioNumero]);
 
   if (!userId) {
     return (
