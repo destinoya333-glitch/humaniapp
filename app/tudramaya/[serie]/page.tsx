@@ -1,5 +1,5 @@
 /**
- * TuDramaYa — lista de episodios de una serie (con candados según acceso).
+ * TuDramaYa — lista de episodios de una serie (tarjetas con miniatura del video).
  */
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -31,35 +31,69 @@ export default async function Page({ params }: { params: Promise<{ serie: string
         </Link>
         <h1 className="text-2xl font-extrabold mt-2">{serie.titulo}</h1>
         {serie.sinopsis && <p className="text-neutral-400 text-sm mt-1">{serie.sinopsis}</p>}
+        <p className="text-neutral-500 text-xs mt-2">
+          {serie.total_caps} capítulos · {serie.caps_gratis} gratis
+        </p>
       </header>
 
-      <ul className="px-4 pb-12 space-y-2">
+      <div className="grid grid-cols-2 gap-3 px-4 pb-12">
         {episodios.map((ep) => {
           const desbloqueado = ep.gratis || (user ? accesosCubren(accesos, ep.numero) : false);
           return (
-            <li key={ep.id}>
-              <Link
-                href={`/tudramaya/ver/${ep.id}`}
-                className="flex items-center justify-between rounded-xl bg-neutral-900 border border-neutral-800 px-4 py-3"
-              >
-                <span className="flex items-center gap-3">
-                  <span className="text-neutral-500 text-sm w-7">#{ep.numero}</span>
-                  <span className="text-sm">{ep.titulo ?? `Capítulo ${ep.numero}`}</span>
+            <Link
+              key={ep.id}
+              href={`/tudramaya/ver/${ep.id}`}
+              className="relative block rounded-xl overflow-hidden bg-neutral-900 border border-neutral-800"
+            >
+              <div className="relative aspect-[9/16] bg-neutral-800">
+                {ep.miniatura_url && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={ep.miniatura_url}
+                    alt={ep.titulo ?? `Capítulo ${ep.numero}`}
+                    className={`w-full h-full object-cover ${!desbloqueado ? "opacity-60" : ""}`}
+                  />
+                )}
+
+                {/* degradado inferior para legibilidad del título */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-black/20" />
+
+                {/* número */}
+                <span className="absolute top-2 left-2 text-[11px] font-bold bg-black/60 rounded-md px-2 py-0.5">
+                  Cap {ep.numero}
                 </span>
-                <span className="text-sm">
-                  {ep.gratis ? (
-                    <span className="text-emerald-400 text-xs font-semibold">GRATIS</span>
-                  ) : desbloqueado ? (
-                    <span className="text-neutral-300">▶</span>
-                  ) : (
-                    <span className="text-neutral-500">🔒</span>
-                  )}
-                </span>
-              </Link>
-            </li>
+
+                {/* estado */}
+                {ep.gratis ? (
+                  <span className="absolute top-2 right-2 text-[10px] font-extrabold bg-emerald-500 text-black rounded-md px-2 py-0.5">
+                    GRATIS
+                  </span>
+                ) : !desbloqueado ? (
+                  <span className="absolute top-2 right-2 text-sm bg-black/60 rounded-md px-1.5 py-0.5">🔒</span>
+                ) : (
+                  <span className="absolute top-2 right-2 text-[10px] font-bold bg-white/90 text-black rounded-md px-2 py-0.5">
+                    ▶ VER
+                  </span>
+                )}
+
+                {/* candado central si está bloqueado */}
+                {!desbloqueado && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-4xl drop-shadow-lg">🔒</span>
+                  </div>
+                )}
+
+                {/* título */}
+                <div className="absolute bottom-0 left-0 right-0 p-2.5">
+                  <p className="text-xs font-semibold leading-tight line-clamp-2">
+                    {ep.titulo ?? `Capítulo ${ep.numero}`}
+                  </p>
+                </div>
+              </div>
+            </Link>
           );
         })}
-      </ul>
+      </div>
     </main>
   );
 }
