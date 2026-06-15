@@ -92,14 +92,17 @@ export default function Paywall({
 
   if (!userId) {
     return (
-      <div className="max-w-md mx-auto text-center bg-neutral-900 rounded-2xl p-6">
-        <p className="text-neutral-300 mb-4">Inicia sesión para desbloquear los capítulos.</p>
+      <div className="max-w-md mx-auto text-center bg-neutral-900 rounded-2xl p-7">
+        <div className="text-5xl mb-3">🔒</div>
+        <h2 className="text-xl font-bold mb-1">Capítulo {episodioNumero}</h2>
+        <p className="text-neutral-400 mb-6">Inicia sesión para desbloquear y seguir viendo.</p>
         <a
           href="/tudramaya/login"
-          className="inline-block bg-rose-600 hover:bg-rose-500 text-white font-semibold rounded-xl px-6 py-3"
+          className="block w-full bg-rose-600 hover:bg-rose-500 text-white font-bold text-lg rounded-xl py-4"
         >
           Iniciar sesión
         </a>
+        <p className="text-neutral-500 text-xs mt-3">Con Google, Facebook o tu correo.</p>
       </div>
     );
   }
