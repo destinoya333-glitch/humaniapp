@@ -13,10 +13,9 @@ export default async function Page() {
   return (
     <main className="min-h-screen bg-neutral-950 text-white">
       <header className="px-5 pt-8 pb-5">
-        <h1 className="text-2xl font-extrabold">
-          TuDrama<span className="text-rose-500">Ya</span>
-        </h1>
-        <p className="text-neutral-400 text-sm">Micro-dramas que enganchan. 3 caps gratis.</p>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/tudramaya-logo.png" alt="TuDramaYa" className="h-10 w-auto" />
+        <p className="text-neutral-400 text-sm mt-2">Micro-dramas que enganchan. 3 caps gratis.</p>
       </header>
 
       {series.length === 0 ? (

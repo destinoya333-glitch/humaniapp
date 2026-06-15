@@ -26,10 +26,11 @@ export default async function Page({ params }: { params: Promise<{ serie: string
   return (
     <main className="min-h-screen bg-neutral-950 text-white">
       <header className="px-5 pt-8 pb-4">
-        <Link href="/tudramaya" className="text-neutral-500 text-sm">
-          ← TuDramaYa
+        <Link href="/tudramaya" className="inline-block">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/tudramaya-logo.png" alt="TuDramaYa" className="h-8 w-auto" />
         </Link>
-        <h1 className="text-2xl font-extrabold mt-2">{serie.titulo}</h1>
+        <h1 className="text-2xl font-extrabold mt-3">{serie.titulo}</h1>
         {serie.sinopsis && <p className="text-neutral-400 text-sm mt-1">{serie.sinopsis}</p>}
         <p className="text-neutral-500 text-xs mt-2">
           {serie.total_caps} capítulos · {serie.caps_gratis} gratis
