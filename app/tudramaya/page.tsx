@@ -3,6 +3,7 @@
  */
 import Link from "next/link";
 import { getSeries } from "@/lib/tudramaya/db";
+import BottomNav from "./_components/BottomNav";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -11,7 +12,7 @@ export default async function Page() {
   const series = await getSeries();
 
   return (
-    <main className="min-h-screen bg-neutral-950 text-white">
+    <main className="min-h-screen bg-neutral-950 text-white pb-24">
       <header className="px-5 pt-8 pb-5">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/tudramaya-logo.png" alt="TuDramaYa" className="h-10 w-auto" />
@@ -42,6 +43,7 @@ export default async function Page() {
           ))}
         </div>
       )}
+      <BottomNav />
     </main>
   );
 }

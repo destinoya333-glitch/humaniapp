@@ -32,6 +32,36 @@ export default function Paywall({
 
   const precio = TIERS.find((t) => t.id === tier)!.precio;
 
+  // Billetera de monedas (para desbloquear sin pagar)
+  const [monedas, setMonedas] = useState<number | null>(null);
+  useEffect(() => {
+    if (!userId) return;
+    fetch("/api/tudramaya/perfil")
+      .then((r) => r.json())
+      .then((j) => setMonedas(j.perfil?.monedas ?? 0))
+      .catch(() => {});
+  }, [userId]);
+
+  async function desbloquearMonedas() {
+    setLoading(true);
+    setErr(null);
+    try {
+      const r = await fetch("/api/tudramaya/desbloquear-monedas", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ serie_id: serieId, episodio: episodioNumero }),
+      });
+      const j = await r.json();
+      if (!j.ok) throw new Error(j.error || "No se pudo desbloquear");
+      setMsg("¡Desbloqueado con monedas! 🪙 Cargando…");
+      setTimeout(() => location.reload(), 900);
+    } catch (e) {
+      setErr((e as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   // INSTANTÁNEO (Supabase Realtime): la página se suscribe a la inserción del
   // acceso; cuando MacroDroid confirma el pago, Supabase lo empuja al toque.
   useEffect(() => {
@@ -156,6 +186,31 @@ export default function Paywall({
 
       {step === "elegir" && (
         <>
+          {/* Desbloquear con monedas (gratis si tienes saldo) */}
+          {monedas != null && (
+            <>
+              <button
+                onClick={desbloquearMonedas}
+                disabled={loading || monedas < 30}
+                className="w-full mb-2 rounded-xl py-3 font-bold bg-amber-400 text-neutral-900 disabled:bg-neutral-700 disabled:text-neutral-400"
+              >
+                🪙 Desbloquear con 30 monedas · tienes {monedas}
+              </button>
+              <p className="text-center text-[11px] text-neutral-500 mb-4">
+                {monedas < 30 ? (
+                  <>
+                    Te faltan monedas — gánalas gratis en{" "}
+                    <a href="/tudramaya/recompensas" className="text-rose-400">
+                      Recompensas
+                    </a>
+                    , o paga con Yape:
+                  </>
+                ) : (
+                  <>— o paga con Yape —</>
+                )}
+              </p>
+            </>
+          )}
           <div className="space-y-2 mb-4">
             {TIERS.map((t) => (
               <button

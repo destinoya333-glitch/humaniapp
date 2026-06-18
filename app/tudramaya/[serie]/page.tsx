@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getSeriePorSlug, getEpisodios } from "@/lib/tudramaya/db";
 import { getAccesos, accesosCubren } from "@/lib/tudramaya/accesos";
+import BottomNav from "../_components/BottomNav";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -37,7 +38,7 @@ export default async function Page({ params }: { params: Promise<{ serie: string
         </p>
       </header>
 
-      <div className="grid grid-cols-2 gap-3 px-4 pb-12">
+      <div className="grid grid-cols-2 gap-3 px-4 pb-24">
         {episodios.map((ep) => {
           const desbloqueado = ep.gratis || (user ? accesosCubren(accesos, ep.numero) : false);
           return (
@@ -95,6 +96,7 @@ export default async function Page({ params }: { params: Promise<{ serie: string
           );
         })}
       </div>
+      <BottomNav />
     </main>
   );
 }
