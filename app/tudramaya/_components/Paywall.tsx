@@ -301,7 +301,9 @@ export default function Paywall({
           >
             {loading ? "…" : `Pagar con Yape · S/ ${precio.toFixed(2)}`}
           </button>
-          {CULQI_PK && (
+          {/* Tarjeta solo en packs grandes; en el cap suelto (S/1) la comisión
+              no conviene, así que ahí solo Yape. */}
+          {CULQI_PK && tier !== "cap" && (
             <button
               onClick={pagarTarjeta}
               disabled={loading || !culqiReady}
