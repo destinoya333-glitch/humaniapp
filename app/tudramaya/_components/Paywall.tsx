@@ -32,6 +32,70 @@ export default function Paywall({
 
   const precio = TIERS.find((t) => t.id === tier)!.precio;
 
+  // Culqi Checkout v4 (pago con tarjeta) — se carga una sola vez.
+  const CULQI_PK = process.env.NEXT_PUBLIC_CULQI_PUBLIC_KEY;
+  const [culqiReady, setCulqiReady] = useState(false);
+  useEffect(() => {
+    if (!CULQI_PK) return;
+    if ((window as unknown as { Culqi?: unknown }).Culqi) {
+      setCulqiReady(true);
+      return;
+    }
+    const s = document.createElement("script");
+    s.src = "https://checkout.culqi.com/js/v4";
+    s.async = true;
+    s.onload = () => setCulqiReady(true);
+    document.body.appendChild(s);
+  }, [CULQI_PK]);
+
+  function pagarTarjeta() {
+    setErr(null);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const Culqi = (window as unknown as { Culqi?: any }).Culqi;
+    if (!CULQI_PK || !Culqi || !culqiReady) {
+      setErr("El pago con tarjeta aún se está cargando, intenta en un segundo.");
+      return;
+    }
+    Culqi.publicKey = CULQI_PK;
+    Culqi.settings({
+      title: "TuDramaYa",
+      currency: "PEN",
+      amount: Math.round(precio * 100),
+      description: `TuDramaYa — ${TIERS.find((t) => t.id === tier)!.label}`,
+    });
+    Culqi.options({
+      lang: "es",
+      paymentMethods: { tarjeta: true, yape: true, billetera: false, bancaMovil: false },
+      style: { buttonText: "Pagar", buttonTextColor: "#ffffff", buttonBackgroundColor: "#E11D48" },
+    });
+    (window as unknown as { culqi?: () => void }).culqi = async () => {
+      if (Culqi.token) {
+        const token = Culqi.token.id as string;
+        const email = (Culqi.token.email as string) || `tdy_${(userId ?? "anon").slice(0, 8)}@activosya.com`;
+        setLoading(true);
+        try {
+          const res = await fetch("/api/tudramaya/culqi-charge", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ token, email, user_id: userId, serie_id: serieId, tier, episodio: episodioNumero }),
+          });
+          const j = await res.json();
+          if (!j.ok) throw new Error(j.error || "No se pudo procesar la tarjeta");
+          Culqi.close();
+          setMsg("¡Pago confirmado! Desbloqueando…");
+          setTimeout(() => location.reload(), 900);
+        } catch (e) {
+          setErr((e as Error).message);
+        } finally {
+          setLoading(false);
+        }
+      } else if (Culqi.error) {
+        setErr(Culqi.error.user_message || "La tarjeta fue rechazada. Intenta con otra.");
+      }
+    };
+    Culqi.open();
+  }
+
   // Billetera de monedas (para desbloquear sin pagar)
   const [monedas, setMonedas] = useState<number | null>(null);
   useEffect(() => {
@@ -237,6 +301,15 @@ export default function Paywall({
           >
             {loading ? "…" : `Pagar con Yape · S/ ${precio.toFixed(2)}`}
           </button>
+          {CULQI_PK && (
+            <button
+              onClick={pagarTarjeta}
+              disabled={loading || !culqiReady}
+              className="w-full mt-2 border border-neutral-600 hover:border-neutral-400 disabled:opacity-50 text-white font-semibold rounded-xl py-3"
+            >
+              💳 {culqiReady ? `Pagar con tarjeta · S/ ${precio.toFixed(2)}` : "Cargando tarjeta…"}
+            </button>
+          )}
           <p className="text-center text-xs text-neutral-500 mt-2">Pago único, sin suscripción.</p>
         </>
       )}
