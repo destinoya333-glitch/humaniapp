@@ -15,6 +15,44 @@ const FLOW_IDS: Record<string, string> = {
   datos_rapidas: process.env.DESTINOYA_FLOW_ID_DATOS_RAPIDAS || "1489822349405911",
 };
 
+// Sub-servicios por categoría. El orden importa: el Flow de WhatsApp devuelve
+// el ÍNDICE de la opción elegida (sub_servicio: "1".."6"), no el nombre. Se
+// exporta para que el webhook pueda traducir ese índice al nombre real.
+export const SUBSERVICIOS_DESTINO: Record<string, { titulo: string; intro: string; subs: string[] }> = {
+  esoterico: {
+    titulo: "🔮 DestinoYA Esotérico",
+    intro: "Elige sub-servicio y plan. Yapeas el monto exacto y validamos automático.",
+    subs: ["Lectura de Mano", "Compatibilidad Amorosa", "Carta Astral", "Tu Futuro 30/60/90", "Feng Shui Express", "Numerología Personal"],
+  },
+  profesional: {
+    titulo: "💼 Área Profesional",
+    intro: "Elige especialidad y plan. Yapeas y validamos automático.",
+    subs: ["Asesoría Legal Express", "Salud Express", "Veterinaria Express", "Plantas y Cultivos", "Asesor Financiero Personal", "Nutricionista Express"],
+  },
+  rapidas: {
+    titulo: "⚡ Soluciones Rápidas",
+    intro: "Elige solución y plan. Ágil y al grano.",
+    subs: ["Elaborar o Mejorar mi CV", "Consejo para mi problema", "Decisión que me conviene tomar", "Analizar problema y dar solución", "Plan para bajar de peso", "Alimentación personalizada"],
+  },
+};
+
+/**
+ * Traduce el valor devuelto por el Flow de submenú al nombre real del servicio.
+ * El Flow manda el índice de la opción ("1".."6"); esto lo convierte al nombre
+ * (ej. "3" + esoterico -> "Carta Astral"). Si `raw` ya es un nombre (no numérico
+ * o fuera de rango), se devuelve tal cual — así el fix es seguro ante cambios.
+ */
+export function resolverSubServicio(categoria: string, raw: string): string {
+  const c = SUBSERVICIOS_DESTINO[categoria];
+  if (!c) return raw;
+  const trimmed = String(raw ?? "").trim();
+  const idx = parseInt(trimmed, 10);
+  if (!isNaN(idx) && String(idx) === trimmed && idx >= 1 && idx <= c.subs.length) {
+    return c.subs[idx - 1];
+  }
+  return raw;
+}
+
 const FLOW_COPY: Record<string, { header: string; body: string; cta: string; footer: string }> = {
   menu: {
     header: "TuDestinoYa",
@@ -136,23 +174,7 @@ export async function sendDestinoFlow(opts: {
   };
   const firstScreen = FIRST_SCREEN[opts.flowKey] || "MENU";
 
-  const SUBSERVICIOS: Record<string, { titulo: string; intro: string; subs: string[] }> = {
-    esoterico: {
-      titulo: "🔮 DestinoYA Esotérico",
-      intro: "Elige sub-servicio y plan. Yapeas el monto exacto y validamos automático.",
-      subs: ["Lectura de Mano", "Compatibilidad Amorosa", "Carta Astral", "Tu Futuro 30/60/90", "Feng Shui Express", "Numerología Personal"],
-    },
-    profesional: {
-      titulo: "💼 Área Profesional",
-      intro: "Elige especialidad y plan. Yapeas y validamos automático.",
-      subs: ["Asesoría Legal Express", "Salud Express", "Veterinaria Express", "Plantas y Cultivos", "Asesor Financiero Personal", "Nutricionista Express"],
-    },
-    rapidas: {
-      titulo: "⚡ Soluciones Rápidas",
-      intro: "Elige solución y plan. Ágil y al grano.",
-      subs: ["Elaborar o Mejorar mi CV", "Consejo para mi problema", "Decisión que me conviene tomar", "Analizar problema y dar solución", "Plan para bajar de peso", "Alimentación personalizada"],
-    },
-  };
+  const SUBSERVICIOS = SUBSERVICIOS_DESTINO;
 
   let payloadData: Record<string, string> | undefined;
   if (opts.flowKey === "submenu") {

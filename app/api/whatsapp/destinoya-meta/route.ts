@@ -22,8 +22,9 @@ import {
   OPT_IN_REPLY,
 } from "@/lib/marketing/opt-out";
 import { sendText, downloadMetaMedia } from "@/lib/destinoya/meta-cloud-sender";
-import { sendDestinoFlow, type DestinoFlowKey } from "@/lib/destinoya/flow-sender";
+import { sendDestinoFlow, resolverSubServicio, type DestinoFlowKey } from "@/lib/destinoya/flow-sender";
 import { procesarMensaje } from "@/lib/destinoya/agent";
+import { isMarketingAdmin, handleMarketingCommand } from "@/lib/marketing/bot";
 import { getConversacion, supabase } from "@/lib/destinoya/db";
 import { getOperadorByMetaPhoneId, type OperadorContexto } from "@/lib/activosya/operadores";
 
@@ -255,14 +256,17 @@ async function handleMessage(m: MetaMessage, operador: OperadorContexto | null =
 
     // Sub-menu Flow submit -> sub-servicio + plan + pago registrados
     if (parsed.status === "submenu_listo") {
-      const subServicio = parsed.sub_servicio as string;
+      const categoria = parsed.categoria as string;
+      // El Flow devuelve el ÍNDICE de la opción ("3"), no el nombre. Traducir
+      // al nombre real (ej. "3" -> "Carta Astral") para que el ruteo del Flow
+      // de datos y del handler de pago (madrodroid) matcheen el servicio correcto.
+      const subServicio = resolverSubServicio(categoria, parsed.sub_servicio as string);
       const plan = parsed.plan as string;
       // Derivar monto del plan (el Flow no lo envia directamente)
       const montoPorPlan: Record<string, number> = {
         basico: 3, intermedio: 6, premium: 9, pro: 9.9,
       };
       const monto = (parsed.monto as number | undefined) ?? montoPorPlan[plan?.toLowerCase()] ?? 0;
-      const categoria = parsed.categoria as string;
 
       // Bot pide datos de la consulta según sub-servicio
       let pedidoData = "Cuéntame qué necesitas saber con detalle.";
@@ -356,6 +360,23 @@ async function handleMessage(m: MetaMessage, operador: OperadorContexto | null =
     const text = (m.text?.body || "").trim();
     await dbg("text_msg", { phone: phoneE164, text });
     if (!text) return;
+
+    // ─── BOT DE MARKETING (solo Percy) ──────────────────────────────────────
+    // Intercepta comandos de marketing antes que el flujo de tarot. Si el
+    // remitente no es admin o el texto no es un comando, sigue el flujo normal.
+    if (isMarketingAdmin(from)) {
+      try {
+        const reply = await handleMarketingCommand(text);
+        if (reply !== null) {
+          await sendChunked(phoneE164, reply);
+          return;
+        }
+      } catch (e) {
+        console.error("[marketing-bot]", (e as Error).message);
+        await sendText(phoneE164, "⚠️ Error procesando comando de marketing. Intenta de nuevo o escribe *sync*.");
+        return;
+      }
+    }
 
     // Marketing opt-out / opt-in (prioridad sobre Flows e intents).
     if (isStopCommand(text)) {
