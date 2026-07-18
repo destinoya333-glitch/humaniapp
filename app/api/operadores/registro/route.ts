@@ -144,7 +144,19 @@ export async function POST(req: NextRequest) {
       `Operador ID: ${result.operador_id}\n\n` +
       `_Esperando Yape S/. ${planInfo.precio_pen} en tu 998 102 258 con detalle "${nombre.split(" ")[0].toUpperCase()}"._`;
 
-    await sendWhatsApp(ADMIN_PHONE, adminMsg);
+    // Notif a Percy via ActivosYA central (canal unificado)
+    try {
+      const { notifyActivosYA } = await import("@/lib/activosya-central/notify");
+      await notifyActivosYA({
+        tipo: "lead_b2b",
+        servicio: "activosya",
+        cliente_nombre: nombre,
+        cliente_phone: ADMIN_PHONE,
+        detalle: { plan: planInfo.label, precio: planInfo.precio_pen, ciudad, activo: activoInfo.name, referral: result.referral_code, operador_id: result.operador_id },
+      });
+    } catch {
+      await sendWhatsApp(ADMIN_PHONE, adminMsg);
+    }
 
     return NextResponse.json({
       ok: true,

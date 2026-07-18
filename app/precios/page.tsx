@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ACTIVOS } from "@/lib/activos";
+import AurumShell from "@/app/components/AurumShell";
 
 export const metadata: Metadata = {
   title: "Precios — Renta o compra de activos digitales",
@@ -11,7 +12,8 @@ export const metadata: Metadata = {
 
 export default function PreciosPage() {
   return (
-    <main className="min-h-screen bg-[#0A0A0A] text-white px-6 py-12">
+    <AurumShell>
+    <main className="px-6 py-12">
       <div className="mx-auto max-w-6xl">
         <Link href="/" className="text-xs text-zinc-500 hover:text-amber-400">
           ← Volver al marketplace
@@ -115,6 +117,7 @@ export default function PreciosPage() {
         </div>
       </div>
     </main>
+    </AurumShell>
   );
 }
 

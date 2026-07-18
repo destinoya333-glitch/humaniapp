@@ -322,8 +322,8 @@ async function handleMessage(m: MetaMessage, operador: OperadorContexto | null =
     if (status === "payment_pending_validation") {
       const planBilling = (parsed.plan_billing as string) || "";
       const PRICING: Record<string, { plan: string; billing: string; monto: number; label: string }> = {
-        cuna_monthly:    { plan: "regular", billing: "monthly", monto: 39,  label: "Regular Mensual" },
-        cuna_yearly:     { plan: "regular", billing: "yearly",  monto: 349, label: "Regular Anual" },
+        cuna_monthly:    { plan: "regular", billing: "monthly", monto: 30,  label: "Regular Mensual" },
+        cuna_yearly:     { plan: "regular", billing: "yearly",  monto: 299, label: "Regular Anual" },
         premium_monthly: { plan: "premium", billing: "monthly", monto: 89,  label: "Premium Mensual" },
         premium_yearly:  { plan: "premium", billing: "yearly",  monto: 799, label: "Premium Anual" },
       };

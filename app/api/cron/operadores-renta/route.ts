@@ -93,25 +93,31 @@ export async function GET(req: NextRequest) {
 
   // ─── T-3: recordatorio temprano (3 días antes del vencimiento) ──────────
   {
-    const { data: operadores, error } = await supabase
+    const { data: tenants, error } = await supabase
       .from("ay_tenants")
-      .select("id, name, whatsapp_personal, plan, monthly_fee_pen, fecha_proxima_renta")
-      .eq("type", "operador")
+      .select("id, type, name, whatsapp_personal, plan, monthly_fee_pen, fecha_proxima_renta")
+      .in("type", ["operador", "chofer_independiente"])
       .eq("status", "active")
       .eq("fecha_proxima_renta", en3DiasStr);
 
     if (error) stats.errores.push(`t-3 query: ${error.message}`);
 
-    for (const op of operadores || []) {
+    for (const op of tenants || []) {
       const proxFmt = fmtDate(new Date(op.fecha_proxima_renta!));
+      const detalle = op.type === "chofer_independiente" ? "TuChoferYa" : "tu primer nombre";
+      const marca = op.type === "chofer_independiente" ? "TuChoferYa" : "ActivosYA";
+      const tipoRenta =
+        op.type === "chofer_independiente"
+          ? "Tu suscripción TuChoferYa"
+          : "Tu renta de operador ActivosYA";
       const msg =
         `🔔 *Recordatorio amistoso, ${op.name.split(" ")[0]}*\n\n` +
-        `Tu renta de operador ActivosYA vence el *${proxFmt}* (en 3 días).\n\n` +
+        `${tipoRenta} vence el *${proxFmt}* (en 3 días).\n\n` +
         `💰 Monto: *S/. ${op.monthly_fee_pen}*\n` +
         `📱 Yapea a: *${YAPE_PERCY}* (Percy R.)\n` +
-        `📝 Detalle Yape: tu primer nombre\n\n` +
-        `_En cuanto detectemos el pago, tu cuenta queda renovada 30 días más sin que tengas que avisarnos._\n\n` +
-        `🚀 ActivosYA`;
+        `📝 Detalle Yape: ${detalle}\n\n` +
+        `_En cuanto detectemos el pago, tu cuenta queda renovada 30 días más._\n\n` +
+        `🚀 ${marca}`;
       await sendWA(op.whatsapp_personal!, msg);
       stats.t_minus_3_enviados++;
     }
@@ -119,25 +125,30 @@ export async function GET(req: NextRequest) {
 
   // ─── T0: día de vencimiento ─────────────────────────────────────────────
   {
-    const { data: operadores, error } = await supabase
+    const { data: tenants, error } = await supabase
       .from("ay_tenants")
-      .select("id, name, whatsapp_personal, plan, monthly_fee_pen, fecha_proxima_renta")
-      .eq("type", "operador")
+      .select("id, type, name, whatsapp_personal, plan, monthly_fee_pen, fecha_proxima_renta")
+      .in("type", ["operador", "chofer_independiente"])
       .eq("status", "active")
       .eq("fecha_proxima_renta", hoyStr);
 
     if (error) stats.errores.push(`t0 query: ${error.message}`);
 
-    for (const op of operadores || []) {
+    for (const op of tenants || []) {
       const limite = fmtDate(addDays(hoy, DIAS_GRACIA));
+      const detalle = op.type === "chofer_independiente" ? "TuChoferYa" : "tu primer nombre";
+      const consecuencia =
+        op.type === "chofer_independiente"
+          ? "tu página pública desaparece del directorio y dejas de recibir reservas"
+          : "tus alumnos dejan de poder usar el servicio";
       const msg =
         `⏰ *${op.name.split(" ")[0]}, hoy vence tu renta*\n\n` +
         `Tu renta mensual de S/. ${op.monthly_fee_pen} vence *HOY*.\n\n` +
         `Yapea ahora a:\n` +
         `📱 *${YAPE_PERCY}*\n` +
         `👤 Percy R.\n` +
-        `📝 Detalle: tu primer nombre\n\n` +
-        `Tienes ${DIAS_GRACIA} días de gracia (hasta el ${limite}). Si no detectamos el pago para esa fecha, tu cuenta se suspende automáticamente y tus alumnos dejan de poder usar el servicio.\n\n` +
+        `📝 Detalle: ${detalle}\n\n` +
+        `Tienes ${DIAS_GRACIA} días de gracia (hasta el ${limite}). Si no detectamos el pago para esa fecha, tu cuenta se suspende automáticamente y ${consecuencia}.\n\n` +
         `_Si ya pagaste hoy, ignora este mensaje — el sistema confirma en 1-2 minutos cuando MacroDroid detecta tu Yape._`;
       await sendWA(op.whatsapp_personal!, msg);
       stats.t_zero_enviados++;
@@ -146,16 +157,16 @@ export async function GET(req: NextRequest) {
 
   // ─── T+gracia: suspensión automática ────────────────────────────────────
   {
-    const { data: operadores, error } = await supabase
+    const { data: tenants, error } = await supabase
       .from("ay_tenants")
-      .select("id, name, whatsapp_personal, plan, monthly_fee_pen, fecha_proxima_renta")
-      .eq("type", "operador")
+      .select("id, type, name, whatsapp_personal, plan, monthly_fee_pen, fecha_proxima_renta")
+      .in("type", ["operador", "chofer_independiente"])
       .eq("status", "active")
       .lt("fecha_proxima_renta", limiteSuspensionStr);
 
     if (error) stats.errores.push(`suspension query: ${error.message}`);
 
-    for (const op of operadores || []) {
+    for (const op of tenants || []) {
       // Pausar tenant
       const { error: errUpd } = await supabase
         .from("ay_tenants")
@@ -171,25 +182,37 @@ export async function GET(req: NextRequest) {
         continue;
       }
 
-      // Pausar todos los assets del operador (status='paused')
-      await supabase
-        .from("ay_tenant_assets")
-        .update({ status: "paused" })
-        .eq("tenant_id", op.id);
+      if (op.type === "operador") {
+        // Pausar todos los assets del operador
+        await supabase
+          .from("ay_tenant_assets")
+          .update({ status: "paused" })
+          .eq("tenant_id", op.id);
+      } else if (op.type === "chofer_independiente") {
+        // Bajar la capa choferya del chofer (desaparece del directorio público)
+        await supabase
+          .from("eco_choferes")
+          .update({ choferya_active: false })
+          .eq("choferya_tenant_id", op.id);
+      }
 
-      // Notificar al operador
+      // Notificar
       const venc = fmtDate(new Date(op.fecha_proxima_renta!));
+      const consecuencias =
+        op.type === "chofer_independiente"
+          ? `❌ Tu página pública dejó de mostrarse en el directorio\n` +
+            `❌ Los pasajeros no pueden reservar contigo desde TuChoferYa\n` +
+            `✅ Tus reservas ya confirmadas siguen vigentes`
+          : `❌ Tus alumnos no pueden usar el servicio\n` +
+            `❌ Tus links de referido siguen funcionando pero los nuevos clientes no son atendidos por el bot`;
       const msg =
         `🚨 *Cuenta suspendida automáticamente*\n\n` +
         `${op.name.split(" ")[0]}, no detectamos tu pago de renta vencida el ${venc}.\n\n` +
-        `Tu cuenta queda *pausada*:\n` +
-        `❌ Tus alumnos no pueden usar el servicio\n` +
-        `❌ Tus links de referido siguen funcionando pero los nuevos clientes no son atendidos por el bot\n\n` +
+        `Tu cuenta queda *pausada*:\n${consecuencias}\n\n` +
         `*Para reactivarla:*\n` +
         `1️⃣ Yapea S/. ${op.monthly_fee_pen} a ${YAPE_PERCY}\n` +
         `2️⃣ El sistema te reactiva automáticamente al detectar el Yape\n` +
-        `3️⃣ Si pasaron más de 30 días, escríbenos por WhatsApp para evaluar\n\n` +
-        `_Tus alumnos que ya pagaron mantienen su acceso pendiente hasta tu reactivación._`;
+        `3️⃣ Si pasaron más de 30 días, escríbenos por WhatsApp para evaluar`;
       await sendWA(op.whatsapp_personal!, msg);
 
       stats.suspendidos++;

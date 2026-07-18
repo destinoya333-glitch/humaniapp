@@ -169,11 +169,11 @@ async function handlePost(
   // El MacroDroid del operador postea SOLO a este endpoint (DestinoYa),
   // pero Miss Sofia comparte la MISMA cuenta Yape (998 102 258). Por eso
   // reenviamos la notificación íntegra a su validador cuando el monto
-  // corresponde a un plan Sofia (39/89/349/799). Cada servicio matchea
+  // corresponde a un plan Sofia (30/89/299/799). Cada servicio matchea
   // contra su propia tabla, así que no hay cruce de datos (un S/39 de
   // ChoferYa no activa Sofia salvo que exista un pago Sofia pendiente).
   // AISLADO: cualquier fallo aquí se traga y NUNCA afecta el flujo DestinoYa.
-  if ([39, 89, 349, 799].includes(montoYape)) {
+  if ([30, 89, 299, 799].includes(montoYape)) {
     try {
       const origin = `https://${req.headers.get("host") || "activosya.com"}`;
       await fetch(`${origin}/api/sofia/macrodroid`, {

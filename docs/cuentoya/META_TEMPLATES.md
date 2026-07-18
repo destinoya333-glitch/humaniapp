@@ -1,6 +1,6 @@
 # Templates Meta WhatsApp — TuCuentoYa
 
-Estos son los 5 templates a crear en **Meta Business Manager → WhatsApp Manager → Plantillas de mensajes**, vinculados a la WABA HumaniAppManager (la misma que usa Sofia/Destino/EcoDrive).
+Estos son los 5 templates a crear en **Meta Business Manager → WhatsApp Manager → Plantillas de mensajes**, vinculados a la WABA EcoDriveBot (la misma que usa Sofia/Destino/EcoDrive).
 
 Tiempo de aprobación: 24-48 horas.
 
@@ -13,7 +13,7 @@ Tiempo de aprobación: 24-48 horas.
 **Header:** (ninguno)
 **Body:**
 ```
-¡Hola! 🦊 Soy Coqui, tu narrador de cuentos personalizados.
+¡Hola! 🐕 Soy Rex, tu narrador de cuentos personalizados.
 
 Te creo un cuento donde *{{1}}* es el HÉROE de la historia, en menos de 60 segundos.
 
@@ -29,7 +29,7 @@ TuCuentoYa · ActivosYA
 
 **Buttons:** (Quick Reply)
 - "🌙 Cuento 2 min — S/2"
-- "🦊 Cuento 3 min — S/3"
+- "🐕 Cuento 3 min — S/3"
 - "🐉 Cuento 5 min — S/5"
 
 ---
@@ -41,7 +41,7 @@ TuCuentoYa · ActivosYA
 **Header:** Text → `🎉 ¡Tu cuento está listo!`
 **Body:**
 ```
-*{{1}}* ya tiene su cuento mágico 🦊
+*{{1}}* ya tiene su cuento mágico 🐕
 
 Título: *{{2}}*
 Duración: {{3}} minutos
@@ -106,7 +106,7 @@ Tu VIP vence el *{{3}}*.
 
 **Categoría:** MARKETING
 **Idioma:** Spanish (es)
-**Header:** Image → (subir imagen 1080x1080 de Coqui con texto "Primer cuento GRATIS")
+**Header:** Image → (subir imagen 1080x1080 de Rex con texto "Primer cuento GRATIS")
 **Body:**
 ```
 🎁 *Regalo de bienvenida*
@@ -118,7 +118,7 @@ Solo dime:
 2️⃣ Quién es el villano (lobo, dragón, bruja...)
 3️⃣ Quién lo salva (papá, mamá, abuela...)
 
-En 60 segundos te envío el audio narrado en voz peruana 🦊
+En 60 segundos te envío el audio narrado en voz peruana 🐕
 ```
 **Footer:**
 ```
@@ -133,7 +133,7 @@ Promo válida por 7 días desde tu suscripción
 ## Cómo crear en Meta Business Manager
 
 1. Entra a https://business.facebook.com/wa/manage/message-templates/
-2. Selecciona la WABA: **HumaniAppManager** (ID en memoria)
+2. Selecciona la WABA: **EcoDriveBot** (ID en memoria)
 3. Click "Crear plantilla"
 4. Por cada template:
    - Categoría → UTILITY o MARKETING (según lista arriba)

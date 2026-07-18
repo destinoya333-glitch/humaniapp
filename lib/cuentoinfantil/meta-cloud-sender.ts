@@ -1,13 +1,14 @@
 /**
  * TuCuentoYa — Meta Cloud direct sender.
  *
- * Clon del patrón de lib/destinoya/meta-cloud-sender.ts. Reusa token de
- * HumaniAppManager (System User) si no hay token específico del producto.
+ * Mismo patrón que choferya/destinoya: usa app messaging EcoDriveBot
+ * (1619223319302965), NO HumaniAppManager. El System User token de
+ * EcoDriveBot se comparte entre productos vía ECODRIVE_META_ACCESS_TOKEN.
  *
  * Env vars:
- *  - META_CUENTO_PHONE_ID  (phone_id Meta del número TuCuento)
- *  - META_CUENTO_ACCESS_TOKEN  (opcional, sino reusa META_SOFIA_ACCESS_TOKEN)
- *  - META_CUENTO_VERIFY_TOKEN  (verify webhook)
+ *  - META_CUENTO_PHONE_ID       phone_id Meta del chip +51 914 200 642
+ *  - META_CUENTO_ACCESS_TOKEN   opcional · fallback a ECODRIVE_META_ACCESS_TOKEN
+ *  - META_CUENTO_VERIFY_TOKEN   verify token del webhook
  */
 const GRAPH = "https://graph.facebook.com/v22.0";
 
@@ -15,7 +16,7 @@ function meta(): { phoneId: string; token: string } | null {
   const phoneId = (process.env.META_CUENTO_PHONE_ID ?? "").trim();
   const token =
     (process.env.META_CUENTO_ACCESS_TOKEN ?? "").trim() ||
-    (process.env.META_SOFIA_ACCESS_TOKEN ?? "").trim();
+    (process.env.ECODRIVE_META_ACCESS_TOKEN ?? "").trim();
   if (!phoneId || !token) return null;
   return { phoneId, token };
 }

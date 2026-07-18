@@ -262,14 +262,84 @@ export async function POST(req: Request, { params }: { params: Params }) {
     console.error("[push send err]", e);
   }
 
+  // BRIDGE WhatsApp → APK chofer: mandar FCM + Supabase Realtime broadcast
+  // para que la APK del chofer (no su WhatsApp) reciba la oferta y muestre el
+  // OfferModal. Mapea wa_id → auth.users.phone → v2_drivers.id.
+  let v2DriverId: string | null = null;
+  let apkOfferOk = false;
+  try {
+    // 1. wa_id (51964304268) → auth.users.id por phone
+    const { data: authUser } = await sb.auth.admin.listUsers({ page: 1, perPage: 1000 });
+    const matchUser = authUser?.users?.find((u) => u.phone === elegido.wa_id);
+    if (matchUser?.id) {
+      // 2. auth.users.id → v2_drivers.id
+      const { data: drvRow } = await sb
+        .from("v2_drivers")
+        .select("id")
+        .eq("user_id", matchUser.id)
+        .maybeSingle();
+      v2DriverId = (drvRow as { id?: string } | null)?.id ?? null;
+    }
+  } catch (e) {
+    console.error("[bridge] lookup v2_driver_id failed", e);
+  }
+
+  if (v2DriverId) {
+    const offerPayload: Record<string, string> = {
+      type: "offer",
+      trip_id: viajeId,
+      rider_name: p.nombre,
+      rider_phone: r.token.wa_id,
+      origin_address: body.origen_direccion || "",
+      origin_lat: String(body.origen_lat ?? 0),
+      origin_lng: String(body.origen_lng ?? 0),
+      destination_address: body.destino_direccion || "",
+      destination_lat: String(body.destino_lat ?? 0),
+      destination_lng: String(body.destino_lng ?? 0),
+      estimated_fare: String(body.tarifa_estimada),
+      estimated_distance_km: String(body.distancia_km ?? 0),
+      estimated_duration_min: String(body.duracion_min ?? 0),
+      payment_method: "cash",
+      source: "whatsapp",
+    };
+
+    // A. Supabase Realtime broadcast — funciona si la APK está abierta (canal
+    // driver-{driverId} con event "offer").
+    try {
+      const channel = sb.channel(`driver-${v2DriverId}`);
+      await channel.send({ type: "broadcast", event: "offer", payload: offerPayload });
+      await sb.removeChannel(channel);
+      apkOfferOk = true;
+    } catch (e) {
+      console.error("[bridge] realtime broadcast failed", e);
+    }
+
+    // B. FCM push — funciona aunque la APK esté en background.
+    try {
+      const botUrl = process.env.ECODRIVE_BOT_URL || "https://bot-whatsapp-production-085b.up.railway.app";
+      await fetch(`${botUrl}/api/push/send`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          driver_id: v2DriverId,
+          title: "🚖 Nuevo servicio EcoDrive+",
+          body: `${p.nombre.split(" ")[0]} → ${(body.destino_direccion || "").slice(0, 40)} · S/ ${body.tarifa_estimada}`,
+          data: offerPayload,
+        }),
+      });
+    } catch (e) {
+      console.error("[bridge] fcm push failed", e);
+    }
+  }
+
   // Log diagnóstico
   await sb.from("wa_flow_health").insert({
     endpoint_url: "pedir-viaje/asignar",
     status_code: templateOk ? 200 : 500,
     duration_ms: 0,
     error: templateOk
-      ? `template chofer enviado a ${elegido.wa_id} (viaje ${viajeId}) | push ok=${pushOk} fail=${pushFail}`
-      : `template fail: ${templateError} | wa=${elegido.wa_id} | push ok=${pushOk} fail=${pushFail}`,
+      ? `template ${elegido.wa_id} ok=${templateOk} | webpush ${pushOk}/${pushFail} | bridge v2=${v2DriverId} apk=${apkOfferOk}`
+      : `template fail: ${templateError} | webpush ${pushOk}/${pushFail} | bridge v2=${v2DriverId} apk=${apkOfferOk}`,
   });
 
   await sb

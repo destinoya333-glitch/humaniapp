@@ -57,6 +57,25 @@ function tipoLabel(tipo: string): string {
 
 const FONT = "system-ui, -apple-system, sans-serif";
 
+const LOGO_URL =
+  "https://rfpmvnoaqibqiqxrmheb.supabase.co/storage/v1/object/public/brand-assets/ecodrive/logo-oficial-tight.png";
+let _logoCache: string | null = null;
+async function getLogoSrc(): Promise<string | null> {
+  if (_logoCache) return _logoCache;
+  try {
+    const r = await fetch(LOGO_URL);
+    if (!r.ok) return null;
+    const b = Buffer.from(await r.arrayBuffer()).toString("base64");
+    _logoCache = "data:image/png;base64," + b;
+    return _logoCache;
+  } catch {
+    return null;
+  }
+}
+
+const STAR_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M50 2 L61.76 33.82 L95.65 35.17 L69.02 56.18 L78.21 88.83 L50 70 L21.79 88.83 L30.98 56.18 L4.35 35.17 L38.24 33.82 Z" fill="#E08821" stroke="#E08821" stroke-width="7" stroke-linejoin="round"/></svg>`;
+const STAR_SRC = "data:image/svg+xml;base64," + Buffer.from(STAR_SVG).toString("base64");
+
 export async function GET(req: NextRequest, ctx: { params: Promise<{ passId: string }> }) {
   const { passId } = await ctx.params;
   const isDemo = req.nextUrl.searchParams.get("demo") === "1";
@@ -75,6 +94,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ passId: str
   }
   if (!pass || !pass.miembro) return new Response("pass not found", { status: 404 });
 
+  const logoSrc = await getLogoSrc();
   const origin = req.nextUrl.origin;
   const verifyUrl = `${origin}/club/mi-cuenta`;
   const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(verifyUrl)}&bgcolor=ffffff&color=0a0908`;
@@ -95,13 +115,35 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ passId: str
           fontFamily: FONT,
         }}
       >
+        {/* MARCA DE AGUA — estrella oficial al centro */}
+        <div
+          style={{
+            display: "flex",
+            position: "absolute",
+            top: -60,
+            left: -60,
+            width: 1080,
+            height: 1350,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={STAR_SRC} width={800} height={800} style={{ opacity: 0.07 }} alt="" />
+        </div>
+
         {/* HEADER */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ display: "flex", flexDirection: "column" }}>
-            <div style={{ display: "flex", fontSize: 52, fontWeight: 700, letterSpacing: -1 }}>
-              EcoDrive<span style={{ color: "#E08821" }}>+</span>
-            </div>
-            <div style={{ display: "flex", fontSize: 22, color: "#E08821", marginTop: 4, fontStyle: "italic" }}>
+            {logoSrc ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={logoSrc} width={300} height={73} alt="EcoDrive+" />
+            ) : (
+              <div style={{ display: "flex", fontSize: 52, fontWeight: 700, letterSpacing: -1 }}>
+                EcoDrive<span style={{ color: "#E08821" }}>+</span>
+              </div>
+            )}
+            <div style={{ display: "flex", fontSize: 22, color: "#E08821", marginTop: 10, fontStyle: "italic", letterSpacing: 1 }}>
               Club
             </div>
           </div>
@@ -137,23 +179,28 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ passId: str
             BENEFICIOS INCLUIDOS
           </div>
           {tipo === "interno_conductor" && (
-            <div style={{ display: "flex", fontSize: 22, color: "#FFA84A" }}>
-              ✦  18 primeros viajes del mes con 0% comisión
+            <div style={{ display: "flex", flexDirection: "row", alignItems: "center", fontSize: 22, color: "#FFA84A" }}>
+              <div style={{ display: "flex", color: "#E08821", marginRight: 14 }}>•</div>
+              <div style={{ display: "flex" }}>18 primeros viajes del mes con 0% comisión</div>
             </div>
           )}
           {tipo === "interno_pasajero" && (
-            <div style={{ display: "flex", fontSize: 22, color: "#FFA84A" }}>
-              ✦  Cashback al 10% durante 1 mes
+            <div style={{ display: "flex", flexDirection: "row", alignItems: "center", fontSize: 22, color: "#FFA84A" }}>
+              <div style={{ display: "flex", color: "#E08821", marginRight: 14 }}>•</div>
+              <div style={{ display: "flex" }}>Cashback al 10% durante 1 mes</div>
             </div>
           )}
-          <div style={{ display: "flex", fontSize: 22, color: "#C8C0B5" }}>
-            ✦  Participación en sorteo de auto eléctrico
+          <div style={{ display: "flex", flexDirection: "row", alignItems: "center", fontSize: 22, color: "#C8C0B5" }}>
+            <div style={{ display: "flex", color: "#E08821", marginRight: 14 }}>•</div>
+            <div style={{ display: "flex" }}>Participación en sorteo de auto eléctrico</div>
           </div>
-          <div style={{ display: "flex", fontSize: 22, color: "#C8C0B5" }}>
-            ✦  Bonus de lealtad: +1 N° por edición consumida
+          <div style={{ display: "flex", flexDirection: "row", alignItems: "center", fontSize: 22, color: "#C8C0B5" }}>
+            <div style={{ display: "flex", color: "#E08821", marginRight: 14 }}>•</div>
+            <div style={{ display: "flex" }}>Bonus de lealtad: +1 N° por edición consumida</div>
           </div>
-          <div style={{ display: "flex", fontSize: 22, color: "#C8C0B5" }}>
-            ✦  Acceso a Pichanga Eco (fútbol/vóley/billar)
+          <div style={{ display: "flex", flexDirection: "row", alignItems: "center", fontSize: 22, color: "#C8C0B5" }}>
+            <div style={{ display: "flex", color: "#E08821", marginRight: 14 }}>•</div>
+            <div style={{ display: "flex" }}>Acceso a Pichanga Eco (fútbol/vóley/billar)</div>
           </div>
         </div>
 

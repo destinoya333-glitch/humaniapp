@@ -58,18 +58,18 @@ function SignupForm() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50 p-4">
-      <div className="bg-white rounded-2xl shadow-lg max-w-md w-full p-8">
-        <div className="text-center mb-6">
-          <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center text-white text-2xl">
-            👩‍🏫
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            Empieza con Miss Sofia
-          </h1>
-          <p className="text-sm text-gray-500">3 minutos gratis al día. Sin tarjeta.</p>
+    <main className="min-h-screen flex flex-col bg-gradient-to-b from-[#FFF3EC] to-[#FFE0D8] px-6 py-8">
+      <div className="w-full max-w-md mx-auto flex-1 flex flex-col justify-center">
+        <div className="text-center mb-8">
+          <img
+            src="/sofia-avatar.jpg"
+            alt="Miss Sofia"
+            className="w-28 h-28 rounded-full object-cover mx-auto border-4 border-white shadow-md mb-4"
+          />
+          <h1 className="text-3xl font-extrabold text-gray-900">Empieza con Miss Sofia</h1>
+          <p className="text-gray-500 mt-1">3 minutos gratis al día. Sin tarjeta.</p>
           {phoneFromQuery && (
-            <div className="mt-3 bg-green-50 border border-green-200 text-green-700 text-xs p-2 rounded-lg">
+            <div className="mt-3 bg-green-50 border border-green-200 text-green-700 text-xs p-2 rounded-2xl">
               ✨ Llegaste desde WhatsApp. Tu nivel detectado se conecta automáticamente.
             </div>
           )}
@@ -77,7 +77,7 @@ function SignupForm() {
 
         <form onSubmit={submit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
               Tu correo electrónico
             </label>
             <input
@@ -86,11 +86,11 @@ function SignupForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border-2 border-gray-200 bg-white rounded-2xl px-4 py-4 text-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#FF6B4A]"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
               Crea una contraseña
             </label>
             <input
@@ -100,33 +100,33 @@ function SignupForm() {
               onChange={(e) => setPassword(e.target.value)}
               minLength={8}
               required
-              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border-2 border-gray-200 bg-white rounded-2xl px-4 py-4 text-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#FF6B4A]"
             />
           </div>
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 text-white rounded-lg py-2.5 font-semibold hover:bg-blue-700 disabled:bg-gray-400"
+            className="w-full bg-[#FF6B4A] text-white rounded-2xl py-4 font-bold text-lg hover:bg-[#e8512f] disabled:bg-gray-300"
           >
-            {loading ? "Creating..." : "Create free account"}
+            {loading ? "Creando..." : "Crear cuenta gratis"}
           </button>
         </form>
 
         {msg && (
-          <div className="mt-4 bg-green-50 border border-green-200 text-green-700 text-sm p-3 rounded-lg">
+          <div className="mt-4 bg-green-50 border border-green-200 text-green-700 text-sm p-3 rounded-2xl">
             {msg}
           </div>
         )}
         {err && (
-          <div className="mt-4 bg-red-50 border border-red-200 text-red-700 text-sm p-3 rounded-lg">
+          <div className="mt-4 bg-red-50 border border-red-200 text-red-700 text-sm p-3 rounded-2xl">
             {err}
           </div>
         )}
 
-        <div className="mt-6 text-center text-sm text-gray-500">
-          Already have an account?{" "}
-          <a href="/sofia-auth/login" className="text-blue-600 hover:underline">
-            Sign in
+        <div className="mt-8 text-center text-sm text-gray-500">
+          ¿Ya tienes cuenta?{" "}
+          <a href="/sofia-auth/login" className="text-[#FF6B4A] font-semibold hover:underline">
+            Inicia sesión
           </a>
         </div>
       </div>

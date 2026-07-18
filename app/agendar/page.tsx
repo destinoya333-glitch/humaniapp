@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import AurumShell from "@/app/components/AurumShell";
 
 export const metadata: Metadata = {
   title: "Agenda 1-on-1 con asesor ActivosYA",
@@ -12,7 +13,8 @@ const CALENDLY_URL = process.env.NEXT_PUBLIC_CALENDLY_URL || "https://calendly.c
 
 export default function AgendarPage() {
   return (
-    <main className="min-h-screen bg-[#0A0A0A] text-white px-6 py-12">
+    <AurumShell>
+    <main className="px-6 py-12">
       <div className="mx-auto max-w-3xl">
         <Link href="/" className="text-xs text-zinc-500 hover:text-amber-400">
           ← Volver al marketplace
@@ -53,6 +55,7 @@ export default function AgendarPage() {
         </div>
       </div>
     </main>
+    </AurumShell>
   );
 }
 

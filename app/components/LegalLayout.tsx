@@ -1,19 +1,53 @@
 import Link from "next/link";
 
+type Brand = "activosya" | "ecodrive";
+
 type Props = {
   title: string;
   subtitle?: string;
   lastUpdated: string;
   children: React.ReactNode;
+  brand?: Brand;
 };
 
-export default function LegalLayout({ title, subtitle, lastUpdated, children }: Props) {
+const BRANDS: Record<
+  Brand,
+  { home: string; name: string; links: { label: string; href: string }[] }
+> = {
+  activosya: {
+    home: "/",
+    name: "ActivosYA",
+    links: [
+      { label: "Términos", href: "/terminos" },
+      { label: "Privacidad", href: "/privacidad" },
+      { label: "Devoluciones", href: "/devoluciones" },
+    ],
+  },
+  ecodrive: {
+    home: "/ecodriveplus",
+    name: "EcoDrive+",
+    links: [
+      { label: "Términos", href: "/ecodriveplus/legal/terms" },
+      { label: "Privacidad", href: "/ecodriveplus/legal/privacy" },
+      { label: "Eliminar datos", href: "/ecodriveplus/legal/data-deletion" },
+    ],
+  },
+};
+
+export default function LegalLayout({
+  title,
+  subtitle,
+  lastUpdated,
+  children,
+  brand = "activosya",
+}: Props) {
+  const b = BRANDS[brand];
   return (
     <main className="min-h-screen bg-[#0A0A0A] text-white">
       <section className="px-6 pt-24 pb-12 border-b border-[#2A2A2A]">
         <div className="mx-auto max-w-3xl">
           <Link
-            href="/"
+            href={b.home}
             className="inline-flex items-center gap-2 text-xs text-zinc-500 hover:text-amber-400 transition-colors mb-8"
           >
             ← Volver al inicio
@@ -41,15 +75,21 @@ export default function LegalLayout({ title, subtitle, lastUpdated, children }: 
         <div className="mx-auto max-w-3xl flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-zinc-600">
           <span>
             <span className="text-amber-400">✦</span>{" "}
-            <Link href="/" className="hover:text-amber-400 transition-colors">
-              ActivosYA
+            <Link href={b.home} className="hover:text-amber-400 transition-colors">
+              {b.name}
             </Link>
             {" · "}Hecho en Perú · 2026
           </span>
           <div className="flex gap-4">
-            <Link href="/terminos" className="hover:text-amber-400 transition-colors">Términos</Link>
-            <Link href="/privacidad" className="hover:text-amber-400 transition-colors">Privacidad</Link>
-            <Link href="/devoluciones" className="hover:text-amber-400 transition-colors">Devoluciones</Link>
+            {b.links.map((l) => (
+              <Link
+                key={l.href}
+                href={l.href}
+                className="hover:text-amber-400 transition-colors"
+              >
+                {l.label}
+              </Link>
+            ))}
           </div>
         </div>
       </footer>

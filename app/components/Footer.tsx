@@ -36,7 +36,6 @@ export default function Footer() {
               <li><a href="#catalogo" className="hover:text-amber-400 transition-colors">TuNoviaIA</a></li>
               <li><a href="#catalogo" className="hover:text-amber-400 transition-colors">TuPedidoYa</a></li>
               <li><a href="#catalogo" className="hover:text-amber-400 transition-colors">TuReservaYa</a></li>
-              <li><a href="#catalogo" className="hover:text-amber-400 transition-colors">EcoDrive+</a></li>
             </ul>
           </div>
 

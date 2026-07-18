@@ -91,15 +91,13 @@ export async function POST(req: NextRequest) {
         `Fuente: ${fuente || "web"}\n` +
         `${comentario ? `Comentario: ${comentario}\n` : ""}` +
         `\nLead ID: ${lead.id}`;
-      await fetch(`https://graph.facebook.com/v22.0/${META_PHONE}/messages`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${META_TOKEN}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messaging_product: "whatsapp",
-          to: "51998102258",
-          type: "text",
-          text: { body: adminMsg },
-        }),
+      const { notifyActivosYA } = await import("@/lib/activosya-central/notify");
+      await notifyActivosYA({
+        tipo: "lead_b2b",
+        servicio: "activosya",
+        cliente_nombre: nombre,
+        cliente_phone: phoneFinal,
+        detalle: { ciudad: ciudad ?? "-", activo: activo_interes ?? "miss-sofia", plan: plan_interes ?? "no-decidido", fuente: fuente ?? "web", comentario: comentario ?? "", lead_id: lead.id },
       });
     } catch {}
 

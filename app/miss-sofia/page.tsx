@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import SofiaPwa from "@/components/SofiaPwa";
 
 const WA_LINK = "https://wa.me/51979385499?text=Hola%20Miss%20Sofia%2C%20quiero%20empezar%20mi%20Fase%200";
 
@@ -123,9 +124,9 @@ const plans = [
   {
     name: "Sofia Cuna",
     subtitle: "El método completo",
-    monthly: "S/39",
-    yearly: "S/349",
-    yearly_save: "Ahorras S/119",
+    monthly: "S/30",
+    yearly: "S/299",
+    yearly_save: "Ahorras S/61",
     color: "border-amber-400/40",
     tag: "Recomendado",
     features: [
@@ -196,7 +197,7 @@ const competitors = [
   { name: "Duolingo Max", price: "$30/mes", method: "Gamificación vacía", real_speaker: false, personal: false, guarantee: false },
   { name: "Open English", price: "$39–49/mes", method: "Clases grupales", real_speaker: true, personal: false, guarantee: false },
   { name: "Academia local", price: "$80–150/mes", method: "Pizarrón presencial", real_speaker: true, personal: true, guarantee: false },
-  { name: "Sofia Cuna", price: "S/39/mes", method: "Método Cuna 6 fases", real_speaker: true, personal: true, guarantee: true },
+  { name: "Sofia Cuna", price: "S/30/mes", method: "Método Cuna 6 fases", real_speaker: true, personal: true, guarantee: true },
 ];
 
 const stats = [
@@ -253,6 +254,7 @@ function FaqItem({ q, a }: { q: string; a: string }) {
 export default function MissSofiaPage() {
   return (
     <main className="overflow-x-hidden">
+      <SofiaPwa />
 
       {/* ── Navbar ── */}
       <nav className="fixed top-0 inset-x-0 z-50 border-b border-[#2A2A2A] bg-[#0A0A0A]/90 backdrop-blur-md">

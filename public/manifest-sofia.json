@@ -1,0 +1,27 @@
+{
+  "name": "Miss Sofia — Tu profe de inglés",
+  "short_name": "Miss Sofia",
+  "description": "Aprende inglés con Miss Sofia: tu profe que te acompaña todos los días. Cápsulas, voz natural y tu racha.",
+  "start_url": "/sofia-chat",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0A0A0A",
+  "theme_color": "#E08821",
+  "categories": ["education"],
+  "lang": "es-PE",
+  "icons": [
+    {
+      "src": "/sofia-avatar.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "/sofia-avatar.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}

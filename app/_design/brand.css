@@ -1,0 +1,104 @@
+/* =====================================================
+   Sistema BRAND — landings premium TuXxxxYa (ActivosYA)
+   Un solo lenguaje editorial; cada marca aporta su acento
+   vía clase modificadora (.brand-destino, .brand-cuento…).
+   Cohesion re-tematiza el markup legacy (amber/orange/zinc)
+   al acento de la marca, sin reescribir cada landing.
+   ===================================================== */
+
+.brand {
+  /* Tokens base (oscuro cálido neutro) */
+  --bx-bg: #08070A;
+  --bx-ink: #F4EFE9;
+  --bx-ink-soft: #C5BEB4;
+  --bx-ink-mute: #79736C;
+  --bx-line: rgba(244, 239, 233, 0.08);
+  --bx-line-strong: rgba(244, 239, 233, 0.16);
+
+  /* Acento por defecto (lo sobreescribe cada .brand-*) */
+  --bx-accent: #E0A82E;
+  --bx-accent-soft: #F6D785;
+  --bx-accent-deep: #B07E16;
+
+  --bx-display: var(--font-fraunces), Georgia, serif;
+  --bx-mono: var(--font-mono), monospace;
+  --bx-ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  color: var(--bx-ink);
+  position: relative;
+}
+
+/* Acentos por marca */
+.brand-destino { --bx-accent: #8B5CF6; --bx-accent-soft: #C4B5FD; --bx-accent-deep: #6D28D9; }
+.brand-cuento  { --bx-accent: #FB7185; --bx-accent-soft: #FDA4AF; --bx-accent-deep: #E11D48; }
+.brand-novia   { --bx-accent: #EC4899; --bx-accent-soft: #F9A8D4; --bx-accent-deep: #BE185D; }
+.brand-sofia   { --bx-accent: #E0A82E; --bx-accent-soft: #F6D785; --bx-accent-deep: #B07E16; }
+.brand-chofer  { --bx-accent: #06B6D4; --bx-accent-soft: #67E8F9; --bx-accent-deep: #0E7490; }
+
+/* Grano sutil */
+.brand::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 100;
+  opacity: 0.04;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Selección / scrollbar con el acento */
+.brand ::selection { background: var(--bx-accent); color: var(--bx-bg); }
+.brand { scrollbar-width: thin; scrollbar-color: var(--bx-accent-deep) transparent; }
+.brand *::-webkit-scrollbar { width: 8px; height: 8px; }
+.brand *::-webkit-scrollbar-thumb { background: var(--bx-accent-deep); border-radius: 8px; }
+
+/* Tipografía editorial: TODOS los headings -> serif display */
+.brand h1, .brand h2, .brand h3 {
+  font-family: var(--bx-display);
+  font-variation-settings: "opsz" 110, "SOFT" 26, "WONK" 0;
+  letter-spacing: -0.032em;
+  font-weight: 500;
+}
+.brand h1 { line-height: 0.96; }
+
+/* Acento como texto/gradiente */
+.brand .bx-accent-text {
+  background: linear-gradient(105deg, var(--bx-accent-deep), var(--bx-accent) 45%, var(--bx-accent-soft));
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+
+/* ── Cohesion: re-tematiza utilidades legacy al acento de marca ── */
+.brand .text-amber-300, .brand .text-amber-400, .brand .text-amber-500,
+.brand .text-orange-300, .brand .text-orange-400, .brand .text-orange-500,
+.brand .text-yellow-400, .brand .text-yellow-500 { color: var(--bx-accent-soft) !important; }
+
+.brand .bg-amber-500, .brand .bg-amber-600,
+.brand .bg-orange-500, .brand .bg-orange-600 {
+  background: linear-gradient(180deg, var(--bx-accent-soft), var(--bx-accent)) !important;
+  color: #120A1F !important;
+}
+.brand .border-amber-500, .brand .border-amber-400,
+.brand .border-orange-500, .brand .border-orange-400 { border-color: color-mix(in srgb, var(--bx-accent) 45%, transparent) !important; }
+
+.brand .from-amber-400, .brand .from-amber-500, .brand .from-orange-400, .brand .from-orange-500 { --tw-gradient-from: var(--bx-accent) !important; }
+.brand .to-amber-400, .brand .to-amber-500, .brand .to-orange-400, .brand .to-orange-500 { --tw-gradient-to: var(--bx-accent-soft) !important; }
+
+/* Grises -> tinta cálida del sistema */
+.brand .text-gray-300, .brand .text-zinc-300 { color: var(--bx-ink); }
+.brand .text-gray-400, .brand .text-zinc-400 { color: var(--bx-ink-soft); }
+.brand .text-gray-500, .brand .text-zinc-500 { color: var(--bx-ink-mute); }
+
+/* Botón premium reutilizable */
+.brand .bx-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+  padding: 0.9rem 1.7rem; border-radius: 999px; font-weight: 600; color: #120A1F;
+  background: linear-gradient(180deg, var(--bx-accent-soft), var(--bx-accent));
+  box-shadow: 0 12px 32px -12px var(--bx-accent), inset 0 1px 0 rgba(255,255,255,0.35);
+  transition: transform .4s var(--bx-ease), filter .4s var(--bx-ease);
+}
+.brand .bx-btn:hover { filter: brightness(1.06); transform: translateY(-1px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .brand *, .brand *::before { scroll-behavior: auto !important; }
+}

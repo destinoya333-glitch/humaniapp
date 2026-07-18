@@ -15,7 +15,7 @@ Cuentos infantiles personalizados por audio IA · 6to activo de ActivosYA.
 1. Lee `SETUP.md` completo
 2. Aplica migración SQL: `supabase/migrations/20260511_cuentoinfantil_schema.sql`
 3. Crea cuenta Azure Speech Service + saca key
-4. Compra chip celular + registra en Meta WABA HumaniAppManager
+4. Compra chip celular + registra en Meta WABA EcoDriveBot
 5. Crea templates Meta (24-48h aprobación) — usa copy de `META_TEMPLATES.md`
 6. DNS `cuento.activosya.com` → Vercel CNAME
 7. Env vars Vercel (lista completa en `SETUP.md`)

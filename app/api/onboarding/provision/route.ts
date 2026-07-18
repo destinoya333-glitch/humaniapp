@@ -89,19 +89,13 @@ export async function POST(req: NextRequest) {
         (body.mode === "rent" ? `Renta: S/.${body.monthly_fee_pen}/mes\n` : `Compra: S/.${body.purchase_amount_pen}\n`) +
         (expiryDate ? `Vence: ${expiryDate.slice(0, 10)}\n` : "") +
         `\nPróximo paso: setup técnico (dominio + chip Meta + branding)`;
-      const META_TOKEN = process.env.ECODRIVE_META_ACCESS_TOKEN || "";
-      if (META_TOKEN) {
-        await fetch(`https://graph.facebook.com/v22.0/1044803088721236/messages`, {
-          method: "POST",
-          headers: { Authorization: `Bearer ${META_TOKEN}`, "Content-Type": "application/json" },
-          body: JSON.stringify({
-            messaging_product: "whatsapp",
-            to: "51998102258",
-            type: "text",
-            text: { body: adminMsg },
-          }),
-        });
-      }
+      const { notifyActivosYA } = await import("@/lib/activosya-central/notify");
+      await notifyActivosYA({
+        tipo: "plan_activado",
+        servicio: "activosya",
+        cliente_nombre: body.tenant_name,
+        detalle: { activo: activo.name, modo: body.mode, slug: body.slug, email: body.contact_email, monto: body.mode === "rent" ? body.monthly_fee_pen : body.purchase_amount_pen, vence: expiryDate?.slice(0, 10) ?? null },
+      });
     } catch (e) {
       console.warn("notify admin failed:", e);
     }

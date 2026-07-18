@@ -25,14 +25,21 @@ ALTER TABLE IF EXISTS public.garaje_payouts      RENAME TO club_payouts;
 ALTER TABLE IF EXISTS public.garaje_audit_log    RENAME TO club_audit_log;
 
 -- ===== FUNCIONES (rpc) =====
--- Las firmas se mantienen idénticas; solo cambia el nombre.
+-- Postgres no soporta ALTER FUNCTION IF EXISTS, hay que envolver en DO + check.
 
-ALTER FUNCTION IF EXISTS public.garaje_edicion_actual()              RENAME TO club_edicion_actual;
-ALTER FUNCTION IF EXISTS public.garaje_ultimos_vendidos()            RENAME TO club_ultimos_vendidos;
-ALTER FUNCTION IF EXISTS public.garaje_historial_ediciones()         RENAME TO club_historial_ediciones;
-ALTER FUNCTION IF EXISTS public.garaje_cleanup_reservas_vencidas()   RENAME TO club_cleanup_reservas_vencidas;
-ALTER FUNCTION IF EXISTS public.garaje_cerrar_edicion_si_completa()  RENAME TO club_cerrar_edicion_si_completa;
-ALTER FUNCTION IF EXISTS public.garaje_aplicar_bonus_lealtad()       RENAME TO club_aplicar_bonus_lealtad;
+DO $$
+DECLARE
+  fn record;
+BEGIN
+  FOR fn IN
+    SELECT p.oid::regprocedure::text AS sig, p.proname
+    FROM pg_proc p
+    JOIN pg_namespace n ON n.oid = p.pronamespace
+    WHERE n.nspname = 'public' AND p.proname LIKE 'garaje_%'
+  LOOP
+    EXECUTE format('ALTER FUNCTION %s RENAME TO %I', fn.sig, replace(fn.proname, 'garaje_', 'club_'));
+  END LOOP;
+END$$;
 
 -- ===== SEQUENCES =====
 -- Postgres renombra automáticamente sequences SERIAL/BIGSERIAL al renombrar

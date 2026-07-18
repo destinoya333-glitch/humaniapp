@@ -64,12 +64,10 @@ export default function TuReservaYaPage() {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <a
-              href="https://wa.me/51961347233?text=Quiero%20probar%20TuReservaYa"
-              target="_blank"
-              rel="noopener noreferrer"
+              href="/#contacto"
               className="w-full sm:w-auto px-8 py-4 text-base font-semibold bg-amber-500 text-black rounded-full hover:bg-amber-400 transition-all glow-gold"
             >
-              Probar demo en WhatsApp →
+              Solicitar acceso →
             </a>
             <a
               href="https://activosya.com/#contacto"

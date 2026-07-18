@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import AurumShell from "@/app/components/AurumShell";
 
 export default function CalculadoraROI() {
   const [modelo, setModelo] = useState<"renta" | "compra">("renta");
@@ -37,7 +38,8 @@ export default function CalculadoraROI() {
   }, [modelo, precioRenta, precioCompra, clientesMes, ticketProm, retencion, marketing]);
 
   return (
-    <main className="min-h-screen bg-[#0A0A0A] text-white px-6 py-12">
+    <AurumShell>
+    <main className="px-6 py-12">
       <div className="mx-auto max-w-4xl">
         <Link href="/" className="text-xs text-zinc-500 hover:text-amber-400">
           ← Volver al marketplace
@@ -203,6 +205,7 @@ export default function CalculadoraROI() {
         </div>
       </div>
     </main>
+    </AurumShell>
   );
 }
 

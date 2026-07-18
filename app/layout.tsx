@@ -1,14 +1,29 @@
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
+import { Geist, Fraunces, JetBrains_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
+import "./_design/aurum.css";
+import "./_design/brand.css";
 import PostHogProvider from "./components/PostHogProvider";
 import { OrganizationSchema } from "./components/SchemaOrg";
 
 const geist = Geist({
   variable: "--font-geist",
   subsets: ["latin"],
+});
+
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
+  subsets: ["latin"],
+  axes: ["opsz", "SOFT", "WONK"],
+  display: "swap",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-mono",
+  subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -37,12 +52,25 @@ export const metadata: Metadata = {
     title: "ActivosYA — Marketplace de activos digitales",
     description:
       "Compra o renta plataformas SaaS con flujo de caja verificado. Hecho en Perú.",
+    images: [
+      {
+        url: "/activosya-logo.jpg",
+        width: 1024,
+        height: 1024,
+        alt: "ActivosYA",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "ActivosYA — Marketplace de activos digitales",
     description:
       "Compra o renta plataformas SaaS con flujo de caja verificado.",
+    images: ["/activosya-logo.jpg"],
+  },
+  icons: {
+    icon: "/activosya-logo.jpg",
+    apple: "/activosya-logo.jpg",
   },
   robots: { index: true, follow: true },
 };
@@ -53,7 +81,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className={`${geist.variable} scroll-smooth`}>
+    <html lang="es" className={`${geist.variable} ${fraunces.variable} ${jetbrainsMono.variable} scroll-smooth`}>
       <body className="bg-[#0A0A0A] text-white antialiased">
         <OrganizationSchema />
         <PostHogProvider>{children}</PostHogProvider>

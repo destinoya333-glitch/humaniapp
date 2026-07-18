@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 const sueltos = [
   { dur: "2 min", precio: "S/ 2", emoji: "🌙", label: "Cuento Dormir" },
-  { dur: "3 min", precio: "S/ 3", emoji: "🦊", label: "Cuento Aventura", popular: true },
+  { dur: "3 min", precio: "S/ 3", emoji: "🐕", label: "Cuento Aventura", popular: true },
   { dur: "5 min", precio: "S/ 5", emoji: "🐉", label: "Cuento Saga" },
 ];
 
@@ -186,7 +186,7 @@ export default function PreciosCuentoPage() {
                   ))}
                 </ul>
                 <a
-                  href="https://wa.me/51994810242?text=Hola%20Coqui%2C%20quiero%20activar%20VIP"
+                  href="https://wa.me/51914200642?text=Hola%20Rex%2C%20quiero%20activar%20VIP"
                   target="_blank"
                   rel="noopener noreferrer"
                   className={`block text-center px-6 py-3 rounded-full font-semibold transition-all ${
@@ -234,11 +234,11 @@ export default function PreciosCuentoPage() {
             (Percy Roj*)
           </p>
           <p className="text-zinc-400 text-sm">
-            Envía la captura por WhatsApp a Coqui. El sistema verifica
+            Envía la captura por WhatsApp a Rex. El sistema verifica
             automáticamente y acredita en segundos.
           </p>
           <a
-            href="https://wa.me/51994810242?text=Hola%20Coqui"
+            href="https://wa.me/51914200642?text=Hola%20Rex"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-block mt-6 px-8 py-3 bg-amber-500 text-black rounded-full font-semibold hover:bg-amber-400 transition-all"

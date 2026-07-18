@@ -72,20 +72,14 @@ async function readBodyAsText(req: NextRequest): Promise<{ text: string; raw: st
 }
 
 async function notifyAdminPlatform(body: string): Promise<void> {
-  if (!META_TOKEN) return;
+  // Redirige a ActivosYA central
   try {
-    await fetch(`https://graph.facebook.com/v22.0/${META_PHONE_ID_PLATAFORMA}/messages`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${META_TOKEN}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        messaging_product: "whatsapp",
-        to: "51998102258",
-        type: "text",
-        text: { body },
-      }),
-    });
+    const { notifyActivosYA } = await import("@/lib/activosya-central/notify");
+    let tipo: "yape_confirmado" | "error_bot" = "yape_confirmado";
+    if (/error|fall/i.test(body)) tipo = "error_bot";
+    await notifyActivosYA({ tipo, servicio: "activosya", mensaje_corto: body });
   } catch (e) {
-    console.error("[yape-detect notifyAdmin]", (e as Error).message);
+    console.error("[yape-detect notifyAdmin->ay]", (e as Error).message);
   }
 }
 

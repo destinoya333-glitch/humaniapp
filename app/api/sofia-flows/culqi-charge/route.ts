@@ -13,7 +13,7 @@ import { createClient } from "@supabase/supabase-js";
 export const runtime = "nodejs";
 
 const PRICING: Record<string, Record<string, number>> = {
-  regular: { monthly: 39, yearly: 349 },
+  regular: { monthly: 30, yearly: 299 },
   premium: { monthly: 89, yearly: 799 },
 };
 

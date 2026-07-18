@@ -25,8 +25,60 @@ export type Activo = {
 
 export const ACTIVOS: Activo[] = [
   {
-    slug: "tumozoya",
+    slug: "app-taxi",
     status: "Activo",
+    icon: "🚕",
+    name: "App de Taxi a medida",
+    tagline: "Plataforma de movilidad tipo Uber / InDrive · con agentes IA · a medida",
+    shortDescription:
+      "Tu propia plataforma de taxi lista para operar: 3 aplicaciones (Pasajero, Conductor y Web Administrador) con agentes de IA integrados. Desarrollada a la medida de tu marca y tu ciudad. Entrega en 1 semana para pruebas.",
+    overview:
+      "Una solución completa de movilidad construida a medida: app de Pasajero para pedir y pagar viajes, app de Conductor para recibir y gestionar carreras, y un Web Administrador para controlar tarifas, conductores, viajes y finanzas en tiempo real. Todo potenciado con agentes de IA que optimizan el emparejamiento, atienden soporte, detectan fraude y automatizan operaciones. Tú eres dueño del código, la marca y los datos.",
+    problem:
+      "Montar una plataforma de movilidad desde cero cuesta meses de desarrollo y decenas de miles de soles. Las apps tipo Uber/Didi/InDrive cobran 25-30% de comisión y el operador local no tiene control de su marca, sus tarifas ni sus datos. Las soluciones 'white-label' del mercado son rígidas, caras y sin IA.",
+    solution:
+      "Una plataforma a medida entregada en 1 semana para pruebas: 3 apps (Pasajero, Conductor, Web Admin) con tu marca, tus tarifas y tus reglas. Agentes de IA integrados para matching inteligente, soporte automático 24/7, detección de fraude y reportes. Cero comisión a terceros — el negocio y los datos son tuyos.",
+    metrics: [
+      { label: "Aplicaciones incluidas", value: "3 (Pasajero/Conductor/Web Admin)" },
+      { label: "Inteligencia artificial", value: "Agentes IA integrados" },
+      { label: "Entrega para pruebas", value: "1 semana" },
+      { label: "Personalización", value: "100% a medida" },
+      { label: "Propiedad", value: "Código + marca + datos del cliente" },
+      { label: "Comisión a terceros", value: "0%" },
+    ],
+    businessModel:
+      "Desarrollo a medida con precio cerrado de S/ 12,000 por el paquete de 3 aplicaciones (Pasajero, Conductor y Web Administrador) con agentes de IA. Incluye entrega en 1 semana para pruebas. Soporte, mantenimiento y nuevas funcionalidades cotizables aparte. Ideal para emprendedores y empresas que quieren operar su propia plataforma de movilidad sin pagar comisiones a terceros.",
+    stack: ["React Native / Expo (apps móviles)", "Next.js (Web Administrador)", "Claude (agentes IA)", "Supabase", "Maps API (geolocalización)", "Pagos (Yape / billetera / tarjeta)"],
+    competitors: [
+      { name: "Uber / Didi / Cabify", weakness: "Comisión 25-30%, el operador no controla marca, tarifas ni datos" },
+      { name: "InDrive", weakness: "No es tuya, sin personalización, soporte limitado en ciudades intermedias" },
+      { name: "White-labels genéricos", weakness: "Rígidos, caros, sin agentes IA, sin entrega rápida" },
+      { name: "Desarrollo desde cero", weakness: "Meses de trabajo y decenas de miles de soles" },
+    ],
+    pnlProjection: [
+      { month: "Entrega", revenue: "S/ 12,000", cost: "—", profit: "3 apps + IA" },
+      { month: "Semana 1", revenue: "Pruebas", cost: "—", profit: "Versión funcional" },
+      { month: "Operación", revenue: "Tarifa propia", cost: "Sin comisión a terceros", profit: "100% tuyo" },
+      { month: "Escala", revenue: "Por ciudad", cost: "Cotizable", profit: "Multi-ciudad" },
+    ],
+    includes: [
+      "App de Pasajero (pedir, seguir y pagar viajes)",
+      "App de Conductor (recibir y gestionar carreras)",
+      "Web Administrador (tarifas, conductores, viajes, finanzas)",
+      "Agentes de IA: matching, soporte 24/7, antifraude, reportes",
+      "Personalización completa de marca, colores y ciudad",
+      "Entrega en 1 semana para pruebas",
+      "Código fuente de las 3 aplicaciones",
+      "Capacitación de uso + soporte de puesta en marcha",
+    ],
+    rent: "Consultar plan mensual",
+    buy: "S/ 12,000 (3 apps + IA)",
+    b2cHref: "#contacto",
+    b2cLabel: "Solicitar demo",
+  },
+  {
+    slug: "tumozoya",
+    status: "Próximamente",
     icon: "🍽️",
     name: "TuMozoYa",
     tagline: "Carta viva con IA · Sazón anfitrión · Salón + Delivery + Reserva",
@@ -44,7 +96,7 @@ export const ACTIVOS: Activo[] = [
       { label: "Comisión por pedido", value: "0%" },
       { label: "Uplift de ticket (upsell IA)", value: "+20-40%" },
       { label: "Margen bruto", value: "76%" },
-      { label: "Estado plataforma", value: "LIVE" },
+      { label: "Estado plataforma", value: "En desarrollo" },
     ],
     businessModel:
       "Suscripción mensual al restaurante (sin comisión por pedido) + margen del delivery propio (EcoDrive+). Modelo de franquicia: un operador gestiona N locales sobre la misma infra multi-tenant. Up-selling: facturación electrónica SUNAT, voz premium del anfitrión, y módulo de reservas con adelanto.",
@@ -92,7 +144,7 @@ export const ACTIVOS: Activo[] = [
     solution:
       "Método Cuna: Fase 0 escucha sin presión, Fase 1 una palabra real, Fase 2 telegráfico, Fase 3 tu voz, Fase 4 tu mundo, Fase 5 nativo. Sofia te acompaña 24/7 con audios diarios, novela personal generada cada semana, misiones reales-life y métricas viscerales (palabras tuyas, días que pensaste en inglés, días que soñaste en inglés).",
     metrics: [
-      { label: "Pricing Regular", value: "S/ 39/mes" },
+      { label: "Pricing Regular", value: "S/ 30/mes" },
       { label: "Pricing Premium", value: "S/ 89/mes" },
       { label: "Garantía", value: "6 meses Klaric" },
       { label: "Duración total", value: "12 meses" },
@@ -100,7 +152,7 @@ export const ACTIVOS: Activo[] = [
       { label: "Estado plataforma", value: "LIVE" },
     ],
     businessModel:
-      "Suscripción mensual o anual. Plan Regular S/39/mes (S/349/año, voz Nova ilimitada). Plan Premium S/89/mes (S/799/año, voz ElevenLabs Sofia 45 min/mes). Free tier: 3 días ilimitado + 6 min/día x 30 días. Yape persona-a-persona, validación MacroDroid Android. Escalable sin contratar profesores humanos.",
+      "Suscripción mensual o anual. Plan Regular S/30/mes (S/299/año, voz Nova ilimitada). Plan Premium S/89/mes (S/799/año, voz ElevenLabs Sofia 45 min/mes). Free tier: 3 días ilimitado + 6 min/día x 30 días. Yape persona-a-persona, validación MacroDroid Android. Escalable sin contratar profesores humanos.",
     stack: ["Next.js 16", "Claude Sonnet 4.6", "ElevenLabs Sofia", "OpenAI Nova TTS", "Groq Whisper STT", "Supabase", "WhatsApp Flows v7", "Twilio (mensajeria)"],
     competitors: [
       { name: "Duolingo Super", weakness: "Memorización gamificada, métrica de rachas vacías, no enseña a hablar" },
@@ -279,56 +331,6 @@ export const ACTIVOS: Activo[] = [
     b2cHref: "https://pedido.activosya.com",
     b2cLabel: "Ver landing B2C",
     subdomain: "pedido.activosya.com",
-  },
-  {
-    slug: "ecodriveplus",
-    status: "Beta",
-    icon: "◈",
-    name: "EcoDrive+",
-    tagline: "Intermediación rideshare por WhatsApp · sin app",
-    shortDescription:
-      "Plataforma de viajes tipo Indrive operada 100% por WhatsApp. Cliente nombra su precio, conductores aceptan. Sin descargar app, sin comisión escandalosa.",
-    overview:
-      "EcoDrive+ es una plataforma de intermediación rideshare local (estilo Indrive) que opera completamente por WhatsApp. El pasajero solicita viaje con origen, destino y precio sugerido. El sistema notifica a conductores cercanos por WhatsApp. El conductor que acepta se conecta con el pasajero. Cero descargas de app, cero comisiones del 25-30% de Uber/Didi.",
-    problem:
-      "Apps tipo Uber/Didi/Cabify cobran 25-30% de comisión al conductor. El pasajero paga más, el conductor gana menos. Las apps requieren descarga, registro, GPS activo, batería. En ciudades intermedias (Trujillo, Arequipa, Chiclayo) el modelo no escala porque la masa crítica es menor.",
-    solution:
-      "Modelo Indrive sobre WhatsApp: sin app que descargar, sin comisión por viaje (modelo de membresía mensual al conductor). El pasajero negocia precio. El conductor acepta o contraoferta. La plataforma cobra fee fijo al conductor por mes — operador cobra recurrente sin depender del volumen.",
-    metrics: [
-      { label: "Base actual", value: "88 conductores" },
-      { label: "Clientes activos", value: "231" },
-      { label: "Ciudad piloto", value: "Trujillo" },
-      { label: "Margen bruto", value: "78%" },
-      { label: "Estado", value: "Relanzamiento" },
-      { label: "Modelo", value: "Membresía conductor" },
-    ],
-    businessModel:
-      "Suscripción mensual al conductor (S/30-60/mes según ciudad), cero comisión por viaje. Modelo predecible y atractivo vs Uber/Didi. Para el operador del activo, el ticket promedio por conductor activo es S/40/mes. Con 100 conductores activos, MRR estable de S/4,000.",
-    stack: ["Twilio Business API", "Claude (matching)", "Supabase (geolocation)", "Maps API", "n8n"],
-    competitors: [
-      { name: "Uber / Didi / Cabify", weakness: "Comisión 25-30%, requieren app, no escalan en ciudades intermedias" },
-      { name: "Indrive", weakness: "Solo en algunas ciudades LATAM, requiere app, soporte limitado" },
-      { name: "Taxis informales", weakness: "Sin trazabilidad, sin recordatorios, sin reportes para el operador" },
-    ],
-    pnlProjection: [
-      { month: "M1", revenue: "S/ 1,500", cost: "S/ 400", profit: "S/ 1,100" },
-      { month: "M3", revenue: "S/ 4,200", cost: "S/ 900", profit: "S/ 3,300" },
-      { month: "M6", revenue: "S/ 8,500", cost: "S/ 1,800", profit: "S/ 6,700" },
-      { month: "M12", revenue: "S/ 16,800", cost: "S/ 3,400", profit: "S/ 13,400" },
-    ],
-    includes: [
-      "Bot WhatsApp con matching pasajero ↔ conductor cercano",
-      "Sistema de membresía recurrente para conductores",
-      "Dashboard del operador (viajes, conductores, MRR)",
-      "Modo demo precargado (Trujillo: 88 conductores + 231 clientes)",
-      "Documentación 109 ítems del relanzamiento",
-      "Onboarding 7-14 días + Slack privado 90 días",
-    ],
-    rent: "Desde S/ 2,200/mes",
-    buy: "Compra a consultar",
-    b2cHref: "https://ecodrive.activosya.com",
-    b2cLabel: "Ver landing B2C",
-    subdomain: "ecodrive.activosya.com",
   },
   {
     slug: "tureservaya",

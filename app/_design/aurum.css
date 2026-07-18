@@ -1,0 +1,291 @@
+/* =====================================================
+   ActivosYA — Direccion estetica: AURUM EDITORIAL
+   - Obsidiana calida + oro refinado (no neon), serif display
+   - Espacio negativo, grano sutil, motion orquestado
+   - Namespace .aurum para no colisionar con estilos legacy
+   ===================================================== */
+
+.aurum {
+  /* ── Color tokens ── */
+  --au-bg: #08070A;
+  --au-bg-soft: #100E12;
+  --au-bg-deep: #040305;
+  --au-ink: #F4EFE9;
+  --au-ink-soft: #C5BEB4;
+  --au-ink-mute: #76706A;
+  --au-line: rgba(244, 239, 233, 0.08);
+  --au-line-strong: rgba(244, 239, 233, 0.16);
+
+  /* Oro refinado ActivosYA */
+  --au-gold: #E0A82E;
+  --au-gold-soft: #F6D785;
+  --au-gold-deep: #B07E16;
+  --au-gold-ink: #FCEFCB;
+
+  /* Tipografia */
+  --au-display: var(--font-fraunces), "PP Editorial New", Georgia, serif;
+  --au-body: var(--font-geist), "PP Neue Montreal", system-ui, sans-serif;
+  --au-mono: var(--font-mono), "JetBrains Mono", monospace;
+
+  /* Easing */
+  --au-ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  background: var(--au-bg);
+  color: var(--au-ink);
+  font-family: var(--au-body);
+  position: relative;
+}
+
+/* ── Grano SVG noise overlay ── */
+.aurum::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 100;
+  opacity: 0.04;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ── Selection / scrollbar ── */
+.aurum ::selection {
+  background: var(--au-gold);
+  color: var(--au-bg);
+}
+.aurum { scrollbar-width: thin; scrollbar-color: var(--au-gold-deep) transparent; }
+.aurum *::-webkit-scrollbar { width: 8px; height: 8px; }
+.aurum *::-webkit-scrollbar-track { background: transparent; }
+.aurum *::-webkit-scrollbar-thumb { background: var(--au-gold-deep); border-radius: 8px; }
+.aurum *::-webkit-scrollbar-thumb:hover { background: var(--au-gold); }
+
+/* ── Tipografia display: TODO heading hereda serif editorial ── */
+.aurum h1, .aurum h2, .aurum h3, .aurum .au-display {
+  font-family: var(--au-display);
+  font-variation-settings: "opsz" 120, "SOFT" 28, "WONK" 0;
+  letter-spacing: -0.035em;
+}
+.aurum h1, .aurum h2 { line-height: 0.95; font-weight: 500; }
+.aurum h3 { letter-spacing: -0.02em; }
+
+.au-display-italic {
+  font-family: var(--au-display);
+  font-variation-settings: "opsz" 144, "SOFT" 100, "WONK" 1;
+  font-style: italic;
+  font-weight: 340;
+  letter-spacing: -0.02em;
+}
+
+/* Oro como texto — gradiente refinado */
+.au-gold-text {
+  background: linear-gradient(105deg, var(--au-gold-deep) 0%, var(--au-gold) 42%, var(--au-gold-soft) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.au-gold-shimmer {
+  background: linear-gradient(105deg, var(--au-gold-deep), var(--au-gold), var(--au-gold-soft), var(--au-gold));
+  background-size: 280% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: au-shimmer 6s ease infinite;
+}
+@keyframes au-shimmer {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ── Mono micro-label ── */
+.au-mono {
+  font-family: var(--au-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-size: 0.7rem;
+  color: var(--au-ink-mute);
+}
+.au-mono-md { font-family: var(--au-mono); letter-spacing: 0.06em; font-size: 0.82rem; }
+
+.au-label-vertical {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-family: var(--au-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.34em;
+  font-size: 0.66rem;
+  color: var(--au-ink-mute);
+}
+
+/* ── Backgrounds atmosfericos ── */
+.au-mesh {
+  background:
+    radial-gradient(68% 58% at 14% 16%, rgba(224, 168, 46, 0.18), transparent 60%),
+    radial-gradient(58% 78% at 86% 10%, rgba(246, 215, 133, 0.08), transparent 64%),
+    radial-gradient(82% 70% at 50% 98%, rgba(176, 126, 22, 0.22), transparent 72%);
+}
+.au-vignette {
+  background: radial-gradient(120% 120% at 50% 0%, transparent 55%, rgba(4, 3, 5, 0.55) 100%);
+}
+
+/* ── Glow & glass ── */
+.au-glow-gold {
+  box-shadow:
+    0 0 0 1px rgba(224, 168, 46, 0.28),
+    0 28px 80px -22px rgba(224, 168, 46, 0.32),
+    inset 0 0 60px rgba(224, 168, 46, 0.04);
+}
+.au-glass {
+  background: linear-gradient(180deg, rgba(244, 239, 233, 0.045), rgba(244, 239, 233, 0.015));
+  border: 1px solid var(--au-line);
+  backdrop-filter: blur(14px);
+}
+
+/* ── Cards ── */
+.au-card {
+  background: linear-gradient(180deg, rgba(244, 239, 233, 0.035), rgba(244, 239, 233, 0.01));
+  border: 1px solid var(--au-line);
+  transition:
+    transform 0.55s var(--au-ease),
+    border-color 0.55s var(--au-ease),
+    background-color 0.55s var(--au-ease),
+    box-shadow 0.55s var(--au-ease);
+}
+.au-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(224, 168, 46, 0.4);
+  box-shadow: 0 30px 70px -30px rgba(0, 0, 0, 0.7), 0 0 40px -20px rgba(224, 168, 46, 0.25);
+}
+
+/* ── Hairlines ── */
+.au-rule { height: 1px; background: linear-gradient(90deg, transparent, var(--au-line-strong), transparent); }
+.au-rule-gold { height: 1px; background: linear-gradient(90deg, transparent, rgba(224,168,46,0.5), transparent); }
+
+/* ── Reveal motion (IntersectionObserver agrega .is-in) ── */
+.au-reveal {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 1s var(--au-ease), transform 1s var(--au-ease);
+  will-change: opacity, transform;
+}
+.au-reveal.is-in { opacity: 1; transform: none; }
+
+.au-word-line { display: inline-block; overflow: hidden; vertical-align: top; }
+.au-word {
+  display: inline-block;
+  transform: translateY(110%);
+  transition: transform 0.9s var(--au-ease);
+  will-change: transform;
+}
+.au-word.is-in { transform: none; }
+
+/* ── Magnetic wrapper ── */
+.au-magnetic { display: inline-block; will-change: transform; }
+
+/* ── Drop cap editorial ── */
+.au-dropcap::first-letter {
+  font-family: var(--au-display);
+  font-variation-settings: "opsz" 144;
+  font-weight: 500;
+  font-size: 4em;
+  float: left;
+  line-height: 0.82;
+  margin: 0.04em 0.12em 0 -0.04em;
+  color: var(--au-gold);
+}
+
+/* ── Marquee ── */
+@keyframes au-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.au-marquee { animation: au-marquee 40s linear infinite; white-space: nowrap; display: inline-flex; gap: 3.5rem; }
+
+/* ── Pill / badge ── */
+.au-pill {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid rgba(224, 168, 46, 0.28);
+  background: rgba(224, 168, 46, 0.06);
+  font-family: var(--au-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.66rem;
+  color: var(--au-gold-soft);
+}
+
+/* ── Live dot ── */
+@keyframes au-ping { 0% { transform: scale(1); opacity: 0.8; } 70% { transform: scale(2.4); opacity: 0; } 100% { opacity: 0; } }
+.au-ping { animation: au-ping 1.6s cubic-bezier(0,0,0.2,1) infinite; }
+
+/* ── Botones ── */
+.au-btn-gold {
+  position: relative;
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.55rem;
+  padding: 0.95rem 1.8rem;
+  border-radius: 999px;
+  font-weight: 600;
+  color: #1A1206;
+  background: linear-gradient(180deg, var(--au-gold-soft), var(--au-gold));
+  box-shadow: 0 10px 30px -10px rgba(224, 168, 46, 0.6), inset 0 1px 0 rgba(255,255,255,0.4);
+  transition: transform 0.4s var(--au-ease), box-shadow 0.4s var(--au-ease), filter 0.4s var(--au-ease);
+}
+.au-btn-gold:hover { filter: brightness(1.06); box-shadow: 0 16px 44px -12px rgba(224, 168, 46, 0.75), inset 0 1px 0 rgba(255,255,255,0.5); }
+.au-btn-ghost {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.55rem;
+  padding: 0.95rem 1.8rem;
+  border-radius: 999px;
+  font-weight: 500;
+  color: var(--au-ink-soft);
+  border: 1px solid var(--au-line-strong);
+  transition: border-color 0.4s var(--au-ease), color 0.4s var(--au-ease), background-color 0.4s var(--au-ease);
+}
+.au-btn-ghost:hover { border-color: rgba(224, 168, 46, 0.5); color: var(--au-ink); background: rgba(224, 168, 46, 0.04); }
+
+/* =====================================================
+   Cohesion: re-tematiza estilos legacy dentro de .aurum
+   (asi las secciones existentes se ven AURUM sin reescribir)
+   ===================================================== */
+.aurum .gold-gradient,
+.aurum .gold-gradient-animated {
+  background: linear-gradient(105deg, var(--au-gold-deep), var(--au-gold) 45%, var(--au-gold-soft));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.aurum .text-amber-400 { color: var(--au-gold-soft); }
+.aurum .text-amber-400\/80 { color: rgba(246, 215, 133, 0.8); }
+
+/* Cards legacy → vidrio aurum */
+.aurum .card-surface {
+  background: linear-gradient(180deg, rgba(244, 239, 233, 0.035), rgba(244, 239, 233, 0.01)) !important;
+  border-color: var(--au-line) !important;
+}
+.aurum .card-hover { transition: transform 0.55s var(--au-ease), border-color 0.55s var(--au-ease), box-shadow 0.55s var(--au-ease); }
+.aurum .card-hover:hover {
+  transform: translateY(-6px);
+  border-color: rgba(224, 168, 46, 0.4) !important;
+  box-shadow: 0 30px 70px -30px rgba(0,0,0,0.7), 0 0 40px -20px rgba(224,168,46,0.25);
+}
+
+/* Botones sólidos legacy (bg-amber-500) → oro refinado */
+.aurum .bg-amber-500 {
+  background: linear-gradient(180deg, var(--au-gold-soft), var(--au-gold)) !important;
+  color: #1A1206 !important;
+}
+.aurum .hover\:bg-amber-400:hover { filter: brightness(1.06); }
+.aurum .glow-gold { box-shadow: 0 10px 30px -10px rgba(224,168,46,0.5); }
+
+/* Eyebrows uppercase legacy → tracking + mono feel */
+.aurum .uppercase.tracking-widest { letter-spacing: 0.22em; }
+
+/* Secciones: ritmo vertical mas generoso */
+.aurum section { scroll-margin-top: 6rem; }
+
+/* Heading weights con serif variable se ven mejor en 500-560 */
+.aurum h2.font-bold, .aurum h3.font-bold { font-weight: 540; }
+.aurum h1.font-bold { font-weight: 520; }
+
+/* ── Reduce motion ── */
+@media (prefers-reduced-motion: reduce) {
+  .au-reveal, .au-word { transition: none !important; opacity: 1 !important; transform: none !important; }
+  .au-shimmer, .au-marquee, .au-ping { animation: none !important; }
+}

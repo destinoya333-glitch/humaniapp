@@ -439,7 +439,7 @@ function bienvenidaRecurrente(name: string | undefined): string {
     `¡Hola${n}! 👋 Qué bueno tenerte de vuelta.\n\n` +
     `¿Qué quieres hacer hoy?\n\n` +
     `🎧 Escribe *continuar* — siguiente lección de tu Fase Cuna\n` +
-    `💎 Escribe *pago* — activa tu plan completo (Regular S/39 o Premium S/89)\n` +
+    `💎 Escribe *pago* — activa tu plan completo (Regular S/30 o Premium S/89)\n` +
     `📊 Escribe *progreso* — ver cómo vas\n` +
     `🎤 Escribe *pronunciacion* — practicar tu pronunciación\n` +
     `⚙️ Escribe *plan* — configurar tu rutina diaria\n\n` +
@@ -475,7 +475,7 @@ async function handleDiaUnoSent(lead: WhatsAppLead, msg: string): Promise<AgentR
 
   return plain(
     `${reaction}\n\n💎 Para seguir y desbloquear tu novela personal (donde TÚ eres el protagonista), tienes 2 caminos:\n\n` +
-    `1️⃣ Activa tu plan por WhatsApp — escribe *pago* y eliges plan (S/39 mensual)\n` +
+    `1️⃣ Activa tu plan por WhatsApp — escribe *pago* y eliges plan (S/30 mensual)\n` +
     `2️⃣ Crea cuenta web (opcional) para ver dashboard:\n${link}\n\n` +
     `Escribe *menu* para volver al comienzo.`
   );

@@ -112,6 +112,62 @@ async function sendText(to: string, body: string): Promise<void> {
   await send({ messaging_product: "whatsapp", to, type: "text", text: { body } });
 }
 
+// Backend EcoDrive+ (Railway) que tiene el Club + Culqi + página de pago.
+const BOT_API =
+  process.env.ECODRIVE_BOT_API_URL ||
+  "https://bot-whatsapp-production-085b.up.railway.app";
+
+/**
+ * Venta de la membresía del Club (sorteo del auto). Llama al backend Railway que
+ * asegura la cuenta por teléfono, deja la membresía pending y devuelve el link de
+ * pago Culqi (tarjeta/Yape). Al pagar, el backend activa la membresía, emite el
+ * boleto y manda el carnet por este mismo número de WhatsApp.
+ */
+async function sellMembership(waId: string, nombre: string | null): Promise<void> {
+  try {
+    const r = await fetch(`${BOT_API}/api/club/wa-start`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone: waId, full_name: nombre ?? "" }),
+    });
+    const j = (await r.json().catch(() => null)) as
+      | { ok?: boolean; pay_url?: string; already_active?: boolean; price?: number }
+      | null;
+    if (!j?.ok || !j.pay_url) {
+      await sendText(
+        waId,
+        "Uf, no pude generar tu pago ahora. Probá de nuevo en un minuto escribiendo *sorteo*."
+      );
+      return;
+    }
+    if (j.already_active) {
+      await sendText(
+        waId,
+        "¡Ya sos socio activo del EcoDrive+ Club! 💚 Tu boleto del sorteo ya está cargado. Escribe *viaje* para pedir un taxi."
+      );
+      return;
+    }
+    const precio = j.price ?? 30;
+    await sendText(
+      waId,
+      `🎟️ *Sorteo del auto eléctrico — EcoDrive+ Club*\n\n` +
+        `Hacéte socio por *S/ ${precio}/mes* y participá del sorteo del auto 🚗⚡. Además incluye:\n` +
+        `• 🎓 1 mes gratis del inglés de Miss Sofia\n` +
+        `• 💸 3% de cashback en tus viajes\n` +
+        `• 🎰 3 tickets diarios para la ruleta\n` +
+        `• 🚕 Cancelación gratis y tarifa fija en hora pico\n\n` +
+        `Pagá seguro con *tarjeta* o *Yape* acá 👇\n${j.pay_url}\n\n` +
+        `Apenas se confirme el pago, te llega tu *carnet + número de boleto* por acá. 🍀`
+    );
+  } catch (e) {
+    console.error("[eco-bot sellMembership err]", e);
+    await sendText(
+      waId,
+      "Tuve un problema generando tu pago. Probá de nuevo escribiendo *sorteo*."
+    );
+  }
+}
+
 async function sendMenuPrincipal(to: string, nombre: string | null): Promise<void> {
   const saludo = nombre ? `Hola ${nombre.split(" ")[0]}` : "Hola";
   await send({
@@ -120,12 +176,14 @@ async function sendMenuPrincipal(to: string, nombre: string | null): Promise<voi
     type: "interactive",
     interactive: {
       type: "button",
-      body: { text: `${saludo}, bienvenido a EcoDrive+ 🚖\n\n¿Qué necesitas?` },
+      body: {
+        text: `${saludo}, bienvenido a EcoDrive+ 🚖\n\n¿Qué necesitas?\n_(o escribí *ayuda* cuando quieras)_`,
+      },
       action: {
         buttons: [
           { type: "reply", reply: { id: "soy_pasajero", title: "Pedir un viaje" } },
           { type: "reply", reply: { id: "soy_chofer", title: "Quiero ser chofer" } },
-          { type: "reply", reply: { id: "ayuda", title: "Ayuda" } },
+          { type: "reply", reply: { id: "club_sorteo", title: "🎟️ Sorteo del auto" } },
         ],
       },
     },
@@ -279,7 +337,7 @@ async function handleMessage(m: {
     button_reply?: { id?: string; title?: string };
     list_reply?: { id?: string; title?: string };
   };
-}): Promise<void> {
+}, profileName: string | null = null): Promise<void> {
   const from = m.from;
   if (!from) return;
 
@@ -338,17 +396,17 @@ async function handleMessage(m: {
     if (wantsViaje.test(t)) {
       // Avisamos lo que entendimos + procesamos como "viaje"
       await sendText(from, `🎙️ Entendí: "${transcript.slice(0, 200)}"\n\nProcesando tu solicitud de viaje...`);
-      await handleMessage({ from, type: "text", text: { body: "viaje" } });
+      await handleMessage({ from, type: "text", text: { body: "viaje" } }, profileName);
       return;
     }
     if (/(chofer|conductor|manejar|inscribir|registrar)/i.test(t)) {
       await sendText(from, `🎙️ Entendí: "${transcript.slice(0, 200)}"`);
-      await handleMessage({ from, type: "text", text: { body: "quiero ser chofer" } });
+      await handleMessage({ from, type: "text", text: { body: "quiero ser chofer" } }, profileName);
       return;
     }
     if (/(en linea|estoy disponible|disponible|listo|prendo|conectar|prender)/i.test(t)) {
       await sendText(from, `🎙️ Entendí: "${transcript.slice(0, 200)}"`);
-      await handleMessage({ from, type: "text", text: { body: "en linea" } });
+      await handleMessage({ from, type: "text", text: { body: "en linea" } }, profileName);
       return;
     }
     // No detectamos intent claro: mostrar transcripción + sugerir
@@ -434,6 +492,26 @@ async function handleMessage(m: {
       return;
     }
 
+    if (/(membres|club|sorteo|boleto|rifa|premio|auto electr|auto eléctr|el auto|ticket.*auto)/.test(text)) {
+      await sellMembership(from, pasajero?.nombre || chofer?.nombre || profileName || null);
+      return;
+    }
+
+    if (/^(ayuda|help|soporte|comandos)/.test(text)) {
+      await sendText(
+        from,
+        "🚖 *EcoDrive+ ayuda*\n\n" +
+          "Comandos:\n" +
+          "• *viaje* — pedir un taxi\n" +
+          "• *sorteo* — unirte al Club y participar del sorteo del auto 🎟️\n" +
+          "• *en linea* — chofer disponible\n" +
+          "• *fuera de linea* — chofer ocupado/descansa\n" +
+          "• *mi estado* — ver si estas aprobado\n" +
+          "• *menu* — ver opciones"
+      );
+      return;
+    }
+
     if (/(mi estado|status|estatus|mi cuenta)/.test(text)) {
       const lines: string[] = ["📋 *Tu estado en EcoDrive+*"];
       if (pasajero) lines.push(`✅ Pasajero aprobado: ${pasajero.nombre}`);
@@ -486,12 +564,18 @@ async function handleMessage(m: {
       return;
     }
 
+    if (id === "club_sorteo") {
+      await sellMembership(from, pasajero?.nombre || chofer?.nombre || profileName || null);
+      return;
+    }
+
     if (id === "ayuda") {
       await sendText(
         from,
         "🚖 *EcoDrive+ ayuda*\n\n" +
           "Comandos:\n" +
           "• *viaje* — pedir un taxi\n" +
+          "• *sorteo* — unirte al Club y participar del sorteo del auto 🎟️\n" +
           "• *en linea* — chofer disponible\n" +
           "• *fuera de linea* — chofer ocupado/descansa\n" +
           "• *mi estado* — ver si estas aprobado\n" +
@@ -558,25 +642,7 @@ export async function POST(request: Request) {
   // ack rápido a Meta + procesar en background
   after(async () => {
     try {
-      const p = payload as {
-        entry?: Array<{
-          changes?: Array<{
-            value?: {
-              messages?: Array<{
-                from: string;
-                type: string;
-                text?: { body?: string };
-                audio?: { id?: string; mime_type?: string };
-                interactive?: {
-                  button_reply?: { id?: string; title?: string };
-                  list_reply?: { id?: string; title?: string };
-                };
-              }>;
-            };
-          }>;
-        }>;
-      };
-      const messages: Array<{
+      type IncomingMsg = {
         from: string;
         type: string;
         text?: { body?: string };
@@ -585,18 +651,34 @@ export async function POST(request: Request) {
           button_reply?: { id?: string; title?: string };
           list_reply?: { id?: string; title?: string };
         };
-      }> = [];
+      };
+      const p = payload as {
+        entry?: Array<{
+          changes?: Array<{
+            value?: {
+              messages?: Array<IncomingMsg>;
+              contacts?: Array<{ wa_id?: string; profile?: { name?: string } }>;
+            };
+          }>;
+        }>;
+      };
+      const messages: Array<{ msg: IncomingMsg; profileName: string | null }> = [];
       for (const entry of p?.entry || []) {
         for (const change of entry.changes || []) {
+          // Nombre del perfil de WhatsApp (para el carnet cuando no está registrado).
+          const nameByWa = new Map<string, string>();
+          for (const c of change.value?.contacts || []) {
+            if (c.wa_id && c.profile?.name) nameByWa.set(c.wa_id, c.profile.name);
+          }
           for (const msg of change.value?.messages || []) {
-            messages.push(msg);
+            messages.push({ msg, profileName: nameByWa.get(msg.from) ?? null });
           }
         }
       }
       await Promise.all(
-        messages.map(async (m) => {
+        messages.map(async ({ msg, profileName }) => {
           try {
-            await handleMessage(m);
+            await handleMessage(msg, profileName);
           } catch (e) {
             console.error("[eco-bot handle err]", e);
           }

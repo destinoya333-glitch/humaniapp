@@ -134,19 +134,42 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // IMPORTANTE: validar el error del insert/update. Antes se ignoraba, así que
+  // si fallaba (FK, columna NOT NULL, etc.) el endpoint devolvía ok:true sin
+  // crear el perfil → el dashboard daba 404 → la app se quedaba en "Sellando...".
   if (existingProfile) {
     if (Object.keys(profileUpdate).length > 0) {
-      await supabase
+      const { error: updErr } = await supabase
         .from("mse_student_profiles")
         .update({ ...profileUpdate, updated_at: new Date().toISOString() })
         .eq("user_id", effectiveUserId);
+      if (updErr) {
+        return NextResponse.json({ error: `profile_update_failed: ${updErr.message}` }, { status: 500 });
+      }
     }
   } else {
-    await supabase.from("mse_student_profiles").insert({
+    const { error: insErr } = await supabase.from("mse_student_profiles").insert({
       user_id: effectiveUserId,
       cuna_started_at: profileUpdate.cuna_started_at ?? new Date().toISOString(),
       ...profileUpdate,
     });
+    if (insErr) {
+      return NextResponse.json({ error: `profile_insert_failed: ${insErr.message}` }, { status: 500 });
+    }
+  }
+
+  // Verificación final: el perfil DEBE quedar consultable por el id de la sesión
+  // (authed.id) — que es el que la app usa para /dashboard. Si por una colisión
+  // de email quedó bajo otro id, lo avisamos en vez de fingir éxito.
+  if (effectiveUserId !== authed.id) {
+    return NextResponse.json(
+      {
+        error: "account_id_mismatch",
+        message:
+          "Ya existe una cuenta con este correo. Inicia sesión con esa cuenta en vez de crear una nueva.",
+      },
+      { status: 409 }
+    );
   }
 
   // Bridge any prior WhatsApp lead with this phone number

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<title>Constancia de Ingresos — Caja Trujillo</title>
+<style>
+@page { size: A4; margin: 1.4cm; }
+@media print {
+  body { font-size: 9.5pt; }
+  .no-print { display: none !important; }
+  .watermark { display: block; }
+}
+body { font-family: 'Calibri', 'Helvetica', sans-serif; font-size: 10pt; line-height: 1.4; color: #1a1a1a; max-width: 19cm; margin: 30px auto; padding: 0 20px; position: relative; background: white; }
+.no-print { background: #E1811B; color: white; padding: 12px 16px; border-radius: 6px; margin-bottom: 22px; text-align: center; font-weight: bold; }
+.no-print button { background: white; color: #E1811B; border: 0; padding: 9px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 13px; margin-left: 10px; }
+.watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-25deg); font-size: 80pt; color: rgba(225, 129, 27, 0.07); font-weight: bold; z-index: 0; letter-spacing: 4px; pointer-events: none; }
+.content { position: relative; z-index: 1; }
+.header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #E1811B; padding-bottom: 12px; margin-bottom: 18px; }
+.header img { max-width: 280px; height: auto; }
+.header .corp { text-align: right; font-size: 9pt; color: #444; line-height: 1.45; }
+.header .corp strong { color: #1a1a1a; }
+h1 { font-size: 20pt; color: #E1811B; margin: 4px 0 0; letter-spacing: 0.3px; }
+.subtitle { font-size: 10pt; color: #555; font-style: italic; }
+.cie-box { display: flex; justify-content: space-between; align-items: center; margin: 8px 0 18px; }
+.cie-box .cie { color: #E1811B; font-weight: bold; font-size: 11pt; }
+.cie-box .fecha { color: #666; font-size: 9.5pt; }
+.section-title { font-size: 9.5pt; font-weight: bold; color: #444; text-transform: uppercase; letter-spacing: 1px; margin-top: 14px; margin-bottom: 6px; border-bottom: 1px solid #eee; padding-bottom: 3px; }
+.field-row { display: flex; padding: 2px 0; font-size: 9.5pt; }
+.field-row .label { width: 38%; color: #666; }
+.field-row .value { font-weight: bold; color: #1a1a1a; }
+.resumen-box { background: rgba(225, 129, 27, 0.08); border: 1px solid rgba(225, 129, 27, 0.25); border-radius: 6px; padding: 14px 18px; margin: 8px 0 16px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; text-align: center; }
+.resumen-box .item .label { font-size: 8pt; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
+.resumen-box .item .value { font-size: 15pt; font-weight: bold; color: #B86A12; margin-top: 3px; }
+.resumen-box .item .value.naranja { color: #E1811B; }
+table { width: 100%; border-collapse: collapse; margin: 6px 0 14px; font-size: 9.5pt; }
+thead { background: #E1811B; color: white; }
+th { padding: 7px 9px; text-align: left; font-weight: bold; }
+td { padding: 6px 9px; border-bottom: 1px solid #f0e0c8; }
+tbody tr:nth-child(even) { background: #fff8ed; }
+tfoot { background: #B86A12; color: white; font-weight: bold; }
+tfoot td { padding: 8px 9px; }
+.disclaimer { font-size: 9pt; color: #555; line-height: 1.45; margin: 10px 0 18px; }
+.bottom { display: flex; justify-content: space-between; align-items: flex-start; margin-top: 14px; }
+.qr-area { width: 42%; }
+.qr-area .qr-img { display: inline-block; vertical-align: middle; margin-right: 10px; }
+.qr-area .qr-img img { width: 90px; height: 90px; display: block; border: 1px solid #ddd; }
+.qr-area .qr-text { display: inline-block; vertical-align: middle; font-size: 9pt; color: #555; }
+.qr-area .qr-text strong { display: block; color: #1a1a1a; }
+.qr-area .qr-text code { font-size: 8pt; color: #888; word-break: break-all; }
+.firma-area { width: 55%; text-align: center; padding-top: 36px; }
+.firma-area .line { border-top: 1px solid #888; padding-top: 5px; }
+.firma-area .nombre { font-weight: bold; font-size: 11pt; color: #1a1a1a; text-transform: uppercase; }
+.firma-area .cargo { font-size: 9pt; color: #444; margin-top: 1px; }
+.firma-area .dni { font-size: 9pt; color: #666; }
+.firma-area .empresa { font-size: 9pt; color: #B86A12; font-weight: bold; margin-top: 3px; }
+.firma-area .nota { font-size: 7.5pt; color: #888; font-style: italic; margin-top: 4px; }
+.footer { margin-top: 18px; padding-top: 8px; border-top: 1px solid #ddd; font-size: 8.5pt; color: #666; text-align: center; }
+</style></head><body>
+<div class="no-print">
+  Ctrl+P → "Microsoft Print to PDF" para guardar como PDF.
+  <button onclick="window.print()">Imprimir / Guardar PDF</button>
+</div>
+
+<div class="watermark">MUESTRA · NO VALIDO</div>
+
+<div class="content">
+
+<div class="header">
+  <img src="https://rfpmvnoaqibqiqxrmheb.supabase.co/storage/v1/object/public/brand-assets/ecodrive/logo-final-naranja-trim.png" alt="EcoDrive+">
+  <div class="corp">
+    <strong>ECO DRIVE PLUS S.A.C.</strong><br>
+    RUC 20613413228<br>
+    Trujillo, La Libertad, Perú<br>
+    projas@ecodriveplus.com<br>
+    https://ecodriveplus.com
+  </div>
+</div>
+
+<h1>CONSTANCIA DE INGRESOS</h1>
+<div class="subtitle">Conductor afiliado a la plataforma Eco Drive Plus S.A.C.</div>
+
+<div class="cie-box">
+  <div></div>
+  <div style="text-align: right;">
+    <div class="cie">N° CIE-TRU-2026-00187</div>
+    <div class="fecha">Emitida: 22/5/2026</div>
+  </div>
+</div>
+
+<div class="section-title">Datos del conductor</div>
+<div class="field-row"><span class="label">Nombre completo:</span><span class="value">Juan Pérez Ramírez</span></div>
+<div class="field-row"><span class="label">DNI:</span><span class="value">12345678</span></div>
+<div class="field-row"><span class="label">Licencia de conducir:</span><span class="value">Q12345678</span></div>
+<div class="field-row"><span class="label">Placa vehículo:</span><span class="value">ABC-123</span></div>
+<div class="field-row"><span class="label">Afiliado desde:</span><span class="value">1/5/2025</span></div>
+<div class="field-row"><span class="label">Calificación promedio:</span><span class="value">4.87 / 5.00</span></div>
+
+<div class="section-title">Periodo acreditado</div>
+<div class="field-row"><span class="label">Rango:</span><span class="value">22/11/2025 — 22/5/2026 (6 meses)</span></div>
+<div class="field-row"><span class="label">Destinado a:</span><span class="value">Caja Municipal de Ahorro y Crédito de Trujillo</span></div>
+<div class="field-row"><span class="label">Finalidad:</span><span class="value">Acreditación de ingresos ante Caja Financiera</span></div>
+
+<div class="section-title">Resumen de ingresos · Últimos 6 meses</div>
+<div class="resumen-box">
+  <div class="item"><div class="label">Viajes totales</div><div class="value">3,485</div></div>
+  <div class="item"><div class="label">Ingreso bruto</div><div class="value">S/ 33.107,50</div></div>
+  <div class="item"><div class="label">Comisión 6.3%</div><div class="value naranja">S/ 2.085,77</div></div>
+  <div class="item"><div class="label">Neto percibido</div><div class="value">S/ 31.021,73</div></div>
+</div>
+<div style="font-size: 9pt; color: #666; margin-top: -8px; margin-bottom: 14px;"><em>Promedio mensual neto:</em> <strong>S/ 5.170,29</strong> · <em>Promedio diario:</em> <strong>S/ 172,34</strong> (180 días)</div>
+
+<div class="section-title">Detalle mensual</div>
+<table>
+  <thead><tr><th>MES</th><th>VIAJES</th><th>BRUTO (S/.)</th><th>COMISIÓN (S/.)</th><th>NETO (S/.)</th></tr></thead>
+  <tbody>
+<tr>
+<td>Dic 2025</td><td>580</td><td>S/. 5.510,00</td><td>S/. 347,13</td><td>S/. 5.162,87</td>
+</tr>
+<tr>
+<td>Ene 2026</td><td>590</td><td>S/. 5.605,00</td><td>S/. 353,12</td><td>S/. 5.251,88</td>
+</tr>
+<tr>
+<td>Feb 2026</td><td>555</td><td>S/. 5.272,50</td><td>S/. 332,17</td><td>S/. 4.940,33</td>
+</tr>
+<tr>
+<td>Mar 2026</td><td>595</td><td>S/. 5.652,50</td><td>S/. 356,11</td><td>S/. 5.296,39</td>
+</tr>
+<tr>
+<td>Abr 2026</td><td>600</td><td>S/. 5.700,00</td><td>S/. 359,10</td><td>S/. 5.340,90</td>
+</tr>
+<tr>
+<td>May 2026</td><td>565</td><td>S/. 5.367,50</td><td>S/. 338,15</td><td>S/. 5.029,35</td>
+</tr>
+  </tbody>
+  <tfoot>
+  <tr><td>TOTAL</td><td>3,485</td><td>S/. 33.107,50</td><td>S/. 2.085,77</td><td>S/. 31.021,73</td></tr>
+  </tfoot>
+</table>
+
+<div class="disclaimer">
+Esta constancia es válida para acreditar ingresos como conductor afiliado a Eco Drive Plus S.A.C. (RUC 20613413228) ante entidades financieras, cajas municipales, bancos y autoridades. Verifique la autenticidad escaneando el código QR — el documento <strong>CIE-TRU-2026-00187</strong> se valida en línea y expira a los 30 días desde la fecha de emisión.
+</div>
+
+<div class="bottom">
+  <div class="qr-area">
+    <div class="qr-img"><img src="data:image/png;base64,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" alt="QR"></div>
+    <div class="qr-text">
+      <strong>Escanee para verificar</strong>
+      <code>https://ecodriveplus.com/verificar/CIE-TRU-2026-00187</code>
+    </div>
+  </div>
+  <div class="firma-area">
+    <img src="https://rfpmvnoaqibqiqxrmheb.supabase.co/storage/v1/object/public/brand-assets/ecodrive/firma-sello-percy.png" alt="Firma y sello Percy Rojas - Gerente General Eco Drive Plus S.A.C." style="max-width: 230px; height: auto; display: block; margin: 0 auto;">
+  </div>
+</div>
+
+<div class="footer">
+  Emitido en Trujillo, 22 de mayo de 2026 · Documento CIE-TRU-2026-00187 · Hash SHA256 incluido en QR
+</div>
+
+</div>
+</body></html>

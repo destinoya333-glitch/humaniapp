@@ -61,11 +61,32 @@ async function getTicket(ticketId: string): Promise<TicketData | null> {
 
 const FONT = "system-ui, -apple-system, sans-serif";
 
+const LOGO_URL =
+  "https://rfpmvnoaqibqiqxrmheb.supabase.co/storage/v1/object/public/brand-assets/ecodrive/logo-oficial-tight.png";
+let _logoCache: string | null = null;
+async function getLogoSrc(): Promise<string | null> {
+  if (_logoCache) return _logoCache;
+  try {
+    const r = await fetch(LOGO_URL);
+    if (!r.ok) return null;
+    const b = Buffer.from(await r.arrayBuffer()).toString("base64");
+    _logoCache = "data:image/png;base64," + b;
+    return _logoCache;
+  } catch {
+    return null;
+  }
+}
+
+const STAR_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M50 2 L61.76 33.82 L95.65 35.17 L69.02 56.18 L78.21 88.83 L50 70 L21.79 88.83 L30.98 56.18 L4.35 35.17 L38.24 33.82 Z" fill="#E08821" stroke="#E08821" stroke-width="7" stroke-linejoin="round"/></svg>`;
+const STAR_SRC = "data:image/svg+xml;base64," + Buffer.from(STAR_SVG).toString("base64");
+
 export async function GET(req: NextRequest, ctx: { params: Promise<{ ticketId: string }> }) {
   const { ticketId } = await ctx.params;
   const isDemo = req.nextUrl.searchParams.get("demo") === "1";
   const t = isDemo ? DEMO_TICKET : await getTicket(ticketId);
   if (!t) return new Response("ticket not found", { status: 404 });
+
+  const logoSrc = await getLogoSrc();
 
   const origin = req.nextUrl.origin;
   const verifyUrl = `${origin}/club?verify=${t.id}`;
@@ -93,13 +114,35 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ ticketId: s
           fontFamily: FONT,
         }}
       >
+        {/* MARCA DE AGUA — estrella oficial al centro */}
+        <div
+          style={{
+            display: "flex",
+            position: "absolute",
+            top: -60,
+            left: -60,
+            width: 1080,
+            height: 1350,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={STAR_SRC} width={800} height={800} style={{ opacity: 0.07 }} alt="" />
+        </div>
+
         {/* HEADER */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ display: "flex", flexDirection: "column" }}>
-            <div style={{ display: "flex", fontSize: 52, fontWeight: 700, letterSpacing: -1 }}>
-              EcoDrive<span style={{ color: "#E08821" }}>+</span>
-            </div>
-            <div style={{ display: "flex", fontSize: 22, color: "#E08821", marginTop: 4, fontStyle: "italic" }}>
+            {logoSrc ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={logoSrc} width={300} height={73} alt="EcoDrive+" />
+            ) : (
+              <div style={{ display: "flex", fontSize: 52, fontWeight: 700, letterSpacing: -1 }}>
+                EcoDrive<span style={{ color: "#E08821" }}>+</span>
+              </div>
+            )}
+            <div style={{ display: "flex", fontSize: 22, color: "#E08821", marginTop: 10, fontStyle: "italic", letterSpacing: 1 }}>
               Club
             </div>
           </div>
@@ -121,8 +164,13 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ ticketId: s
           <div style={{ display: "flex", fontSize: 18, color: "#9a8f7a", letterSpacing: 4 }}>
             TU NUMERO DE SOCIO
           </div>
-          <div style={{ display: "flex", fontSize: 240, fontWeight: 800, color: "#E08821", lineHeight: 1, marginTop: 12, letterSpacing: -8 }}>
-            #{numero}
+          <div style={{ display: "flex", flexDirection: "row", alignItems: "flex-end", marginTop: 12 }}>
+            <div style={{ display: "flex", fontSize: 110, fontWeight: 700, color: "#E08821", marginRight: 16, marginBottom: 34 }}>
+              N°
+            </div>
+            <div style={{ display: "flex", fontSize: 230, fontWeight: 800, color: "#E08821", lineHeight: 1, letterSpacing: -6 }}>
+              {numero}
+            </div>
           </div>
         </div>
 

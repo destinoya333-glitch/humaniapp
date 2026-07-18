@@ -1,15 +1,32 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 
 export const metadata: Metadata = {
   title: "TuCuentoYa — Cuentos infantiles personalizados por WhatsApp · Audio IA",
   description:
-    "Tu hijo es el HÉROE del cuento. Dile a Coqui 🦊 quién es, el escenario y la duración. Recibe audio narrado en voz peruana en menos de 60 segundos. Desde S/ 2.",
+    "Tu hijo es el HÉROE del cuento. Dile a Rex quién es, el escenario y la duración. Recibe audio narrado en voz peruana en menos de 60 segundos. Desde S/ 2.",
+  openGraph: {
+    title: "TuCuentoYa — Cuentos infantiles personalizados",
+    description:
+      "Tu hijo es el HÉROE del cuento. Audio IA en voz peruana, entregado por WhatsApp en 60 segundos. Desde S/2.",
+    images: ["/cuento/rex-avatar.jpg"],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "TuCuentoYa — El cuento donde tu hijo es el héroe",
+    description: "Cuentos infantiles personalizados por audio IA. Desde S/2 por WhatsApp.",
+    images: ["/cuento/rex-avatar.jpg"],
+  },
+  icons: {
+    icon: "/cuento/rex-avatar.jpg",
+  },
 };
 
 const features = [
   {
-    icon: "🦊",
+    icon: "🐕",
     title: "100% personalizado",
     desc: "El niño es el protagonista, con su familia real (papá, mamá, abuelos) en el escenario que tú elijas.",
   },
@@ -42,7 +59,7 @@ const features = [
 
 const sampleChat = [
   { from: "user", text: "Hola, quiero un cuento para mi hijo" },
-  { from: "bot", text: "¡Hola! 🦊 Soy Coqui, tu narrador. ¿Cómo se llama tu peque?" },
+  { from: "bot", text: "¡Hola! 🐕 Soy Rex, tu narrador. ¿Cómo se llama tu peque?" },
   { from: "user", text: "Mateo, 5 años" },
   { from: "bot", text: "¡Genial! ¿Dónde quieres que ocurra la historia y quiénes salen?" },
   {
@@ -51,7 +68,7 @@ const sampleChat = [
   },
   {
     from: "bot",
-    text: "🦊 ¿De cuánto quieres el cuento?\n\n*2 min* — S/2\n*3 min* — S/3 ⭐\n*5 min* — S/5",
+    text: "🐕 ¿De cuánto quieres el cuento?\n\n*2 min* — S/2\n*3 min* — S/3 ⭐\n*5 min* — S/5",
   },
   { from: "user", text: "3" },
   {
@@ -128,9 +145,19 @@ export default function TuCuentoYaPage() {
             ← Volver a ActivosYA
           </Link>
 
+          <div className="flex justify-center mb-6">
+            <Image
+              src="/cuento/rex-avatar.jpg"
+              alt="Rex, el zorrito narrador"
+              width={160}
+              height={160}
+              priority
+              className="drop-shadow-2xl"
+            />
+          </div>
+
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-300 text-sm mb-6">
-            <span className="text-lg">🦊</span>
-            <span>Hola, soy Coqui · Tu narrador IA</span>
+            <span>Hola, soy Rex · Tu narrador IA</span>
           </div>
 
           <h1 className="text-5xl md:text-7xl font-bold tracking-tight leading-[1.05] mb-6">
@@ -153,7 +180,7 @@ export default function TuCuentoYaPage() {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <a
-              href="https://wa.me/51994810242?text=Hola%20Coqui%2C%20quiero%20mi%20primer%20cuento%20gratis"
+              href="https://wa.me/51914200642?text=Hola%20Rex%2C%20quiero%20mi%20primer%20cuento%20gratis"
               target="_blank"
               rel="noopener noreferrer"
               className="w-full sm:w-auto px-8 py-4 text-base font-semibold bg-amber-500 text-black rounded-full hover:bg-amber-400 transition-all shadow-lg shadow-amber-500/30"
@@ -161,10 +188,10 @@ export default function TuCuentoYaPage() {
               Probar gratis por WhatsApp →
             </a>
             <Link
-              href="/cuento/precios"
+              href="/cuento/demo"
               className="w-full sm:w-auto px-8 py-4 text-base font-medium border border-zinc-700 text-zinc-300 rounded-full hover:border-amber-500/40 hover:text-white transition-all"
             >
-              Ver todos los planes
+              Ver ejemplos
             </Link>
           </div>
 
@@ -246,11 +273,15 @@ export default function TuCuentoYaPage() {
 
           <div className="rounded-3xl border border-zinc-800 bg-[#0F0F0F] p-5 shadow-2xl">
             <div className="flex items-center gap-3 pb-3 border-b border-zinc-800 mb-4">
-              <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center text-xl">
-                🦊
-              </div>
+              <Image
+                src="/cuento/rex-avatar.jpg"
+                alt="Rex"
+                width={40}
+                height={40}
+                className="rounded-full bg-amber-500/20"
+              />
               <div>
-                <p className="text-sm font-semibold">Coqui · TuCuentoYa</p>
+                <p className="text-sm font-semibold">Rex · TuCuentoYa</p>
                 <p className="text-xs text-emerald-400">● en línea</p>
               </div>
             </div>
@@ -317,7 +348,7 @@ export default function TuCuentoYaPage() {
                   ))}
                 </ul>
                 <a
-                  href="https://wa.me/51994810242?text=Hola%20Coqui"
+                  href="https://wa.me/51914200642?text=Hola%20Rex"
                   target="_blank"
                   rel="noopener noreferrer"
                   className={`block text-center px-6 py-3 rounded-full font-semibold transition-all ${
@@ -371,7 +402,14 @@ export default function TuCuentoYaPage() {
       {/* CTA final */}
       <section className="px-6 py-16 bg-gradient-to-br from-amber-500/10 via-pink-500/5 to-transparent border-t border-zinc-800">
         <div className="mx-auto max-w-3xl text-center">
-          <div className="text-6xl mb-6">🦊</div>
+          <div className="flex justify-center mb-6">
+            <Image
+              src="/cuento/rex-avatar.jpg"
+              alt="Rex"
+              width={120}
+              height={120}
+            />
+          </div>
           <h2 className="text-3xl md:text-5xl font-bold mb-4">
             ¿Listo para crear el primer cuento?
           </h2>
@@ -380,12 +418,12 @@ export default function TuCuentoYaPage() {
             dime el nombre de tu peque.
           </p>
           <a
-            href="https://wa.me/51994810242?text=Hola%20Coqui%2C%20quiero%20mi%20primer%20cuento%20gratis"
+            href="https://wa.me/51914200642?text=Hola%20Rex%2C%20quiero%20mi%20primer%20cuento%20gratis"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-block px-10 py-5 text-lg font-semibold bg-amber-500 text-black rounded-full hover:bg-amber-400 transition-all shadow-lg shadow-amber-500/30"
           >
-            Escribir a Coqui ahora →
+            Escribir a Rex ahora →
           </a>
           <p className="text-xs text-zinc-500 mt-6">
             Activo digital de{" "}

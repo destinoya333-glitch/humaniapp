@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { DESTINO_WA_E164, waUrl } from "@/lib/activosya/contact";
 
 export const metadata: Metadata = {
   title: "TuDestinoYa — Consultas IA por WhatsApp · Tarot, astrología y más",
@@ -75,7 +76,7 @@ export default function TuDestinoYaPage() {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <a
-              href="https://wa.me/51961347233?text=Hola"
+              href={waUrl(DESTINO_WA_E164, "Hola")}
               target="_blank"
               rel="noopener noreferrer"
               className="w-full sm:w-auto px-8 py-4 text-base font-semibold bg-amber-500 text-black rounded-full hover:bg-amber-400 transition-all glow-gold"
@@ -227,7 +228,7 @@ export default function TuDestinoYaPage() {
               </div>
             </div>
             <a
-              href="https://wa.me/51961347233?text=Quiero%20el%20Plan%20VIP"
+              href={waUrl(DESTINO_WA_E164, "Quiero el Plan VIP")}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-8 py-3 bg-amber-500 text-black font-semibold rounded-full hover:bg-amber-400 transition-colors"

@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ACTIVOS, getActivo, getAllSlugs, type Status } from "@/lib/activos";
+import AurumShell from "@/app/components/AurumShell";
+import { ProductSchema, BreadcrumbSchema } from "@/app/components/SchemaOrg";
 
 type Params = Promise<{ slug: string }>;
 
@@ -16,6 +18,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   return {
     title: `${activo.name} — Data room · ActivosYA`,
     description: activo.shortDescription,
+    alternates: { canonical: `https://activosya.com/activos/${slug}` },
   };
 }
 
@@ -30,8 +33,22 @@ export default async function ActivoPage({ params }: { params: Params }) {
   const activo = getActivo(slug);
   if (!activo) notFound();
 
+  const activoUrl = `https://activosya.com/activos/${activo.slug}`;
+
   return (
-    <main className="min-h-screen bg-[#0A0A0A] text-white">
+    <AurumShell footer={false}>
+    <main className="min-h-screen">
+      <ProductSchema
+        name={activo.name}
+        description={activo.shortDescription || activo.overview}
+        url={activoUrl}
+      />
+      <BreadcrumbSchema
+        items={[
+          { name: "Catálogo", url: "https://activosya.com/#catalogo" },
+          { name: activo.name, url: activoUrl },
+        ]}
+      />
       {/* Hero */}
       <section className="relative px-6 pt-24 pb-16 overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
@@ -381,5 +398,6 @@ export default async function ActivoPage({ params }: { params: Params }) {
         </div>
       </footer>
     </main>
+    </AurumShell>
   );
 }

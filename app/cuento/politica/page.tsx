@@ -76,14 +76,14 @@ export default function PoliticaCuentoPage() {
             <li>El nombre y edad del peque se usan SOLO para generar el cuento.</li>
             <li>No compartimos datos con terceros, ni con anunciantes.</li>
             <li>El audio se guarda 90 días por si quieres re-descargarlo, luego se elimina.</li>
-            <li>Puedes pedir eliminación total escribiendo &quot;borra mis datos&quot; a Coqui.</li>
+            <li>Puedes pedir eliminación total escribiendo &quot;borra mis datos&quot; a Rex.</li>
           </ul>
 
           <h2 className="text-2xl font-bold mt-10 mb-4 text-white">
             ¿Tienes una sugerencia o reportar contenido?
           </h2>
           <p>
-            Escríbenos al WhatsApp de Coqui o a{" "}
+            Escríbenos al WhatsApp de Rex o a{" "}
             <a
               href="mailto:contacto@activosya.com"
               className="text-amber-400 underline"

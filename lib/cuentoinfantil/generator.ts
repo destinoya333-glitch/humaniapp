@@ -15,7 +15,7 @@ import {
   type ContextoCuento,
   type DuracionCuento,
 } from "./prompts";
-import { sintetizar, costoEstimadoUSD, type SegmentoNarracion } from "./azure-tts";
+import { sintetizar, costoEstimadoUSD, type SegmentoNarracion } from "./openai-tts";
 import { mezclarConAmbient, detectarAmbient } from "./audio-mixer";
 import { subirAudio } from "./storage";
 import { actualizarPedido, registrarMetricaCuento, supabase } from "./db";
@@ -81,6 +81,16 @@ export async function generarCuento(opts: {
 
     if (!Array.isArray(cuento.narracion) || cuento.narracion.length === 0) {
       throw new Error("Narración vacía o malformada");
+    }
+
+    // Forzar cierre clásico: si el ultimo segmento no contiene "colorin colorado", agregarlo.
+    const ultimo = cuento.narracion[cuento.narracion.length - 1];
+    const tieneColorin = /colorin colorado|color[íi]n colorado/i.test(ultimo?.texto ?? "");
+    if (!tieneColorin) {
+      cuento.narracion.push({
+        voz: "narrador",
+        texto: "Y colorín colorado... este cuento se ha terminado.",
+      });
     }
 
     // ─── Safety post-generación: si hay red flags, fallar el cuento ────

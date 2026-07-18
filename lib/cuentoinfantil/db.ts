@@ -111,15 +111,25 @@ export async function upsertConversacion(
   celular: string,
   patch: Partial<Conversacion>,
 ): Promise<void> {
-  await supabase.from("tci_conversaciones").upsert(
-    {
-      celular,
-      ...patch,
-      ultimo_mensaje_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: "celular" },
-  );
+  // CRITICO: si solo actualizamos algunas columnas, primero leemos el row existente
+  // y hacemos merge. Sin esto, las columnas no incluidas en `patch` se pisan con
+  // NULL/default (especialmente `contexto`).
+  const { data: existing } = await supabase
+    .from("tci_conversaciones")
+    .select("*")
+    .eq("celular", celular)
+    .maybeSingle();
+
+  const merged = {
+    celular,
+    estado: existing?.estado ?? "inicio",
+    contexto: existing?.contexto ?? {},
+    ...patch, // patch sobrescribe lo que venga
+    ultimo_mensaje_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+
+  await supabase.from("tci_conversaciones").upsert(merged, { onConflict: "celular" });
 }
 
 export async function resetConversacion(celular: string): Promise<void> {

@@ -9,7 +9,7 @@ const tech = [
 
 export default function Why() {
   return (
-    <section className="py-24 px-6">
+    <section id="por-que" className="py-24 px-6 scroll-mt-24">
       <div className="mx-auto max-w-6xl">
         <div className="text-center mb-16">
           <p className="text-amber-400 text-sm font-medium mb-3 tracking-widest uppercase">

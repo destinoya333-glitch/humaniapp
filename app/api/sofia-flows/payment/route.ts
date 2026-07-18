@@ -31,10 +31,10 @@ export const runtime = "nodejs";
 
 // Pricing — single source of truth (en sync con landing page.tsx)
 const PRICING: Record<string, Record<string, number>> = {
-  regular: { monthly: 39, yearly: 349 },
+  regular: { monthly: 30, yearly: 299 },
   premium: { monthly: 89, yearly: 799 },
   // Legacy keys aliased to new ones (backwards compat)
-  cuna: { monthly: 39, yearly: 349 },
+  cuna: { monthly: 30, yearly: 299 },
   cuna_vip: { monthly: 89, yearly: 799 },
 };
 

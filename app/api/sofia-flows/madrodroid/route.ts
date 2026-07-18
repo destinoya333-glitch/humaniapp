@@ -62,8 +62,8 @@ export async function POST(req: NextRequest) {
 
   await log("PARSED", { monto, op: operacion });
 
-  // Sofia montos validos: 39, 89, 349, 799
-  const sofiaMontos = [39, 89, 349, 799];
+  // Sofia montos validos: 30, 89, 299, 799
+  const sofiaMontos = [30, 89, 299, 799];
   if (!sofiaMontos.includes(monto)) {
     await log("MONTO_NO_SOFIA", { monto });
     return NextResponse.json({ ok: false, reason: "monto fuera del rango Sofia", monto });

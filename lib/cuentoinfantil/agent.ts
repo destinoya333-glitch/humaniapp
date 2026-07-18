@@ -121,6 +121,14 @@ export async function procesarMensaje(opts: {
     conv = { celular: telefono, estado: "inicio", contexto: {}, ultimo_mensaje_at: "", updated_at: "" };
   }
 
+  // Si el último estado fue "entregado", cualquier mensaje nuevo inicia
+  // un cuento fresco. Sin esto el bot queda atrapado en el estado terminal
+  // y cae en fallback de bienvenida sin permitir avanzar.
+  if (conv.estado === "entregado") {
+    await resetConversacion(telefono);
+    conv = { celular: telefono, estado: "inicio", contexto: {}, ultimo_mensaje_at: "", updated_at: "" };
+  }
+
   const ctx = (conv.contexto ?? {}) as Record<string, unknown>;
   const estado: EstadoConv = (conv.estado as EstadoConv) ?? "inicio";
 
@@ -142,6 +150,17 @@ export async function procesarMensaje(opts: {
   if (/^(recarga|recargar|wallet|saldo)$/i.test(lower)) {
     const w = await resumenWallet(telefono);
     return { reply: replyRecarga(w.balance, w.bonus) };
+  }
+
+  // Comando: ver historial de cuentos pagados + permitir re-enviar
+  if (/^(mis cuentos|mi historial|historial|cuentos pagados)$/i.test(lower)) {
+    return { reply: await replyHistorial(telefono) };
+  }
+
+  // Comando: reenviar un cuento especifico — "reenviar abc123" o "audio abc123"
+  const reenvioMatch = lower.match(/^(reenviar|reenvio|audio|enviar)\s+([a-f0-9-]{6,})/i);
+  if (reenvioMatch) {
+    return await reenviarCuento(telefono, reenvioMatch[2]);
   }
 
   // Extrae intent + datos del mensaje
@@ -168,7 +187,7 @@ export async function procesarMensaje(opts: {
       if (!ctx.escenario) {
         await upsertConversacion(telefono, { estado: "recolectando_escenario" });
         return {
-          reply: `¡Genial! Un cuento para *${extr.nombre_hijo}* 🦊\n\n¿Dónde quieres que ocurra la historia? Cuéntame el escenario o trama (ej: "un bosque con un lobo y su papá lo salva", "una nave espacial", "una sirena en el mar"). Puedes mandarme texto o audio.`,
+          reply: `¡Genial! Un cuento para *${extr.nombre_hijo}* 🦮\n\n¿Dónde quieres que ocurra la historia? Cuéntame el escenario o trama (ej: "un bosque con un lobo y su papá lo salva", "una nave espacial", "una sirena en el mar").\n\n_Puedes responderme por texto o enviándome un audio_ 🎙️`,
         };
       }
       if (!ctx.duracion) {
@@ -184,13 +203,29 @@ export async function procesarMensaje(opts: {
 
   // ─── ESTADO: recolectando_hijo ──────────────────────────────────
   if (estado === "recolectando_hijo") {
-    if (!extr.nombre_hijo) {
+    // FALLBACK: si el extractor LLM no detecto nombre pero el mensaje parece un nombre
+    // (texto corto, sin numeros, primera palabra), usarlo. Evita loop de "vuelve a preguntar".
+    let nombreFinal = extr.nombre_hijo;
+    if (!nombreFinal) {
+      const limpio = mensaje.trim().replace(/[^\w\sñáéíóúÁÉÍÓÚñÑ-]/g, "");
+      const palabra1 = limpio.split(/\s+/)[0] || "";
+      const esNombrePlausible =
+        palabra1.length >= 2 &&
+        palabra1.length <= 25 &&
+        !/^\d+$/.test(palabra1) &&
+        !/^(hola|si|no|ok|menu|gracias|cuento|audio)$/i.test(palabra1);
+      if (esNombrePlausible) {
+        // Capitalizar primera letra
+        nombreFinal = palabra1.charAt(0).toUpperCase() + palabra1.slice(1).toLowerCase();
+      }
+    }
+    if (!nombreFinal) {
       return {
-        reply: `¿Cómo se llama tu peque? 🦊 Y si quieres, dime también su edad y si es niño o niña.`,
+        reply: `¿Cómo se llama tu peque? 🦮 Y si quieres, dime también su edad y si es niño o niña.\n\n_Puedes responderme por texto o enviándome un audio_ 🎙️`,
       };
     }
     ctx.hijo = {
-      nombre: extr.nombre_hijo,
+      nombre: nombreFinal,
       edad: extr.edad_hijo,
       genero: extr.genero_hijo,
     };
@@ -200,7 +235,7 @@ export async function procesarMensaje(opts: {
       estado: "recolectando_escenario",
     });
     return {
-      reply: `Anotado: *${extr.nombre_hijo}*${extr.edad_hijo ? ` (${extr.edad_hijo} años)` : ""} 🦊\n\nAhora cuéntame: ¿dónde se desarrolla el cuento? ¿Quiénes salen además de ${extr.nombre_hijo}? (papá, mamá, abuela, mascota...).\n\nEjemplo: _"En un bosque, llega un lobo y yo (su papá) llego a salvarlo"_`,
+      reply: `Anotado: *${nombreFinal}*${extr.edad_hijo ? ` (${extr.edad_hijo} años)` : ""} 🦮\n\nAhora cuéntame: ¿dónde se desarrolla el cuento? ¿Quiénes salen además de ${nombreFinal}? (papá, mamá, abuela, mascota...).\n\nEjemplo: _"En un bosque, llega un lobo y yo (su papá) llego a salvarlo"_\n\n_Puedes responderme por texto o mandándome un audio_ 🎙️`,
     };
   }
 
@@ -245,7 +280,7 @@ export async function procesarMensaje(opts: {
     }
     if (extr.intent === "cancelar" || /^(no|cancela|cancelar)$/i.test(lower)) {
       await resetConversacion(telefono);
-      return { reply: `Cancelado. Cuando quieras otro cuento, escríbeme *menú* 🦊` };
+      return { reply: `Cancelado. Cuando quieras otro cuento, escríbeme *menú* 🦮` };
     }
     return await confirmarPedido(telefono, ctx);
   }
@@ -255,14 +290,14 @@ export async function procesarMensaje(opts: {
     return {
       reply:
         `Estoy esperando tu Yape de S/${ctx.monto_esperado ?? "?"} a *998 102 258*. ` +
-        `Cuando lo detectemos, genero tu cuento automáticamente 🦊\n\n` +
+        `Cuando lo detectemos, genero tu cuento automáticamente 🦮\n\n` +
         `Si ya pagaste, envíame la captura.`,
     };
   }
 
   if (estado === "generando") {
     return {
-      reply: `🦊 Tu cuento se está generando, dame unos 60 segundos más... ✨`,
+      reply: `🦮 Tu cuento se está generando, dame unos 60 segundos más... ✨`,
     };
   }
 
@@ -291,7 +326,7 @@ async function confirmarPedido(
   await upsertConversacion(telefono, { estado: "confirmando_pedido" });
   return {
     reply:
-      `🦊 *Confirmemos el cuento*\n\n` +
+      `🦮 *Confirmemos el cuento*\n\n` +
       `Protagonista: *${hijo.nombre}*${hijo.edad ? ` (${hijo.edad} años)` : ""}\n` +
       `Escenario: ${escenario.slice(0, 200)}\n` +
       `Duración: *${duracion} minutos*\n` +
@@ -341,9 +376,9 @@ async function intentarCobrarYGenerar(
       });
       return {
         reply:
-          `🦊 No tienes saldo suficiente.\n\n` +
+          `🦮 No tienes saldo suficiente.\n\n` +
           `Yapea *S/${precio}* a *998 102 258* (Percy Roj*) y envíame la captura.\n\n` +
-          `O recarga tu wallet con bonus 🎁 (escribe *recarga*).`,
+          `O recarga tu billetera con bonus 🎁 (escribe *recarga*).`,
       };
     }
   }
@@ -372,7 +407,7 @@ async function intentarCobrarYGenerar(
   // Disparar generación en background (el caller maneja el envío del audio)
   return {
     audio_pedido_id: pedido.id,
-    reply: `🦊 ¡Perfecto! Estoy creando el cuento de *${hijo.nombre}*... Dame ~60 segundos ✨`,
+    reply: `🦮 ¡Perfecto! Estoy creando el cuento de *${hijo.nombre}*... Dame ~60 segundos ✨`,
   };
 }
 
@@ -381,9 +416,10 @@ async function intentarCobrarYGenerar(
 // ════════════════════════════════════════════════════════════
 function replyBienvenida(nombreCliente?: string | null): string {
   return (
-    `¡Hola${nombreCliente ? `, ${nombreCliente}` : ""}! 🦊 Soy *Coqui*, tu narrador de cuentos personalizados.\n\n` +
+    `¡Hola${nombreCliente ? `, ${nombreCliente}` : ""}! 🦮 Soy *Rex*, tu golden retriever narrador de cuentos personalizados.\n\n` +
     `Te creo un cuento donde tu hijo(a) es el HÉROE 💫\n\n` +
-    `Para empezar, cuéntame: *¿cómo se llama tu peque?* (y su edad si quieres).`
+    `Para empezar, cuéntame: *¿cómo se llama tu peque?* (y su edad si quieres).\n\n` +
+    `_Puedes responderme por texto o mandándome un audio_ 🎙️`
   );
 }
 
@@ -392,13 +428,14 @@ function replyPrecios(): string {
     `📋 *Precios TuCuentoYa*\n\n` +
     `*Cuentos sueltos:*\n` +
     `🌙 2 min — S/2\n` +
-    `🦊 3 min — S/3 ⭐ (más popular)\n` +
+    `🦮 3 min — S/3 ⭐ (más popular)\n` +
     `🐉 5 min — S/5\n\n` +
-    `*Wallet recargable (con bonus):*\n` +
-    `Chica S/15 → 6 cuentos\n` +
-    `Media S/30 → 12 cuentos\n` +
-    `Grande S/50 → 21 cuentos\n` +
-    `Mágica S/100 → 45 cuentos\n\n` +
+    `*Billetera recargable (con bonus):*\n` +
+    `Chica S/15 → 6 cuentos de 3 min c/u\n` +
+    `Media S/30 → 12 cuentos de 3 min c/u\n` +
+    `Grande S/50 → 21 cuentos de 3 min c/u\n` +
+    `Mágica S/100 → 45 cuentos de 3 min c/u\n\n` +
+    `_Puedes elegir 2, 3 o 5 min por cuento — el saldo se ajusta._\n\n` +
     `*VIP mensual (ahorro hasta 80%):*\n` +
     `🌟 Estrella S/18/mes → 20 cuentos\n` +
     `🪄 Mágico S/30/mes → 50 cuentos + música personalizada\n\n` +
@@ -427,21 +464,103 @@ function replyVIP(): string {
 
 function replyRecarga(balance: number, bonus: number): string {
   return (
-    `💰 *Tu Wallet*\n\n` +
+    `💰 *Tu Billetera*\n\n` +
     `Saldo: *S/${balance.toFixed(2)}*\n` +
     `Cuentos bonus: *${bonus}*\n\n` +
     `*Recargar (Yape a 998 102 258):*\n` +
-    `S/15 → 5 cuentos + 1 bonus = 6 cuentos\n` +
-    `S/30 → 10 + 2 bonus = 12 cuentos\n` +
-    `S/50 → 16 + 5 bonus = 21 cuentos\n` +
-    `S/100 → 33 + 12 bonus = 45 cuentos\n\n` +
+    `S/15 → 5 + 1 bonus = 6 cuentos de 3 min c/u\n` +
+    `S/30 → 10 + 2 bonus = 12 cuentos de 3 min c/u\n` +
+    `S/50 → 16 + 5 bonus = 21 cuentos de 3 min c/u\n` +
+    `S/100 → 33 + 12 bonus = 45 cuentos de 3 min c/u\n\n` +
+    `_Cada cuento puede ser de 2 min (S/2), 3 min (S/3) o 5 min (S/5) — elegís al crearlo._\n\n` +
     `Envíame la captura después de yapear.`
   );
 }
 
+// ════════════════════════════════════════════════════════════
+// HISTORIAL DE CUENTOS PAGADOS — re-acceso ilimitado
+// ════════════════════════════════════════════════════════════
+async function replyHistorial(telefono: string): Promise<string> {
+  const { supabase } = await import("./db");
+  const { data: pedidos } = await supabase
+    .from("tci_pedidos")
+    .select("id, duracion_min, audio_url, monto, fuente_pago, personajes, created_at")
+    .eq("celular", telefono)
+    .not("audio_url", "is", null)
+    .order("created_at", { ascending: false })
+    .limit(10);
+
+  const arr = (pedidos || []) as Array<{
+    id: string;
+    duracion_min: number;
+    audio_url: string;
+    monto: number;
+    personajes: unknown;
+    created_at: string;
+  }>;
+
+  if (arr.length === 0) {
+    return (
+      `🦮 Aún no tienes cuentos generados.\n\n` +
+      `Escríbeme *menú* para crear el primero. La promo de bienvenida es *primer cuento de 2 min GRATIS* 🎁`
+    );
+  }
+
+  const lines: string[] = [`🦮 *Tus últimos cuentos*\n`];
+  for (const p of arr) {
+    const personajes = Array.isArray(p.personajes) ? p.personajes : [];
+    const protagonista = (personajes[0] as { nombre?: string })?.nombre || "—";
+    const fecha = new Date(p.created_at).toLocaleDateString("es-PE", {
+      day: "2-digit",
+      month: "short",
+      year: "2-digit",
+    });
+    const idCorto = p.id.slice(0, 8);
+    lines.push(`*${protagonista}* · ${p.duracion_min} min · ${fecha}`);
+    lines.push(`   Reescuchar: escribe *audio ${idCorto}*`);
+    lines.push("");
+  }
+  lines.push(
+    `_Tus cuentos quedan guardados de por vida en la plataforma. Pídelos cuando quieras._`
+  );
+  return lines.join("\n");
+}
+
+async function reenviarCuento(
+  telefono: string,
+  idCorto: string,
+): Promise<ResultadoProcesar> {
+  const { supabase } = await import("./db");
+  const { data: pedidos } = await supabase
+    .from("tci_pedidos")
+    .select("id, audio_url, duracion_min, personajes")
+    .eq("celular", telefono)
+    .like("id", `${idCorto}%`)
+    .not("audio_url", "is", null)
+    .limit(1);
+
+  const pedido = (pedidos || [])[0] as
+    | { id: string; audio_url: string; duracion_min: number; personajes: unknown }
+    | undefined;
+
+  if (!pedido) {
+    return {
+      reply:
+        `🦮 No encuentro un cuento con ID ${idCorto}. Escribe *mis cuentos* para ver tu historial completo.`,
+    };
+  }
+
+  const personajes = Array.isArray(pedido.personajes) ? pedido.personajes : [];
+  const protagonista = (personajes[0] as { nombre?: string })?.nombre || "tu peque";
+  return {
+    audio_pedido_id: pedido.id,
+    reply: `🦮 Aquí va el cuento de *${protagonista}* (${pedido.duracion_min} min) otra vez 🎧`,
+  };
+}
+
 function replyElegirDuracion(): string {
   return (
-    `🦊 *¿De cuánto quieres el cuento?*\n\n` +
+    `🦮 *¿De cuánto quieres el cuento?*\n\n` +
     `*2* — Cuento Dormir (2 min) — S/2\n` +
     `*3* — Cuento Aventura (3 min) — S/3 ⭐\n` +
     `*5* — Cuento Saga (5 min) — S/5\n\n` +

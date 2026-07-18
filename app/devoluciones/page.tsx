@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import LegalLayout from "@/app/components/LegalLayout";
+import AurumShell from "@/app/components/AurumShell";
 
 export const metadata: Metadata = {
   title: "Política de Devoluciones",
@@ -9,6 +10,7 @@ export const metadata: Metadata = {
 
 export default function DevolucionesPage() {
   return (
+    <AurumShell footer={false}>
     <LegalLayout
       title="Política de Devoluciones"
       subtitle="Sin sorpresas, sin letra chica. Así funcionan las devoluciones en ActivosYA según el tipo de servicio."
@@ -61,8 +63,8 @@ export default function DevolucionesPage() {
       </ul>
       <h3>2.4 Cómo solicitar la devolución</h3>
       <p>
-        Envíanos por WhatsApp <a href="https://wa.me/51961347233">+51 961 347 233</a> o
-        por email los siguientes datos:
+        Envíanos por email <a href="mailto:contacto@activosya.com">contacto@activosya.com</a> los
+        siguientes datos:
       </p>
       <ul>
         <li>Activo adquirido y fecha de lanzamiento técnico.</li>
@@ -103,7 +105,7 @@ export default function DevolucionesPage() {
       </ul>
       <h3>3.3 Cómo solicitar el reembolso B2C</h3>
       <p>
-        Escríbenos por WhatsApp <a href="https://wa.me/51961347233">+51 961 347 233</a> con:
+        Escríbenos por email <a href="mailto:contacto@activosya.com">contacto@activosya.com</a> con:
       </p>
       <ul>
         <li>Nombre y número con el que pagaste.</li>
@@ -149,11 +151,12 @@ export default function DevolucionesPage() {
 
       <h2>8. Contacto</h2>
       <p>
-        Para cualquier reclamo o solicitud de reembolso:{" "}
-        <a href="https://wa.me/51961347233">WhatsApp +51 961 347 233</a> o el{" "}
+        Para cualquier reclamo o solicitud de reembolso: email{" "}
+        <a href="mailto:contacto@activosya.com">contacto@activosya.com</a> o el{" "}
         <a href="/#contacto">formulario de contacto</a>. Respondemos en
         menos de 24 horas hábiles.
       </p>
     </LegalLayout>
+    </AurumShell>
   );
 }

@@ -8,6 +8,7 @@ import CountUp from "./_design/CountUp";
 import TrujilloClock from "./_design/TrujilloClock";
 import ChatMockup from "./_design/ChatMockup";
 import CinematicImage from "./_design/CinematicImage";
+import { MobileApplicationSchema, FaqSchema } from "../components/SchemaOrg";
 
 export const metadata: Metadata = {
   title: "EcoDrive+ — La app de Trujillo con agente IA",
@@ -97,6 +98,18 @@ const FAQS: Array<[string, React.ReactNode]> = [
   ["¿Mi familia puede ver dónde estoy en el viaje?", <>Sí. Al pedir el viaje recibís link de seguimiento en vivo que podés compartir. Ven la ubicación en tiempo real hasta que llegues. Si tienen la app pasajero, ven el mapa con más detalle.</>],
 ];
 
+// Versiones en texto plano de las FAQ para el FAQPage JSON-LD (citable por
+// buscadores y motores generativos). Mantener sincronizadas con FAQS.
+const FAQ_PLAIN: Array<{ q: string; a: string }> = [
+  { q: "¿Necesito descargar la app?", a: "Sí, la app es el producto principal: ahí vive el agente IA Eco, el mapa GPS en vivo, BilleteraEco, el ranking y los sorteos del Pass Club. Si solo quieres pedir un viaje rápido también puedes escribir al WhatsApp 994 810 242, donde el bot te atiende 24/7. Para choferes la app es obligatoria." },
+  { q: "¿Qué es el Pass EcoDrive+ Club?", a: "Una membresía de S/.30 por edición. Con un solo pago participas en el sorteo del auto (la Edición #1 es un BYD Yuan Pro 2023), sumas tickets bonus por cada viaje, obtienes descuento en BilleteraEco y prioridad en zonas de alta demanda. Si renuevas, el siguiente Pass te cuesta S/.27." },
+  { q: "¿Cómo pago el viaje?", a: "Tres opciones: Yape directo al chofer, BilleteraEco dentro de la app (con bono de S/.5 en el primer viaje) o efectivo." },
+  { q: "¿Qué pasa si el chofer no llega?", a: "Eco rastrea cada viaje. Si el chofer demora o cancela, te reasignamos otro automáticamente y enviamos una compensación a tu BilleteraEco." },
+  { q: "¿Cómo me registro como chofer?", a: "Descarga la app chofer EcoDrive+ y completa tu perfil: DNI, foto del vehículo, SOAT y revisión técnica. La aprobación toma de 24 a 48 horas. También puedes escribir al WhatsApp 994 810 242 para que te guíen en el proceso." },
+  { q: "¿La comisión 6.3% incluye algo más?", a: "No. 6.3% es lo único que EcoDrive+ descuenta por viaje: sin pagos por uso, sin suscripciones y sin cargos sorpresa." },
+  { q: "¿Mi familia puede ver dónde estoy en el viaje?", a: "Sí. Al pedir el viaje recibes un link de seguimiento en vivo que puedes compartir; verán tu ubicación en tiempo real hasta que llegues. Con la app pasajero ven el mapa con más detalle." },
+];
+
 export default function EcoDrivePlusPage() {
   return (
     <main className="relative min-h-screen overflow-hidden">
@@ -120,23 +133,44 @@ export default function EcoDrivePlusPage() {
         </>
       )}
 
-      <Script id="schema-org" type="application/ld+json" strategy="afterInteractive">
-        {JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "Organization",
-          name: "EcoDrive+",
-          url: "https://ecodriveplus.com",
-          logo: "https://rfpmvnoaqibqiqxrmheb.supabase.co/storage/v1/object/public/brand-assets/ecodrive/logo-final-naranja-trim.png",
-          description: "App de transporte de última generación con agente IA. Pass Club S/.30 por edición con sorteo del carro + beneficios reales. WhatsApp también disponible. Comisión 6.3% para choferes — la más baja del Perú.",
-          areaServed: { "@type": "City", name: "Trujillo, Perú" },
-          contactPoint: {
-            "@type": "ContactPoint",
-            telephone: "+51-994-810-242",
-            contactType: "Customer Service",
-            availableLanguage: "Spanish",
-          },
-        })}
-      </Script>
+      {/* === STRUCTURED DATA — server-rendered into static HTML (crawler + LLM visible) ===
+          NOTE: JSON-LD must be a native <script>, NOT next/script (which injects
+          after hydration and is invisible to crawlers / generative engines). */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "@id": "https://ecodriveplus.com/#organization",
+            name: "EcoDrive+",
+            legalName: "EcoDrive Plus SAC",
+            url: "https://ecodriveplus.com",
+            logo: "https://rfpmvnoaqibqiqxrmheb.supabase.co/storage/v1/object/public/brand-assets/ecodrive/logo-final-naranja-trim.png",
+            description:
+              "App de transporte de última generación con agente IA Eco en Trujillo, Perú. Pass Club S/.30 por edición con sorteo de auto. Comisión 6.3% para choferes — la más baja del Perú. Disponible por app y por WhatsApp.",
+            areaServed: {
+              "@type": "City",
+              name: "Trujillo",
+              containedInPlace: { "@type": "AdministrativeArea", name: "La Libertad, Perú" },
+            },
+            contactPoint: {
+              "@type": "ContactPoint",
+              telephone: "+51-994-810-242",
+              contactType: "customer service",
+              availableLanguage: "Spanish",
+            },
+            sameAs: ["https://activosya.com/ecodriveplus"],
+          }).replace(/</g, "\\u003c"),
+        }}
+      />
+      <MobileApplicationSchema
+        name="EcoDrive+"
+        description="App de taxi con agente IA Eco: pides en lenguaje natural, mapa GPS en vivo, BilleteraEco, pago con Yape y sorteos del Pass Club. Trujillo, Perú."
+        url="https://ecodriveplus.com/descargar-app"
+        category="TravelApplication"
+      />
+      <FaqSchema items={FAQ_PLAIN} />
 
       {/* === ATMOSPHERIC BACKGROUND === */}
       <div aria-hidden className="fixed inset-0 pointer-events-none eco-mesh" />

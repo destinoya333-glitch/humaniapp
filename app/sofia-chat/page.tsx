@@ -9,6 +9,7 @@ import TimerWarning from "@/components/sofia-chat/TimerWarning";
 import UpgradeModal from "@/components/sofia-chat/UpgradeModal";
 import ReviewTab from "@/components/sofia-chat/ReviewTab";
 import RolePlaySelector from "@/components/sofia-chat/RolePlaySelector";
+import SofiaPwa from "@/components/SofiaPwa";
 
 /* ─── Types matching the Cuna endpoints ──────────────────────── */
 
@@ -339,6 +340,7 @@ export default function SofiaChatPage() {
 
   return (
     <main className="min-h-screen bg-[#0A0A0A] text-zinc-100">
+      <SofiaPwa />
       <div className="max-w-3xl mx-auto p-4 sm:p-6">
 
         {/* ── Header con fase + ritual ─────────────────── */}

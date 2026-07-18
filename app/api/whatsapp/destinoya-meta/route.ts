@@ -126,6 +126,29 @@ async function sendChunked(toPhone: string, body: string): Promise<void> {
   }
 }
 
+// Envía la respuesta del AGENTE al cliente, interceptando el marcador
+// [OPEN_FLOW_MENU]: el prompt de Sofía la instruye a responder ese marcador
+// para que el handler abra el Flow de menú, pero antes NADIE lo interceptaba
+// y el cliente recibía el texto literal "[OPEN_FLOW_MENU]". Aquí lo detectamos
+// (solo o embebido) y enviamos el Flow de menú en su lugar.
+async function enviarRespuestaAgente(toPhone: string, respuesta: string): Promise<void> {
+  const marker = /\[OPEN_FLOW_MENU\]/i;
+  if (marker.test(respuesta || "")) {
+    const r = await sendDestinoFlow({ phone: toPhone, flowKey: "menu", userIdOrPhone: toPhone });
+    if (r.ok) {
+      // Si además del marcador venía texto útil, lo enviamos limpio antes.
+      const extra = (respuesta || "").replace(marker, "").trim();
+      if (extra) await sendChunked(toPhone, extra);
+      return;
+    }
+    // Fallback si el Flow no se pudo enviar: nunca mandar el marcador crudo.
+    const limpio = (respuesta || "").replace(marker, "").trim();
+    await sendChunked(toPhone, limpio || "Escribe *menu* para ver todos los servicios ✨");
+    return;
+  }
+  await sendChunked(toPhone, respuesta);
+}
+
 // Detecta si el ultimo turno del bot esperaba datos (post pago confirmado).
 // Si si: el siguiente turno del user va a generar consulta larga (>15s) y es
 // preferible enviar "Generando..." primero por UX.

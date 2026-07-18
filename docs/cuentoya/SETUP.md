@@ -117,13 +117,13 @@ Replica el proceso que usaste para Sofia/Destino/EcoDrive (ver memoria `feedback
 3. En **Meta Business Manager** → WhatsApp Manager → Phone Numbers:
    - Add phone number → ingresar +51 9XX XXX XXX
    - Verificar por SMS / llamada
-   - Asociar a WABA **HumaniAppManager** (la misma de Sofia/Destino)
+   - Asociar a WABA **EcoDriveBot** (la misma de Sofia/Destino)
 4. **Configurar 2FA off vía ImprovMX** (el truco de Sofia para evitar rate limit Meta):
    - Crear alias `tucuento@activosya.com` → tu email real
    - Usar ese email para configurar Meta Business
 5. Una vez registrado el phone, obtener:
    - `phone_id` (numérico) → `META_CUENTO_PHONE_ID`
-6. Reusar el system user token de HumaniAppManager (ya está en Vercel como `META_SOFIA_ACCESS_TOKEN`). El sender de TuCuentoYa hace fallback automático a este token.
+6. Reusar el system user token de EcoDriveBot (ya está en Vercel como `ECODRIVE_META_ACCESS_TOKEN`). El sender de TuCuentoYa hace fallback automático a este token.
 
 ### Gotchas conocidos (de memoria Sofia migración)
 
@@ -179,7 +179,7 @@ AZURE_TTS_DEFAULT_VOICE_M=es-PE-AlexNeural
 # Meta Cloud TuCuentoYa
 META_CUENTO_PHONE_ID=<phone_id de Meta>
 META_CUENTO_VERIFY_TOKEN=cuentoya_verify_xxxxxx
-# (META_CUENTO_ACCESS_TOKEN opcional - si vacío, reusa META_SOFIA_ACCESS_TOKEN)
+# (META_CUENTO_ACCESS_TOKEN opcional - si vacío, reusa ECODRIVE_META_ACCESS_TOKEN)
 
 # Yape destino (reusa Percy)
 TCI_YAPE_NUMERO=998 102 258
@@ -235,7 +235,7 @@ Con el número TuCuentoYa registrado, manda un mensaje desde tu WhatsApp persona
 
 ```
 1. "Hola"
-   → debe responder con bienvenida de Coqui
+   → debe responder con bienvenida de Rex
 
 2. "Mateo, 5 años"
    → debe pedir escenario

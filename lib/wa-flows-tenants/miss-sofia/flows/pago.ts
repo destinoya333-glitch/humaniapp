@@ -2,7 +2,7 @@
  * Miss Sofia — Flow #3: Pago Cuna / Cuna VIP.
  *
  * 2 screens:
- *  - COMPARATIVA: cards Cuna S/39 vs Cuna VIP S/89, boton "Continuar al pago"
+ *  - COMPARATIVA: cards Cuna S/30 vs Cuna VIP S/89, boton "Continuar al pago"
  *  - PAGO: seleccion plan+billing + Yape destination + input codigo operacion
  *
  * Pricing single source de truth: el endpoint REST. Aqui lo replicamos para
@@ -17,8 +17,8 @@ const BASE_URL = (process.env.NEXT_PUBLIC_BASE_URL ?? "https://activosya.com").r
 
 // Espejo del endpoint para texto de comparativa. Si cambia el endpoint, cambiar aqui.
 const PRICING_DISPLAY = {
-  cuna_monthly: 39,
-  cuna_yearly: 349,
+  cuna_monthly: 30,
+  cuna_yearly: 299,
   premium_monthly: 89,
   premium_yearly: 799,
 };

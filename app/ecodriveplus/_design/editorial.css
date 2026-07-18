@@ -282,3 +282,46 @@
 /* Hide native scrollbar inside cards */
 .eco-no-scrollbar::-webkit-scrollbar { display: none; }
 .eco-no-scrollbar { scrollbar-width: none; }
+
+/* =====================================================
+   Cohesion: unifica subpaginas "planas" del ecosistema
+   EcoDrive+ (club/bases, legal, mi-cuenta, etc.) con el
+   home editorial. Las clases .eco-display de las paginas
+   premium ganan por especificidad, asi que NO se alteran.
+   ===================================================== */
+.eco-editorial h1,
+.eco-editorial h2,
+.eco-editorial h3 {
+  font-family: var(--eco-display);
+  font-variation-settings: "opsz" 96, "SOFT" 26, "WONK" 0;
+  letter-spacing: -0.03em;
+  font-weight: 500;
+}
+.eco-editorial h1 { line-height: 0.98; }
+
+/* Grises genericos -> tinta calida */
+.eco-editorial .text-gray-300 { color: var(--eco-ink); }
+.eco-editorial .text-gray-400 { color: var(--eco-ink-soft); }
+.eco-editorial .text-gray-500,
+.eco-editorial .text-zinc-500 { color: var(--eco-ink-mute); }
+.eco-editorial .text-zinc-400 { color: var(--eco-ink-soft); }
+
+/* Acentos amber legacy -> flame oficial */
+.eco-editorial .text-amber-400,
+.eco-editorial .text-amber-500 { color: var(--eco-flame-soft); }
+.eco-editorial .bg-amber-500,
+.eco-editorial .bg-amber-600 {
+  background: linear-gradient(180deg, var(--eco-flame-soft), var(--eco-flame)) !important;
+  color: #1A0F02 !important;
+}
+.eco-editorial .border-amber-500,
+.eco-editorial .border-amber-400 { border-color: rgba(224, 136, 33, 0.4) !important; }
+
+/* Fondos planos -> superficie calida del sistema */
+.eco-editorial .bg-\[\#0A0A0A\] { background: var(--eco-bg) !important; }
+
+/* Prose (bases legales, etc.) afinado al sistema */
+.eco-editorial .prose-invert a,
+.eco-editorial .prose a { color: var(--eco-flame-soft); text-underline-offset: 2px; }
+.eco-editorial .prose-invert strong,
+.eco-editorial .prose strong { color: var(--eco-ink); }

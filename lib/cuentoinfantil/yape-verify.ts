@@ -216,7 +216,7 @@ export async function aplicarPago(opts: {
   if (concepto.tipo === "cuento_suelto") {
     return {
       ok: true,
-      mensaje: `✅ Pago recibido (S/${opts.monto}). Tu cuento se está generando 🦊`,
+      mensaje: `✅ Pago recibido (S/${opts.monto}). Tu cuento se está generando 🦮`,
       tipo: "cuento_suelto",
     };
   }

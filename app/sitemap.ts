@@ -15,9 +15,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
   return [
     { url: `${BASE}/`, lastModified: now, changeFrequency: "weekly", priority: 1.0 },
+    { url: `${BASE}/comparativa`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${BASE}/casos-exito`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE}/calculadora-roi`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
-    { url: `${BASE}/agendar`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
-    { url: `${BASE}/comparativa`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${BASE}/agendar`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${BASE}/afiliados`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
     { url: `${BASE}/terminos`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
     { url: `${BASE}/privacidad`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
     { url: `${BASE}/devoluciones`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
@@ -33,8 +35,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: "https://novia.activosya.com", lastModified: now, changeFrequency: "monthly", priority: 0.7 },
     { url: "https://pedido.activosya.com", lastModified: now, changeFrequency: "monthly", priority: 0.7 },
     { url: "https://reserva.activosya.com", lastModified: now, changeFrequency: "monthly", priority: 0.7 },
-    { url: "https://ecodriveplus.com/club", lastModified: now, changeFrequency: "daily", priority: 0.95 },
-    { url: "https://ecodriveplus.com/club/como-funciona", lastModified: now, changeFrequency: "weekly", priority: 0.7 },
-    { url: "https://ecodriveplus.com/club/bases", lastModified: now, changeFrequency: "weekly", priority: 0.6 },
+    // EcoDrive+ (ecodriveplus.com) tiene su propio robots/sitemap dedicado.
   ];
 }

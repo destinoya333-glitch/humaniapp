@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import LegalLayout from "@/app/components/LegalLayout";
+import AurumShell from "@/app/components/AurumShell";
 
 export const metadata: Metadata = {
   title: "Términos y Condiciones",
@@ -9,6 +10,7 @@ export const metadata: Metadata = {
 
 export default function TerminosPage() {
   return (
+    <AurumShell footer={false}>
     <LegalLayout
       title="Términos y Condiciones"
       subtitle="Las reglas que rigen el uso de ActivosYA, su catálogo y los activos digitales que ofrecemos."
@@ -158,11 +160,12 @@ export default function TerminosPage() {
 
       <h2>11. Contacto</h2>
       <p>
-        Para reclamos, consultas o ejercicio de derechos: WhatsApp{" "}
-        <a href="https://wa.me/51961347233">+51 961 347 233</a> o por el{" "}
+        Para reclamos, consultas o ejercicio de derechos: email{" "}
+        <a href="mailto:contacto@activosya.com">contacto@activosya.com</a> o por el{" "}
         <a href="/#contacto">formulario de contacto</a>. Respondemos en menos
         de 24 horas hábiles.
       </p>
     </LegalLayout>
+    </AurumShell>
   );
 }

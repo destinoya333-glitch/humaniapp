@@ -12,14 +12,14 @@ Scripts y textos listos para usar en redes sociales y reels.
 **Texto en pantalla:** *"Mi hijo escuchó SU nombre en un cuento mágico"*
 
 **Voz en off (papá/mamá narrador):**
-> "Le mandé un mensaje a Coqui por WhatsApp. Le dije: 'Quiero un cuento para Mateo, mi hijo de 5 años. Que sea en un bosque, que un lobo lo quiera atrapar, y que yo, su papá, llegue a salvarlo'.
+> "Le mandé un mensaje a Rex por WhatsApp. Le dije: 'Quiero un cuento para Mateo, mi hijo de 5 años. Que sea en un bosque, que un lobo lo quiera atrapar, y que yo, su papá, llegue a salvarlo'.
 >
 > En 60 segundos recibí esto..."
 
 **Cut:** Audio del cuento se reproduce + reacción del niño riendo/abrazando al papá.
 
 **CTA final (texto):** *"Tu peque también puede ser el héroe.
-Coqui los espera en WhatsApp 🦊
+Rex los espera en WhatsApp 🐕
 Link en bio · S/2 el primero gratis"*
 
 ---
@@ -39,23 +39,23 @@ Link en bio · S/2 el primero gratis"*
 >
 > Por S/2 hago la diferencia."
 
-**CTA:** *"WhatsApp en bio 🦊"*
+**CTA:** *"WhatsApp en bio 🐕"*
 
 ---
 
-### Reel 3 — "Coqui hace de las suyas" (humor)
+### Reel 3 — "Rex hace de las suyas" (humor)
 
 **Hook (0-3s):** Pantalla negra. Voz susurra: *"¿Qué pasa cuando le pides a una IA un cuento... raro?"*
 
 **Cut:** Chat WhatsApp en pantalla.
-- Papá: "Coqui, quiero un cuento donde mi hijo y un T-Rex hagan piqueos juntos en la playa"
-- Coqui: "¡Buenísima idea! 🦊 Dame 60 segundos..."
+- Papá: "Rex, quiero un cuento donde mi hijo y un T-Rex hagan piqueos juntos en la playa"
+- Rex: "¡Buenísima idea! 🐕 Dame 60 segundos..."
 
 **Cut:** Audio se reproduce: *"Y entonces el T-Rex, con su pequeño pie sin chancletas, miró a Joaquín y le dijo: '¿Cebiche o leche de tigre?'"*
 
 **Risa del papá grabando.**
 
-**CTA:** *"No hay cuento que Coqui no haga. Solo dilo.
+**CTA:** *"No hay cuento que Rex no haga. Solo dilo.
 WhatsApp en bio · S/2 el primero gratis"*
 
 ---
@@ -64,11 +64,11 @@ WhatsApp en bio · S/2 el primero gratis"*
 
 ### Post 1 — Carrusel "Cómo funciona" (5 slides)
 
-**Slide 1:** Imagen de Coqui 🦊
+**Slide 1:** Imagen de Rex 🐕
 **Texto slide 1:** *"¿Tu peque ya tiene SU cuento?"*
 
 **Slide 2:** Captura de WhatsApp con conversación.
-**Texto:** *"1. Escribes a Coqui por WhatsApp"*
+**Texto:** *"1. Escribes a Rex por WhatsApp"*
 
 **Slide 3:** Captura: "Mateo, 5 años, en un bosque con lobo"
 **Texto:** *"2. Le dices nombre, escenario y duración"*
@@ -80,7 +80,7 @@ WhatsApp en bio · S/2 el primero gratis"*
 **Texto:** *"4. En 60 segundos recibes el audio MP3"*
 
 **Caption:**
-> 🦊 Coqui es tu narrador IA personal.
+> 🐕 Rex es tu narrador IA personal.
 >
 > Crea cuentos en los que TU hijo es el héroe, con TU familia como personajes, en el escenario que TÚ quieras.
 >
@@ -88,7 +88,7 @@ WhatsApp en bio · S/2 el primero gratis"*
 > ▪️ 3 minutos → S/3 (más popular)
 > ▪️ 5 minutos → S/5
 >
-> 🎁 PRIMER CUENTO GRATIS - escríbele a Coqui ahora.
+> 🎁 PRIMER CUENTO GRATIS - escríbele a Rex ahora.
 >
 > 👉 Link en bio
 >
@@ -102,13 +102,13 @@ WhatsApp en bio · S/2 el primero gratis"*
 
 **Caption:**
 > "Mi hijo me pidió que YO le contara un cuento.
-> Pero estaba cansado del día. Le mandé un audio a Coqui.
+> Pero estaba cansado del día. Le mandé un audio a Rex.
 > En 1 minuto, mi hijo escuchó SU nombre en una aventura del espacio. Se durmió sonriendo.
 >
 > Cuesta S/3. Vale por 10 años de recuerdo."
 > — Carlos, papá de Diego (6 años) · Trujillo
 >
-> 🦊 TuCuentoYa - Link en bio.
+> 🐕 TuCuentoYa - Link en bio.
 
 ---
 
@@ -124,7 +124,7 @@ WhatsApp en bio · S/2 el primero gratis"*
 >
 > Por S/3. Sin pelearte. Sin gritarle. Sin negociar pantallas.
 >
-> 🦊 Coqui te ayuda. WhatsApp en bio.
+> 🐕 Rex te ayuda. WhatsApp en bio.
 
 ---
 
@@ -158,7 +158,7 @@ WhatsApp en bio · S/2 el primero gratis"*
 >
 > 🎁 Primer cuento 2 min GRATIS.
 >
-> 🦊 WhatsApp en bio.
+> 🐕 WhatsApp en bio.
 
 ---
 
@@ -179,7 +179,7 @@ WhatsApp en bio · S/2 el primero gratis"*
 >
 > ⏰ Promo válida hasta 21 junio 2026.
 >
-> 🦊 Link en bio.
+> 🐕 Link en bio.
 
 ---
 
@@ -189,7 +189,7 @@ WhatsApp en bio · S/2 el primero gratis"*
 **POV:** *"Eres papá. Tu hijo te exige un cuento DIFERENTE cada noche. Ya no tienes ideas."*
 
 **Cut:** Papá agarrando teléfono.
-**Texto:** *"WhatsApp · Coqui · 'Nombre Mateo, escenario espacio, 3 min'"*
+**Texto:** *"WhatsApp · Rex · 'Nombre Mateo, escenario espacio, 3 min'"*
 **Cut:** 30 segundos después.
 **Texto:** *"PROBLEMA RESUELTO ✅"*
 
@@ -202,7 +202,7 @@ WhatsApp en bio · S/2 el primero gratis"*
 
 **Voz:**
 > "1. Abres WhatsApp.
-> 2. Le escribes a Coqui (🦊 IA narradora).
+> 2. Le escribes a Rex (🐕 IA narradora).
 > 3. Le dices el nombre de tu peque y un escenario.
 > 4. Por S/3 te manda un cuento de 3 minutos en audio.
 > 5. Tu peque feliz. Tú en paz. Todos ganamos."
@@ -215,7 +215,7 @@ WhatsApp en bio · S/2 el primero gratis"*
 
 ### Ad 1 — Conversion (objetivo: clicks WhatsApp)
 **Headline:** "El cuento donde TU hijo es el héroe"
-**Body:** "Coqui crea cuentos infantiles personalizados por WhatsApp. Voz peruana. Entrega en 60 segundos. Primer cuento GRATIS."
+**Body:** "Rex crea cuentos infantiles personalizados por WhatsApp. Voz peruana. Entrega en 60 segundos. Primer cuento GRATIS."
 **CTA:** "Enviar mensaje"
 
 ### Ad 2 — Awareness
@@ -225,14 +225,14 @@ WhatsApp en bio · S/2 el primero gratis"*
 
 ### Ad 3 — Retargeting (visitaron landing)
 **Headline:** "¿Aún no probaste TuCuentoYa?"
-**Body:** "Sigue con tu primer cuento gratis. Solo dile a Coqui el nombre de tu peque."
+**Body:** "Sigue con tu primer cuento gratis. Solo dile a Rex el nombre de tu peque."
 **CTA:** "Enviar mensaje"
 
 ---
 
 ## 🎤 ELEVATOR PITCH (30 seg)
 
-> "TuCuentoYa es una plataforma que crea cuentos infantiles personalizados por WhatsApp. El padre le dice al bot Coqui el nombre del niño, el escenario y la duración, y en 60 segundos recibe un audio MP3 narrado por una voz peruana donde su hijo es el héroe de la historia. Desde S/2 por cuento. Modelo wallet recargable + VIP mensual. Mercado: padres peruanos 25-45 años con hijos 2-10 años. Lanzamiento Día del Padre 2026."
+> "TuCuentoYa es una plataforma que crea cuentos infantiles personalizados por WhatsApp. El padre le dice al bot Rex el nombre del niño, el escenario y la duración, y en 60 segundos recibe un audio MP3 narrado por una voz peruana donde su hijo es el héroe de la historia. Desde S/2 por cuento. Modelo wallet recargable + VIP mensual. Mercado: padres peruanos 25-45 años con hijos 2-10 años. Lanzamiento Día del Padre 2026."
 
 ---
 

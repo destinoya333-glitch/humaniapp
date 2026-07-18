@@ -158,14 +158,19 @@ export async function POST(req: NextRequest) {
         try {
           if (isMetaCloudConfigured()) {
             await sendText(opPendiente.whatsapp_personal, opMsg);
-            await sendText("51998102258",
-              `✅ *Operador ACTIVADO automáticamente* (vía Sofia macrodroid)\n\n` +
-              `${opPendiente.name}\nPlan ${planInfo.label} (S/. ${parsed.amount})\n` +
-              `WhatsApp: ${opPendiente.whatsapp_personal}\nYape op: ${parsed.operation}\n\n` +
-              `_Falta agregar SU chip a Meta Cloud cuando te lo envíe._`);
           }
+          // Notif a Percy via ActivosYA (canal unificado)
+          const { notifyActivosYA } = await import("@/lib/activosya-central/notify");
+          await notifyActivosYA({
+            tipo: "plan_activado",
+            servicio: "sofia",
+            monto: parsed.amount,
+            cliente_nombre: opPendiente.name,
+            cliente_phone: opPendiente.whatsapp_personal,
+            detalle: { plan: planInfo.label, yape_op: parsed.operation, falta_chip: true },
+          });
         } catch (e) {
-          console.error("[sofia/macrodroid: WhatsApp activación operador]", (e as Error).message);
+          console.error("[sofia/macrodroid: activación operador]", (e as Error).message);
         }
 
         logRow.result = `OPERADOR_ACTIVADO: ${opPendiente.id} (${opPendiente.name}) plan=${opPendiente.plan}`;

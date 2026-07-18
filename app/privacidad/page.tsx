@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import LegalLayout from "@/app/components/LegalLayout";
+import AurumShell from "@/app/components/AurumShell";
 
 export const metadata: Metadata = {
   title: "Política de Privacidad",
@@ -9,6 +10,7 @@ export const metadata: Metadata = {
 
 export default function PrivacidadPage() {
   return (
+    <AurumShell footer={false}>
     <LegalLayout
       title="Política de Privacidad"
       subtitle="Tu información, tratada con el respeto que merece. Esta política explica qué datos recolectamos, por qué, y qué hacemos con ellos."
@@ -27,8 +29,8 @@ export default function PrivacidadPage() {
       <p>
         ActivosYA es responsable del tratamiento de tus datos. Para cualquier
         consulta sobre privacidad, contacta a nuestro responsable de
-        protección de datos por WhatsApp{" "}
-        <a href="https://wa.me/51961347233">+51 961 347 233</a> o vía el{" "}
+        protección de datos por email{" "}
+        <a href="mailto:contacto@activosya.com">contacto@activosya.com</a> o vía el{" "}
         <a href="/#contacto">formulario de contacto</a>.
       </p>
 
@@ -129,8 +131,8 @@ export default function PrivacidadPage() {
         <li><strong>Portabilidad</strong>: recibir tus datos en formato estándar.</li>
       </ul>
       <p>
-        Para ejercer cualquier derecho, contáctanos por{" "}
-        <a href="https://wa.me/51961347233">WhatsApp</a>. Respondemos en hasta
+        Para ejercer cualquier derecho, contáctanos por email{" "}
+        <a href="mailto:contacto@activosya.com">contacto@activosya.com</a>. Respondemos en hasta
         20 días hábiles.
       </p>
 
@@ -172,5 +174,6 @@ export default function PrivacidadPage() {
         notifican por email a usuarios con cuenta activa.
       </p>
     </LegalLayout>
+    </AurumShell>
   );
 }

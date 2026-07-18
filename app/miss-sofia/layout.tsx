@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "@/app/globals.css";
+import SmoothScroll from "../_design/SmoothScroll";
 
 export const metadata: Metadata = {
   title: "Miss Sofia — Aprende inglés con IA · ActivosYA",
@@ -9,7 +10,8 @@ export const metadata: Metadata = {
 
 export default function MissSofiaLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-white">
+    <div className="brand brand-sofia min-h-screen bg-[#0A0A0A] text-white">
+      <SmoothScroll />
       {children}
     </div>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { getLeadWaUrl, getLeadWaDisplay, LEAD_EMAIL } from "@/lib/activosya/contact";
 
 type Form = {
   name: string;
@@ -64,8 +65,8 @@ export default function Contact() {
       ``,
       `Notas: ${form.message || "(sin notas)"}`,
     ].join("\n");
-    const whatsapp = `https://wa.me/51961347233?text=${encodeURIComponent(summary)}`;
-    window.open(whatsapp, "_blank");
+    const whatsapp = getLeadWaUrl(summary);
+    if (whatsapp) window.open(whatsapp, "_blank");
     setSent(true);
   }
 
@@ -91,8 +92,9 @@ export default function Contact() {
               ¡Solicitud enviada!
             </h3>
             <p className="text-zinc-400">
-              Abrimos WhatsApp para coordinar la siguiente reunión. Si no se
-              abrió, escríbenos directamente al +51 961 347 233.
+              {getLeadWaDisplay()
+                ? `Abrimos WhatsApp para coordinar la siguiente reunión. Si no se abrió, escríbenos directamente al ${getLeadWaDisplay()}.`
+                : `Te contactaremos por email (${LEAD_EMAIL}) en menos de 24 horas hábiles.`}
             </p>
           </div>
         ) : (
@@ -151,7 +153,6 @@ export default function Contact() {
                 <option value="tunoviaia">TuNoviaIA (compañía IA)</option>
                 <option value="tupedidoya">TuPedidoYa (pedidos para restaurantes)</option>
                 <option value="tureservaya">TuReservaYa (reservas para consultorios)</option>
-                <option value="ecodriveplus">EcoDrive+ (rideshare por WhatsApp)</option>
                 <option value="indeciso">Estoy evaluando, quiero ver el catálogo completo</option>
               </select>
             </div>
@@ -212,7 +213,9 @@ export default function Contact() {
             </button>
 
             <p className="text-xs text-zinc-500 text-center">
-              Tu información va directamente a nuestro asesor por WhatsApp.
+              {getLeadWaDisplay()
+                ? "Tu información va directamente a nuestro asesor por WhatsApp."
+                : "Te contactaremos por email en menos de 24 horas hábiles."}{" "}
               No spam, no listas, no terceros.
             </p>
           </form>
