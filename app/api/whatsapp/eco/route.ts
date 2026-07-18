@@ -112,60 +112,26 @@ async function sendText(to: string, body: string): Promise<void> {
   await send({ messaging_product: "whatsapp", to, type: "text", text: { body } });
 }
 
-// Backend EcoDrive+ (Railway) que tiene el Club + Culqi + página de pago.
-const BOT_API =
-  process.env.ECODRIVE_BOT_API_URL ||
-  "https://bot-whatsapp-production-085b.up.railway.app";
+// Página del Club (sistema completo: Club Pass S/30 = 1 número del sorteo, pide DNI,
+// reserva número correlativo y AL PAGAR envía el boleto oficial como IMAGEN).
+const CLUB_URL = process.env.ECODRIVE_CLUB_URL || "https://ecodriveplus.com/club";
 
 /**
- * Venta de la membresía del Club (sorteo del auto). Llama al backend Railway que
- * asegura la cuenta por teléfono, deja la membresía pending y devuelve el link de
- * pago Culqi (tarjeta/Yape). Al pagar, el backend activa la membresía, emite el
- * boleto y manda el carnet por este mismo número de WhatsApp.
+ * Venta del Club por WhatsApp. Manda al cliente a la página del Club, que ya hace
+ * todo el flujo (Pass, DNI, número, pago y boleto en imagen). El sorteo se realiza
+ * apenas se completan los boletos de la edición — no hay fecha fija: cuando se llena,
+ * se sortea ante notario público.
  */
 async function sellMembership(waId: string, nombre: string | null): Promise<void> {
-  try {
-    const r = await fetch(`${BOT_API}/api/club/wa-start`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phone: waId, full_name: nombre ?? "" }),
-    });
-    const j = (await r.json().catch(() => null)) as
-      | { ok?: boolean; pay_url?: string; already_active?: boolean; price?: number }
-      | null;
-    if (!j?.ok || !j.pay_url) {
-      await sendText(
-        waId,
-        "Uf, no pude generar tu pago ahora. Probá de nuevo en un minuto escribiendo *sorteo*."
-      );
-      return;
-    }
-    if (j.already_active) {
-      await sendText(
-        waId,
-        "¡Ya sos socio activo del EcoDrive+ Club! 💚 Tu boleto del sorteo ya está cargado. Escribe *viaje* para pedir un taxi."
-      );
-      return;
-    }
-    const precio = j.price ?? 30;
-    await sendText(
-      waId,
-      `🎟️ *Sorteo del auto eléctrico — EcoDrive+ Club*\n\n` +
-        `Hacéte socio por *S/ ${precio}/mes* y participá del sorteo del auto 🚗⚡. Además incluye:\n` +
-        `• 🎓 1 mes gratis del inglés de Miss Sofia\n` +
-        `• 💸 3% de cashback en tus viajes\n` +
-        `• 🎰 3 tickets diarios para la ruleta\n` +
-        `• 🚕 Cancelación gratis y tarifa fija en hora pico\n\n` +
-        `Pagá seguro con *tarjeta* o *Yape* acá 👇\n${j.pay_url}\n\n` +
-        `Apenas se confirme el pago, te llega tu *carnet + número de boleto* por acá. 🍀`
-    );
-  } catch (e) {
-    console.error("[eco-bot sellMembership err]", e);
-    await sendText(
-      waId,
-      "Tuve un problema generando tu pago. Probá de nuevo escribiendo *sorteo*."
-    );
-  }
+  const saludo = nombre ? `${nombre.split(" ")[0]}, ` : "";
+  await sendText(
+    waId,
+    `🎟️ *EcoDrive+ Club — Sorteo del BYD Yuan Pro 2023* 🚗⚡\n\n` +
+      `${saludo}con el *Club Pass (S/ 30)* te llevás *1 número* para el sorteo del auto eléctrico, más los beneficios del Club.\n\n` +
+      `🍀 *El sorteo se realiza apenas se completen los boletos de la edición* — no hay fecha fija: cuando se llena, se sortea ante notario público.\n\n` +
+      `Elegí tu número y pagá seguro acá 👇\n${CLUB_URL}\n\n` +
+      `Apenas confirmes el pago, te llega tu *boleto oficial (imagen)* por este mismo WhatsApp. 💚`
+  );
 }
 
 async function sendMenuPrincipal(to: string, nombre: string | null): Promise<void> {
