@@ -78,8 +78,8 @@ export function ClubCTA(props: {
     return null;
   };
 
-  // Paga N membresías → abre Culqi por el total.
-  const pagar = () => {
+  // Paga N membresías → abre Culqi con UN método (Yape o tarjeta) por separado.
+  const pagarCon = (metodo: "yape" | "tarjeta") => {
     setErrorMsg("");
     const inv = validar();
     if (inv) return setErrorMsg(inv);
@@ -97,7 +97,14 @@ export function ClubCTA(props: {
     Culqi.options({
       lang: "es",
       installments: false,
-      paymentMethods: { tarjeta: true, yape: true, billetera: false, bancaMovil: false, agente: false, cuotealo: false },
+      paymentMethods: {
+        tarjeta: metodo === "tarjeta",
+        yape: metodo === "yape",
+        billetera: false,
+        bancaMovil: false,
+        agente: false,
+        cuotealo: false,
+      },
       style: { buttonText: "Pagar", buttonTextColor: "#0A0908", buttonBackgroundColor: "#E1811B" },
     });
 
@@ -356,12 +363,18 @@ export function ClubCTA(props: {
 
       {errorMsg && <p className="text-red-400 text-sm mb-3">⚠️ {errorMsg}</p>}
 
-      <button onClick={pagar} disabled={loading || !dni || !nombre || !whatsapp || !culqiReady}
-        className="w-full bg-[#E1811B] hover:bg-[#FFA84A] text-black font-bold py-4 rounded-xl disabled:opacity-50 transition">
-        {loading ? "Procesando..." : `Pagar S/.${total} →`}
+      <button onClick={() => pagarCon("yape")} disabled={loading || !dni || !nombre || !whatsapp || !culqiReady}
+        className="w-full flex items-center justify-center gap-3 bg-[#790699] hover:bg-[#8f1cb0] disabled:opacity-50 text-white font-bold text-lg rounded-2xl py-4 transition">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/ecodriveplus/yape-logo.png" alt="Yape" className="h-8 w-auto" />
+        {loading ? "Procesando…" : `Pagar con Yape · S/.${total}`}
+      </button>
+      <button onClick={() => pagarCon("tarjeta")} disabled={loading || !dni || !nombre || !whatsapp || !culqiReady}
+        className="w-full mt-3 flex items-center justify-center gap-2 border-2 border-[#E1811B] text-[#E1811B] hover:bg-[#E1811B]/10 disabled:opacity-50 font-bold text-lg rounded-2xl py-4 transition">
+        💳 {loading ? "Procesando…" : `Pagar con tarjeta · S/.${total}`}
       </button>
       <p className="text-xs text-gray-500 mt-3 text-center">
-        💳 Tarjeta o Yape · Culqi · Elegís {cantidad > 1 ? "tus números" : "tu número"} apenas confirmes el pago
+        Pago seguro con Culqi · Elegís {cantidad > 1 ? "tus números" : "tu número"} apenas confirmes el pago
       </p>
     </div>
   );
