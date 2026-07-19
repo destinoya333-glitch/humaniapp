@@ -17,8 +17,8 @@ const TXT = `# EcoDrive+
 - Cobro directo a BilleteraEco con retiro por Yape cuando quieras.
 - Beneficios por nivel: bonos, salud, préstamos sin interés y programa Pichanga Eco.
 
-## EcoDrive+ Club (Pass)
-- [Pass del Club](https://ecodriveplus.com/club): membresía de S/.30 por edición que da 1 número del sorteo del auto.
+## EcoDrive+ Club (Membresía)
+- [Membresía del Club](https://ecodriveplus.com/club): membresía de S/.30 por edición que da 1 número del sorteo del auto.
 - Edición #1: sorteo de un BYD Yuan Pro 2023, con notario público y acta pública.
 - [Cómo funciona](https://ecodriveplus.com/club/como-funciona) · [Bases](https://ecodriveplus.com/club/bases)
 

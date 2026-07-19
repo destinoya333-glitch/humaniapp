@@ -13,7 +13,7 @@ import { MobileApplicationSchema, FaqSchema } from "../components/SchemaOrg";
 export const metadata: Metadata = {
   title: "EcoDrive+ — La app de Trujillo con agente IA",
   description:
-    "EcoDrive+ Trujillo: app de última generación con agente IA Eco. Pass Club S/.30 por edición con sorteo del carro + beneficios reales. WhatsApp también disponible. Comisión 6.3% para choferes — la más baja del Perú.",
+    "EcoDrive+ Trujillo: app de última generación con agente IA Eco. Membresía Club S/.30 por edición con sorteo del carro + beneficios reales. WhatsApp también disponible. Comisión 6.3% para choferes — la más baja del Perú.",
   alternates: { canonical: "https://ecodriveplus.com" },
   keywords: [
     "app taxi Trujillo",
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     "agente IA taxi",
     "EcoDrive Trujillo",
     "membresia taxi sorteo BYD",
-    "Club EcoDrive Pass",
+    "Membresía Club EcoDrive",
     "app conductor Trujillo",
     "chofer Trujillo comisión baja",
     "InDrive alternativa Perú",
@@ -89,8 +89,8 @@ const TESTIMONIOS = [
 ];
 
 const FAQS: Array<[string, React.ReactNode]> = [
-  ["¿Necesito descargar la app?", <>Sí — la <strong>app es el producto principal</strong>: ahí vive el agente IA Eco, el mapa GPS en vivo, BilleteraEco, ranking, sorteos del Pass Club. Si solo querés pedir un viaje rápido, también podés hablarle al <strong className="text-[var(--eco-flame)]">994 810 242</strong> por WhatsApp — el bot te atiende 24/7, pero la experiencia completa pide la app. Para choferes, la <strong>app chofer es obligatoria</strong>.</>],
-  ["¿Qué es el Pass EcoDrive+ Club?", <>Una <strong>membresía anual única</strong> de <strong className="text-[var(--eco-flame)]">S/.30</strong>. Con un solo pago participás en <strong>cada sorteo del año</strong> — la Edición #1 es un BYD Yuan Pro 2023. Además sumás tickets bonus por cada viaje, descuento del 2 % en BilleteraEco y prioridad en zonas con demanda alta. <Link href="/ecodriveplus/club" className="text-[var(--eco-flame)] underline underline-offset-2">Ver Pass</Link>.</>],
+  ["¿Necesito descargar la app?", <>Sí — la <strong>app es el producto principal</strong>: ahí vive el agente IA Eco, el mapa GPS en vivo, BilleteraEco, ranking, sorteos de la Membresía Club. Si solo querés pedir un viaje rápido, también podés hablarle al <strong className="text-[var(--eco-flame)]">994 810 242</strong> por WhatsApp — el bot te atiende 24/7, pero la experiencia completa pide la app. Para choferes, la <strong>app chofer es obligatoria</strong>.</>],
+  ["¿Qué es la Membresía EcoDrive+ Club?", <>Una <strong>membresía anual única</strong> de <strong className="text-[var(--eco-flame)]">S/.30</strong>. Con un solo pago participás en <strong>cada sorteo del año</strong> — la Edición #1 es un BYD Yuan Pro 2023. Además sumás tickets bonus por cada viaje, descuento del 2 % en BilleteraEco y prioridad en zonas con demanda alta. <Link href="/ecodriveplus/club" className="text-[var(--eco-flame)] underline underline-offset-2">Ver Membresía</Link>.</>],
   ["¿Cómo pago el viaje?", <>Tres opciones: <strong>Yape</strong> (al toque al chofer), <strong>BilleteraEco</strong> en la app (con bono S/.5 al primer viaje) o <strong>efectivo</strong>. Tú eliges.</>],
   ["¿Qué pasa si el chofer no llega?", <>Eco rastrea cada viaje. Si demora o cancela, te reasignamos otro y enviamos compensación a tu BilleteraEco automáticamente.</>],
   ["¿Cómo me registro como chofer?", <>Descargá la <strong>app chofer EcoDrive+</strong> y completá tu perfil: DNI, foto vehículo, SOAT y revisión técnica. Aprobación 24–48 horas. Si preferís, escribí al WhatsApp <strong>994 810 242</strong> y te guiamos el proceso.</>],
@@ -101,8 +101,8 @@ const FAQS: Array<[string, React.ReactNode]> = [
 // Versiones en texto plano de las FAQ para el FAQPage JSON-LD (citable por
 // buscadores y motores generativos). Mantener sincronizadas con FAQS.
 const FAQ_PLAIN: Array<{ q: string; a: string }> = [
-  { q: "¿Necesito descargar la app?", a: "Sí, la app es el producto principal: ahí vive el agente IA Eco, el mapa GPS en vivo, BilleteraEco, el ranking y los sorteos del Pass Club. Si solo quieres pedir un viaje rápido también puedes escribir al WhatsApp 994 810 242, donde el bot te atiende 24/7. Para choferes la app es obligatoria." },
-  { q: "¿Qué es el Pass EcoDrive+ Club?", a: "Una membresía de S/.30 por edición. Con un solo pago participas en el sorteo del auto (la Edición #1 es un BYD Yuan Pro 2023), sumas tickets bonus por cada viaje, obtienes descuento en BilleteraEco y prioridad en zonas de alta demanda. Si renuevas, el siguiente Pass te cuesta S/.27." },
+  { q: "¿Necesito descargar la app?", a: "Sí, la app es el producto principal: ahí vive el agente IA Eco, el mapa GPS en vivo, BilleteraEco, el ranking y los sorteos de la Membresía Club. Si solo quieres pedir un viaje rápido también puedes escribir al WhatsApp 994 810 242, donde el bot te atiende 24/7. Para choferes la app es obligatoria." },
+  { q: "¿Qué es la Membresía EcoDrive+ Club?", a: "Una membresía de S/.30 por edición. Con un solo pago participas en el sorteo del auto (la Edición #1 es un BYD Yuan Pro 2023), sumas tickets bonus por cada viaje, obtienes descuento en BilleteraEco y prioridad en zonas de alta demanda. Si renuevas, la siguiente Membresía te cuesta S/.27." },
   { q: "¿Cómo pago el viaje?", a: "Tres opciones: Yape directo al chofer, BilleteraEco dentro de la app (con bono de S/.5 en el primer viaje) o efectivo." },
   { q: "¿Qué pasa si el chofer no llega?", a: "Eco rastrea cada viaje. Si el chofer demora o cancela, te reasignamos otro automáticamente y enviamos una compensación a tu BilleteraEco." },
   { q: "¿Cómo me registro como chofer?", a: "Descarga la app chofer EcoDrive+ y completa tu perfil: DNI, foto del vehículo, SOAT y revisión técnica. La aprobación toma de 24 a 48 horas. También puedes escribir al WhatsApp 994 810 242 para que te guíen en el proceso." },
@@ -148,7 +148,7 @@ export default function EcoDrivePlusPage() {
             url: "https://ecodriveplus.com",
             logo: "https://rfpmvnoaqibqiqxrmheb.supabase.co/storage/v1/object/public/brand-assets/ecodrive/logo-final-naranja-trim.png",
             description:
-              "App de transporte de última generación con agente IA Eco en Trujillo, Perú. Pass Club S/.30 por edición con sorteo de auto. Comisión 6.3% para choferes — la más baja del Perú. Disponible por app y por WhatsApp.",
+              "App de transporte de última generación con agente IA Eco en Trujillo, Perú. Membresía Club S/.30 por edición con sorteo de auto. Comisión 6.3% para choferes — la más baja del Perú. Disponible por app y por WhatsApp.",
             areaServed: {
               "@type": "City",
               name: "Trujillo",
@@ -166,7 +166,7 @@ export default function EcoDrivePlusPage() {
       />
       <MobileApplicationSchema
         name="EcoDrive+"
-        description="App de taxi con agente IA Eco: pides en lenguaje natural, mapa GPS en vivo, BilleteraEco, pago con Yape y sorteos del Pass Club. Trujillo, Perú."
+        description="App de taxi con agente IA Eco: pides en lenguaje natural, mapa GPS en vivo, BilleteraEco, pago con Yape y sorteos de la Membresía Club. Trujillo, Perú."
         url="https://ecodriveplus.com/descargar-app"
         category="TravelApplication"
       />
@@ -192,7 +192,7 @@ export default function EcoDrivePlusPage() {
 
           <nav className="hidden lg:flex items-center gap-7 xl:gap-9 eco-mono text-[var(--eco-ink-soft)] text-sm">
             <a href="#ia" className="hover:text-[var(--eco-flame)] transition-colors">IA</a>
-            <a href="#pass" className="hover:text-[var(--eco-flame)] transition-colors">Pass</a>
+            <a href="#pass" className="hover:text-[var(--eco-flame)] transition-colors">Membresía</a>
             <a href="#como" className="hover:text-[var(--eco-flame)] transition-colors">Cómo opera</a>
             <a href="#niveles" className="hover:text-[var(--eco-flame)] transition-colors">Niveles</a>
             <a href="#contra" className="hover:text-[var(--eco-flame)] transition-colors">Contraste</a>
@@ -251,8 +251,8 @@ export default function EcoDrivePlusPage() {
               <p>
                 Descargás la <strong className="text-[var(--eco-ink)]">app EcoDrive+</strong> y tu agente IA{" "}
                 <span className="eco-display-italic text-[var(--eco-flame-soft)]">Eco</span> aprende tus lugares,
-                te sugiere viajes y te avisa de zonas seguras. Billetera, mapa GPS en vivo, sorteos del{" "}
-                <strong className="text-[var(--eco-ink)]">Pass Club</strong> — todo dentro.
+                te sugiere viajes y te avisa de zonas seguras. Billetera, mapa GPS en vivo, sorteos de la{" "}
+                <strong className="text-[var(--eco-ink)]">Membresía Club</strong> — todo dentro.
                 ¿Apurado? Hablale a Eco por <strong className="text-[var(--eco-ink)]">WhatsApp</strong> y listo.
               </p>
             </Reveal>
@@ -280,7 +280,7 @@ export default function EcoDrivePlusPage() {
 
             <Reveal delay={1.2} className="mt-12 flex flex-wrap gap-x-8 gap-y-2 eco-mono text-[var(--eco-ink-mute)]">
               <span>⌗ Agente IA Eco</span>
-              <span>⌗ Pass Club S/.30 por sorteo</span>
+              <span>⌗ Membresía Club S/.30 por sorteo</span>
               <span>⌗ Yape al toque</span>
               <span>⌗ WhatsApp 24/7</span>
             </Reveal>
@@ -510,7 +510,7 @@ export default function EcoDrivePlusPage() {
             </h2>
             <p className="mt-8 max-w-2xl text-[var(--eco-ink-soft)] leading-relaxed">
               Pedís desde la <strong className="text-[var(--eco-ink)]">app EcoDrive+</strong> con el agente IA Eco —
-              mapa GPS en vivo, BilleteraEco, ranking, sorteos del Pass Club. ¿Sin app? Hablale a Eco
+              mapa GPS en vivo, BilleteraEco, ranking, sorteos de la Membresía Club. ¿Sin app? Hablale a Eco
               por WhatsApp, el bot también te atiende. Los conductores operan desde la app chofer.
             </p>
           </Reveal>
@@ -521,7 +521,7 @@ export default function EcoDrivePlusPage() {
               ["01", "Dile Hola", "Por WhatsApp al 994 810 242. Eco te saluda y pregunta a dónde vas."],
               ["02", "Comparte ubicación", "Clip 📎 → Ubicación. Eco identifica al toque."],
               ["03", "Elige chofer", "3 ofertas con foto, vehículo, rating y precio. Tú decides."],
-              ["04", "Listo", "Llega tu chofer. Pagás con BilleteraEco (app) o efectivo. 2 % de retorno al Pass."],
+              ["04", "Listo", "Llega tu chofer. Pagás con BilleteraEco (app) o efectivo. 2 % de retorno a la Membresía."],
             ].map(([code, title, desc], i) => (
               <Reveal key={code} delay={i * 0.12} className="relative pt-12">
                 <div className="absolute -top-2 left-0 eco-mono text-[var(--eco-flame)]">PASO {code}</div>
@@ -856,24 +856,24 @@ export default function EcoDrivePlusPage() {
         </div>
 
         <div aria-hidden className="hidden lg:block absolute left-6 top-32 eco-label-vertical">
-          09 — PASS · MEMBRESÍA · CLUB
+          09 — MEMBRESÍA · CLUB
         </div>
 
         <div className="relative mx-auto max-w-[1400px] px-6 lg:px-24">
           <Reveal className="mb-16 max-w-4xl">
             <div className="eco-mono text-[var(--eco-flame)] mb-4 flex items-center gap-3">
               <span className="inline-block h-2 w-2 rounded-full bg-[var(--eco-flame)] animate-pulse" />
-              — 09 / Pass del sorteo
+              — 09 / Membresía del sorteo
             </div>
             <h2 className="eco-display text-[52px] md:text-[88px] xl:text-[112px] leading-[0.92] text-[var(--eco-ink)]">
               Una <span className="eco-display-italic text-[var(--eco-flame)]">membresía.</span><br />
               Un <span className="eco-display-italic text-[var(--eco-flame)]">carro</span> esperando.
             </h2>
             <p className="mt-8 max-w-2xl text-[var(--eco-ink-soft)] leading-relaxed text-[17px] md:text-[19px]">
-              El <strong className="text-[var(--eco-ink)]">Pass EcoDrive+ Club</strong> cuesta <strong className="text-[var(--eco-flame)]">S/.30</strong> y te da
+              La <strong className="text-[var(--eco-ink)]">Membresía EcoDrive+ Club</strong> cuesta <strong className="text-[var(--eco-flame)]">S/.30</strong> y te da
               <strong className="text-[var(--eco-ink)]"> 1 número del sorteo del carro</strong> de la edición vigente +
               beneficios reales (cashback boost, descuento BilleteraEco, prioridad de chofer, Miss Sofia 30 días).
-              Cuando se sortea el carro, abre la siguiente edición con tickets nuevos. Si ya tenías Pass antes,
+              Cuando se sortea el carro, abre la siguiente edición con tickets nuevos. Si ya tenías Membresía antes,
               <strong className="text-[var(--eco-flame)]"> el próximo te cuesta S/.27</strong>.
             </p>
           </Reveal>
@@ -886,15 +886,15 @@ export default function EcoDrivePlusPage() {
                 <div className="relative z-10">
                   <div className="eco-mono text-[var(--eco-flame)] mb-6 flex items-center gap-3 flex-wrap">
                     <span className="inline-block h-2 w-2 rounded-full bg-[var(--eco-flame)] animate-pulse" />
-                    — Pass del sorteo
+                    — Membresía del sorteo
                     <span className="text-[10px] uppercase px-2 py-0.5 rounded-full bg-[var(--eco-flame)] text-[var(--eco-bg-deep)] tracking-wider">por edición</span>
                   </div>
                   <div className="flex items-baseline gap-4 flex-wrap">
                     <div className="eco-display text-[96px] md:text-[144px] xl:text-[176px] text-[var(--eco-flame)] leading-none">S/.30</div>
-                    <div className="eco-mono text-[var(--eco-ink-soft)] text-lg">/ Pass</div>
+                    <div className="eco-mono text-[var(--eco-ink-soft)] text-lg">/ Membresía</div>
                   </div>
                   <p className="mt-4 eco-mono text-[var(--eco-ink-mute)]">
-                    1 Pass = 1 número del sorteo. Cap 9 por DNI / mes. Bonus lealtad S/.27 si volvés.
+                    1 Membresía = 1 número del sorteo. Cap 9 por DNI / mes. Bonus lealtad S/.27 si volvés.
                   </p>
                   <div className="mt-10">
                     <Magnetic strength={0.3}>
@@ -902,7 +902,7 @@ export default function EcoDrivePlusPage() {
                         href={CLUB_URL}
                         className="inline-flex items-center gap-3 px-8 py-4 rounded-full bg-[var(--eco-flame)] text-[var(--eco-bg-deep)] font-semibold eco-mono hover:bg-[var(--eco-flame-soft)] transition-colors shadow-[0_8px_32px_-8px_rgba(224,136,33,0.7)]"
                       >
-                        Activar mi Pass
+                        Activar mi Membresía
                         <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
                       </Link>
                     </Magnetic>
@@ -924,7 +924,7 @@ export default function EcoDrivePlusPage() {
                   <li className="flex items-start gap-3"><span className="text-[var(--eco-flame)] mt-0.5">✦</span>Pre-asignación de número favorito</li>
                   <li className="flex items-start gap-3"><span className="text-[var(--eco-flame)] mt-0.5">✦</span>Miss Sofia 30 días gratis</li>
                   <li className="flex items-start gap-3"><span className="text-[var(--eco-flame)] mt-0.5">✦</span>TuDestinoYa + TuCuentoYa beta</li>
-                  <li className="flex items-start gap-3"><span className="text-[var(--eco-flame)] mt-0.5">✦</span>Premios consuelo + insignia Pass holder</li>
+                  <li className="flex items-start gap-3"><span className="text-[var(--eco-flame)] mt-0.5">✦</span>Premios consuelo + insignia de Miembro</li>
                 </ul>
               </div>
             </Reveal>
@@ -1027,7 +1027,7 @@ export default function EcoDrivePlusPage() {
               empieza con un <span className="eco-display-italic text-[var(--eco-flame)]">tap.</span>
             </h2>
             <p className="mt-12 text-[var(--eco-ink-soft)] eco-mono max-w-3xl mx-auto">
-              App con agente IA · Pass Club S/.30 por sorteo · WhatsApp 24/7 · Trujillo hoy · Lima pronto.
+              App con agente IA · Membresía Club S/.30 por sorteo · WhatsApp 24/7 · Trujillo hoy · Lima pronto.
             </p>
             <div className="mt-12 flex flex-col sm:flex-row gap-4 justify-center">
               <Magnetic strength={0.35}>
@@ -1038,7 +1038,7 @@ export default function EcoDrivePlusPage() {
               </Magnetic>
               <Magnetic strength={0.25}>
                 <Link href={CLUB_URL} className="inline-flex items-center justify-center gap-2 px-8 py-5 rounded-full border border-[var(--eco-flame)] text-[var(--eco-flame)] hover:bg-[var(--eco-flame)]/10 eco-mono transition-colors">
-                  Activar mi Pass S/.30
+                  Activar mi Membresía S/.30
                 </Link>
               </Magnetic>
               <Magnetic strength={0.2}>
@@ -1069,7 +1069,7 @@ export default function EcoDrivePlusPage() {
           </div>
           <div className="flex items-center justify-end gap-6 eco-mono flex-wrap">
             <Link href={APP_DOWNLOAD} className="text-[var(--eco-flame)] hover:text-[var(--eco-flame-soft)] transition-colors font-semibold">Descargar app</Link>
-            <Link href={CLUB_URL} className="text-[var(--eco-ink-soft)] hover:text-[var(--eco-flame)] transition-colors">Pass · Club</Link>
+            <Link href={CLUB_URL} className="text-[var(--eco-ink-soft)] hover:text-[var(--eco-flame)] transition-colors">Membresía · Club</Link>
             <Link href="/ecodriveplus/sorteos" className="text-[var(--eco-ink-soft)] hover:text-[var(--eco-flame)] transition-colors">Sorteos</Link>
             <Link href="/" className="text-[var(--eco-ink-soft)] hover:text-[var(--eco-flame)] transition-colors">ActivosYA</Link>
             <a href={PASAJERO_WA} className="text-[var(--eco-ink-soft)] hover:text-[var(--eco-flame)] transition-colors">Soporte WSP</a>

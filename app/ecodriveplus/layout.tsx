@@ -29,13 +29,13 @@ export const metadata: Metadata = {
     siteName: "EcoDrive+",
     title: "EcoDrive+ — La app de Trujillo con agente IA",
     description:
-      "App de taxi con agente IA Eco, Pass Club S/.30 por sorteo y comisión 6.3% para choferes — la más baja del Perú. Trujillo. También por WhatsApp.",
+      "App de taxi con agente IA Eco, Membresía Club S/.30 por sorteo y comisión 6.3% para choferes — la más baja del Perú. Trujillo. También por WhatsApp.",
   },
   twitter: {
     card: "summary_large_image",
     title: "EcoDrive+ — La app de Trujillo con agente IA",
     description:
-      "App de taxi con agente IA Eco, Pass Club S/.30 por sorteo y comisión 6.3% para choferes. Trujillo, Perú.",
+      "App de taxi con agente IA Eco, Membresía Club S/.30 por sorteo y comisión 6.3% para choferes. Trujillo, Perú.",
   },
   icons: {
     icon: "/ecodriveplus/icon.png",

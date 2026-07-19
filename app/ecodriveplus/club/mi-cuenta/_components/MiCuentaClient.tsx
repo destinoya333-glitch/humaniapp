@@ -55,7 +55,7 @@ export function MiCuentaClient() {
             <div className="bg-yellow-500/10 border border-yellow-500/40 rounded-xl p-6 text-center">
               <p className="text-yellow-200 mb-3">No encontramos compras a este número.</p>
               <a href="/ecodriveplus/club" className="bg-[#E1811B] text-black px-5 py-2 rounded font-bold inline-block">
-                Hacerme Club Pass
+                Hacerme Miembro del Club
               </a>
             </div>
           ) : (
@@ -72,12 +72,12 @@ export function MiCuentaClient() {
 
               {data.pass.length > 0 && (
                 <div className="bg-white/5 border border-white/10 rounded-xl p-5">
-                  <h3 className="text-xl font-bold mb-3">👑 Tus Pass ({data.pass.length})</h3>
+                  <h3 className="text-xl font-bold mb-3">👑 Tus Membresías ({data.pass.length})</h3>
                   <div className="space-y-2">
                     {data.pass.map((p) => (
                       <div key={p.id} className="bg-black/40 rounded p-3 flex justify-between">
                         <div>
-                          <p className="font-bold">Pass #{p.numero_pass_en_dni}</p>
+                          <p className="font-bold">Membresía #{p.numero_pass_en_dni}</p>
                           <p className="text-xs text-gray-400">
                             Vigente {p.fecha_inicio} → {p.fecha_fin} · {p.ediciones_consumidas} ediciones consumidas
                           </p>
@@ -116,9 +116,9 @@ export function MiCuentaClient() {
 
               {data.tickets.length === 0 && data.pass.length === 0 && (
                 <div className="bg-yellow-500/10 border border-yellow-500/40 rounded-xl p-6 text-center">
-                  <p className="text-yellow-200 mb-3">Todavía no tenés Pass activo.</p>
+                  <p className="text-yellow-200 mb-3">Todavía no tenés Membresía activa.</p>
                   <a href="/ecodriveplus/club" className="bg-[#E1811B] text-black px-5 py-2 rounded font-bold inline-block">
-                    Hacerme Club Pass
+                    Hacerme Miembro del Club
                   </a>
                 </div>
               )}
