@@ -241,7 +241,7 @@ export function ClubCTA(props: {
           <div className="w-40 h-40 rounded-full border-4 border-[#E1811B] flex items-center justify-center bg-black/40 shadow-lg">
             <span className={`eco-display text-5xl text-[#E1811B] ${spinning ? "opacity-70" : ""}`}>
               {numeroElegido != null
-                ? `#${numeroElegido}`
+                ? `${numeroElegido}`
                 : spinDisplay != null
                   ? spinDisplay
                   : "?"}
@@ -374,7 +374,7 @@ export function ClubCTA(props: {
     return (
       <div className="bg-green-500/10 border border-green-500/40 rounded-2xl p-6 md:p-8 text-center">
         <div className="text-green-300 text-sm font-bold mb-2">✅ MEMBRESÍA ACTIVADA</div>
-        <h2 className="text-4xl md:text-5xl font-black text-white">#{okResult.numero}</h2>
+        <h2 className="text-4xl md:text-5xl font-black text-white">{okResult.numero}</h2>
         <p className="text-gray-300 text-sm mt-3">
           Tu Membresía Club anual a nombre de <strong className="text-white">{nombre}</strong> quedó activa
           {okResult.fecha_fin ? <> hasta <strong className="text-white">{okResult.fecha_fin}</strong></> : null}.
@@ -431,7 +431,7 @@ export function ClubCTA(props: {
         <div>
           <div className="text-[11px] text-gray-400">TU NÚMERO</div>
           <div className="eco-display text-2xl text-[#E1811B]">
-            #{numeroElegido != null ? String(numeroElegido).padStart(4, "0") : "----"}
+            {numeroElegido != null ? numeroElegido : "----"}
           </div>
         </div>
         <button
