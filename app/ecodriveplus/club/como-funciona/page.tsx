@@ -46,7 +46,7 @@ const FAQ: Array<{ q: string; a: string }> = [
   },
   {
     q: "¿Cómo pago?",
-    a: "Yape al 998 102 258 con la glosa que te indicamos (ej: CLUB-0042). MacroDroid detecta el pago automático y en menos de 2 minutos te llega WhatsApp con tu Membresía confirmada.",
+    a: "Directo en la web, con tarjeta o Yape, de forma segura a través de Culqi (la pasarela de pagos). Apenas se aprueba el pago tu Membresía queda activada al instante y te llega por WhatsApp tu confirmación y tu número — sin subir capturas ni esperar validación manual.",
   },
   {
     q: "¿Cómo entregan el auto al ganador?",

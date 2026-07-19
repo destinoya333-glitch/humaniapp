@@ -1,11 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type Perfil = "publico" | "interno_pasajero" | "interno_conductor";
-type Step = "form" | "reservado" | "error";
-
-const WSP_ADMIN = "51994810242";
+type Step = "form" | "ok" | "error";
 
 export function ClubCTA(props: {
   edicionId: string;
@@ -23,18 +21,50 @@ export function ClubCTA(props: {
 
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
-  const [reservaResult, setReservaResult] = useState<{ numero: number; precio: number; expira: string; yape_glosa: string; reserva_id: string } | null>(null);
+  const [okResult, setOkResult] = useState<{ numero: number; fecha_fin?: string } | null>(null);
 
   const precio = perfil === "publico" ? props.passPublico : props.passInterno;
 
-  const reservar = async () => {
+  // Culqi Checkout v4 (tarjeta + Yape) — se carga una sola vez.
+  const CULQI_PK = process.env.NEXT_PUBLIC_CULQI_PUBLIC_KEY;
+  const [culqiReady, setCulqiReady] = useState(false);
+  useEffect(() => {
+    if (!CULQI_PK) return;
+    if ((window as unknown as { Culqi?: unknown }).Culqi) {
+      setCulqiReady(true);
+      return;
+    }
+    const s = document.createElement("script");
+    s.src = "https://checkout.culqi.com/js/v4";
+    s.async = true;
+    s.onload = () => setCulqiReady(true);
+    document.body.appendChild(s);
+  }, [CULQI_PK]);
+
+  const validar = (): string | null => {
+    if (dni.length !== 8 || !/^\d{8}$/.test(dni)) return "DNI debe ser 8 dígitos";
+    if (nombre.trim().length < 3) return "Ingresá tu nombre completo";
+    if (whatsapp.replace(/\D/g, "").length < 9) return "WhatsApp debe ser de 9 dígitos";
+    return null;
+  };
+
+  const pagar = async () => {
     setErrorMsg("");
-    if (dni.length !== 8 || !/^\d{8}$/.test(dni)) { setErrorMsg("DNI debe ser 8 dígitos"); return; }
-    if (nombre.trim().length < 3) { setErrorMsg("Ingresá tu nombre completo"); return; }
-    const waDigits = whatsapp.replace(/\D/g, "");
-    if (waDigits.length < 9) { setErrorMsg("WhatsApp debe ser de 9 dígitos"); return; }
+    const invalido = validar();
+    if (invalido) {
+      setErrorMsg(invalido);
+      return;
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const Culqi = (window as unknown as { Culqi?: any }).Culqi;
+    if (!CULQI_PK || !Culqi || !culqiReady) {
+      setErrorMsg("El pago aún se está cargando, intentá en un segundo.");
+      return;
+    }
+
     setLoading(true);
     try {
+      // 1) Reservar el número (asigna correlativo + precio real con bonus de lealtad)
       const r = await fetch("/api/ecodrive/club/reservar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -45,79 +75,95 @@ export function ClubCTA(props: {
           nombre,
           whatsapp,
           tipo_perfil: perfil,
-          metodo_pago_preferido: "yape",
         }),
       });
       const d = await r.json();
       if (!r.ok) {
-        setErrorMsg(d.error || "Error reservando");
-        setStep("error");
+        setErrorMsg(d.error || "No se pudo iniciar el pago");
+        setLoading(false);
         return;
       }
-      setReservaResult({
-        numero: d.numero_correlativo,
-        precio: d.precio,
-        expira: d.expira_en,
-        yape_glosa: d.pagar?.yape?.glosa ?? `CLUB-${d.numero_correlativo}`,
-        reserva_id: d.reserva_id,
+      const reservaId: string = d.reserva_id;
+      const montoReal: number = Number(d.precio);
+      const numero: number = d.numero_correlativo;
+
+      // 2) Abrir Culqi Checkout con tarjeta + Yape
+      Culqi.publicKey = CULQI_PK;
+      Culqi.settings({
+        title: "EcoDrive+ Club",
+        currency: "PEN",
+        amount: Math.round(montoReal * 100),
+        description: `Membresía Club anual — N° ${numero}`,
       });
-      setStep("reservado");
+      Culqi.options({
+        lang: "es",
+        paymentMethods: { tarjeta: true, yape: true, billetera: false, bancaMovil: false },
+        style: { buttonText: "Pagar", buttonTextColor: "#0A0908", buttonBackgroundColor: "#E1811B" },
+      });
+
+      (window as unknown as { culqi?: () => void }).culqi = async () => {
+        if (Culqi.token) {
+          const token = Culqi.token.id as string;
+          const email = (Culqi.token.email as string) || `club_${dni}@ecodriveplus.com`;
+          setLoading(true);
+          try {
+            const res = await fetch("/api/ecodrive/club/culqi-charge", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ token, email, reserva_id: reservaId }),
+            });
+            const j = await res.json();
+            if (!j.ok) throw new Error(j.error || "No se pudo procesar el pago");
+            Culqi.close();
+            setOkResult({ numero: j.numero_correlativo ?? numero, fecha_fin: j.fecha_fin });
+            setStep("ok");
+          } catch (e) {
+            setErrorMsg((e as Error).message);
+            setStep("error");
+          } finally {
+            setLoading(false);
+          }
+        } else if (Culqi.error) {
+          setErrorMsg(Culqi.error.user_message || "El pago fue rechazado. Intentá con otro método o tarjeta.");
+        }
+      };
+
+      Culqi.open();
     } catch (e) {
       setErrorMsg((e as Error).message);
-      setStep("error");
     } finally {
       setLoading(false);
     }
   };
 
-  if (step === "reservado" && reservaResult) {
-    const wsConfirm = `https://wa.me/${WSP_ADMIN}?text=${encodeURIComponent(`Hola! Acabo de yapear S/.${reservaResult.precio} por mi Membresía Club ${reservaResult.yape_glosa}. Mi DNI es ${dni}. Acá va captura:`)}`;
+  if (step === "ok" && okResult) {
     return (
-      <div className="bg-green-500/10 border border-green-500/40 rounded-2xl p-6 md:p-8">
-        <div className="text-center mb-6">
-          <div className="text-green-300 text-sm font-bold mb-2">✅ MEMBRESÍA RESERVADA</div>
-          <h2 className="text-4xl md:text-5xl font-black text-white">#{reservaResult.numero}</h2>
-          <p className="text-gray-300 text-sm mt-2">
-            Membresía Club anual a nombre de <strong className="text-white">{nombre}</strong>
-          </p>
-        </div>
-
-        <div className="bg-black/40 rounded-xl p-5 mb-5">
-          <div className="text-gray-300 text-sm mb-2">PASO 1 — Yapeá</div>
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <p className="text-3xl font-black text-white">S/.{reservaResult.precio}</p>
-              <p className="text-sm text-gray-400">al celular</p>
-            </div>
-            <div className="text-right">
-              <p className="text-2xl font-bold text-[#E1811B]">998 102 258</p>
-              <p className="text-sm text-gray-400">EcoDrive Plus SAC</p>
-            </div>
-          </div>
-          <div className="border-t border-white/10 pt-3">
-            <p className="text-sm text-gray-300 mb-1">En la <strong>glosa/mensaje</strong> escribí exactamente:</p>
-            <code className="block bg-[#E1811B]/20 text-[#FFA84A] px-3 py-2 rounded text-center text-lg font-bold tracking-wider">
-              {reservaResult.yape_glosa}
-            </code>
-            <p className="text-xs text-gray-500 mt-2">⚠️ Sin la glosa exacta, no podemos identificar tu pago automáticamente.</p>
-          </div>
-        </div>
-
-        <div className="bg-black/40 rounded-xl p-5 mb-5">
-          <div className="text-gray-300 text-sm mb-3">PASO 2 — Mandanos captura del Yape</div>
-          <a href={wsConfirm} target="_blank" rel="noopener noreferrer" className="block w-full bg-[#25D366] hover:bg-[#1ebe57] text-white font-bold py-4 rounded-xl text-center transition">
-            📲 Avisar pago por WhatsApp
-          </a>
-          <p className="text-xs text-gray-500 mt-2 text-center">Te abre WhatsApp con mensaje pre-llenado. Adjuntá captura del Yape.</p>
-        </div>
-
-        <div className="text-center text-xs text-gray-500 space-y-1">
-          <p>⏱️ Tu Membresía queda reservada por <strong className="text-white">15 minutos</strong>.</p>
-          <p>Una vez confirmemos tu pago, tu Membresía se activa por 12 meses y participás en cada sorteo del año.</p>
-          <p>Consultá tu Membresía en cualquier momento: <a href="/ecodriveplus/club/mi-cuenta" className="text-[#E1811B] underline">/club/mi-cuenta</a></p>
-        </div>
-
-        <button onClick={() => { setStep("form"); setReservaResult(null); setDni(""); setNombre(""); setWhatsapp(""); }} className="mt-4 w-full bg-white/5 hover:bg-white/10 text-gray-300 py-2 rounded-lg text-sm transition">
+      <div className="bg-green-500/10 border border-green-500/40 rounded-2xl p-6 md:p-8 text-center">
+        <div className="text-green-300 text-sm font-bold mb-2">✅ MEMBRESÍA ACTIVADA</div>
+        <h2 className="text-4xl md:text-5xl font-black text-white">#{okResult.numero}</h2>
+        <p className="text-gray-300 text-sm mt-3">
+          Tu Membresía Club anual a nombre de <strong className="text-white">{nombre}</strong> quedó activa
+          {okResult.fecha_fin ? <> hasta <strong className="text-white">{okResult.fecha_fin}</strong></> : null}.
+        </p>
+        <p className="text-gray-400 text-xs mt-3">
+          Te enviamos la confirmación y tu número por WhatsApp. Participás en cada sorteo del año.
+        </p>
+        <a
+          href="/ecodriveplus/club/mi-cuenta"
+          className="inline-block mt-5 bg-[#E1811B] hover:bg-[#FFA84A] text-black font-bold px-6 py-3 rounded-xl transition"
+        >
+          Ver mi cuenta
+        </a>
+        <button
+          onClick={() => {
+            setStep("form");
+            setOkResult(null);
+            setDni("");
+            setNombre("");
+            setWhatsapp("");
+          }}
+          className="mt-4 w-full bg-white/5 hover:bg-white/10 text-gray-300 py-2 rounded-lg text-sm transition"
+        >
           Comprar otra Membresía
         </button>
       </div>
@@ -128,8 +174,14 @@ export function ClubCTA(props: {
     return (
       <div className="bg-red-500/10 border border-red-500/40 rounded-2xl p-6 text-center">
         <h2 className="text-xl font-bold text-red-300 mb-3">⚠️ {errorMsg}</h2>
-        <button onClick={() => { setStep("form"); setErrorMsg(""); }} className="bg-[#E1811B] text-black px-6 py-2 rounded-lg font-bold">
-          Volver al formulario
+        <button
+          onClick={() => {
+            setStep("form");
+            setErrorMsg("");
+          }}
+          className="bg-[#E1811B] text-black px-6 py-2 rounded-lg font-bold"
+        >
+          Volver a intentar
         </button>
       </div>
     );
@@ -145,9 +197,7 @@ export function ClubCTA(props: {
         <p className="text-sm text-gray-300 mb-3">
           Participás en <strong>TODOS</strong> los sorteos del año + bonus por lealtad (+1 número por edición consumida, cap 5).
         </p>
-        <p className="text-3xl font-bold">
-          S/.{precio}
-        </p>
+        <p className="text-3xl font-bold">S/.{precio}</p>
       </div>
 
       <div className="mb-4">
@@ -178,27 +228,23 @@ export function ClubCTA(props: {
       </div>
 
       {perfil === "interno_conductor" && (
-        <p className="text-xs text-green-300 mb-3">
-          ✓ Beneficio incluido: 18 primeros viajes del mes sin comisión EcoDrive+
-        </p>
+        <p className="text-xs text-green-300 mb-3">✓ Beneficio incluido: 18 primeros viajes del mes sin comisión EcoDrive+</p>
       )}
       {perfil === "interno_pasajero" && (
-        <p className="text-xs text-green-300 mb-3">
-          ✓ Beneficio incluido: 1 mes con cashback al 10% en tus viajes (vs 5% normal)
-        </p>
+        <p className="text-xs text-green-300 mb-3">✓ Beneficio incluido: 1 mes con cashback al 10% en tus viajes (vs 5% normal)</p>
       )}
 
       {errorMsg && <p className="text-red-400 text-sm mb-3">⚠️ {errorMsg}</p>}
 
       <button
-        onClick={reservar}
-        disabled={loading || !dni || !nombre || !whatsapp}
+        onClick={pagar}
+        disabled={loading || !dni || !nombre || !whatsapp || !culqiReady}
         className="w-full bg-[#E1811B] hover:bg-[#FFA84A] text-black font-bold py-4 rounded-xl disabled:opacity-50 transition"
       >
-        {loading ? "Reservando..." : "Quiero mi Membresía anual →"}
+        {loading ? "Procesando..." : culqiReady ? `Pagar S/.${precio} →` : "Cargando pago…"}
       </button>
       <p className="text-xs text-gray-500 mt-3 text-center">
-        Total a pagar: <strong className="text-white">S/.{precio}</strong> · Yape al 998 102 258 · Reserva válida 15 min
+        💳 Tarjeta o Yape · Pago seguro con Culqi · Sin suscripción
       </p>
     </div>
   );

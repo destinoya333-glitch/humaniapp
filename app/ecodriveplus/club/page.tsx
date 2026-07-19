@@ -208,14 +208,6 @@ export default async function ClubPage() {
                   {actual?.nombre ?? preview?.nombre ?? "BYD Yuan Pro 2023"}
                 </div>
               </div>
-              {(actual?.premio_valor || preview?.premio_valor_referencial) && (
-                <div className="text-right">
-                  <div className="eco-mono text-[var(--eco-ink-mute)]">valor referencial</div>
-                  <div className="eco-display text-[24px] md:text-[32px] text-[var(--eco-flame)] leading-none">
-                    S/. {Number(actual?.premio_valor ?? preview?.premio_valor_referencial).toLocaleString("es-PE")}
-                  </div>
-                </div>
-              )}
             </div>
           </Reveal>
         </div>
@@ -304,7 +296,7 @@ export default async function ClubPage() {
             <div aria-hidden className="hidden md:block absolute top-12 left-[8%] right-[8%] h-px bg-gradient-to-r from-transparent via-[var(--eco-flame)] to-transparent opacity-40" />
             {[
               ["01", "Te haces Miembro", "S/. 30 por Membresía = 1 número del sorteo del carro en la edición vigente. Si adquirís tu Membresía en una edición posterior, S/. 27 (bonus de lealtad)."],
-              ["02", "Pagas", "Yape al 998 102 258. En menos de 2 minutos tu Membresía queda activada y recibís número por WhatsApp."],
+              ["02", "Pagas", "Con tarjeta o Yape, seguro con Culqi. Apenas se aprueba el pago tu Membresía queda activada al instante y recibís tu número por WhatsApp."],
               ["03", "Participás todo el año", "En cada edición que se ejecuta durante tu vigencia participás con número(s). Bonus de lealtad +1 por edición consumida (cap 5)."],
             ].map(([code, title, desc], i) => (
               <Reveal key={code} delay={i * 0.12} className="relative pt-12">
