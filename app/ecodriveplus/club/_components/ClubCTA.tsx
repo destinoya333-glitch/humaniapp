@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 type Perfil = "publico" | "interno_pasajero" | "interno_conductor";
-type Step = "form" | "ok" | "error";
+type Step = "form" | "metodo" | "ok" | "error";
 
 export function ClubCTA(props: {
   edicionId: string;
@@ -22,10 +22,11 @@ export function ClubCTA(props: {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [okResult, setOkResult] = useState<{ numero: number; fecha_fin?: string } | null>(null);
+  const [reserva, setReserva] = useState<{ id: string; monto: number; numero: number } | null>(null);
 
   const precio = perfil === "publico" ? props.passPublico : props.passInterno;
 
-  // Culqi Checkout v4 (tarjeta + Yape) — se carga una sola vez.
+  // Culqi Checkout v4 (tarjeta / Yape) — se carga una sola vez.
   const CULQI_PK = process.env.NEXT_PUBLIC_CULQI_PUBLIC_KEY;
   const [culqiReady, setCulqiReady] = useState(false);
   useEffect(() => {
@@ -48,23 +49,16 @@ export function ClubCTA(props: {
     return null;
   };
 
-  const pagar = async () => {
+  // Paso 1: reservar el número y pasar a la pantalla de elegir método de pago.
+  const iniciar = async () => {
     setErrorMsg("");
     const invalido = validar();
     if (invalido) {
       setErrorMsg(invalido);
       return;
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const Culqi = (window as unknown as { Culqi?: any }).Culqi;
-    if (!CULQI_PK || !Culqi || !culqiReady) {
-      setErrorMsg("El pago aún se está cargando, intentá en un segundo.");
-      return;
-    }
-
     setLoading(true);
     try {
-      // 1) Reservar el número (asigna correlativo + precio real con bonus de lealtad)
       const r = await fetch("/api/ecodrive/club/reservar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -80,61 +74,130 @@ export function ClubCTA(props: {
       const d = await r.json();
       if (!r.ok) {
         setErrorMsg(d.error || "No se pudo iniciar el pago");
-        setLoading(false);
         return;
       }
-      const reservaId: string = d.reserva_id;
-      const montoReal: number = Number(d.precio);
-      const numero: number = d.numero_correlativo;
-
-      // 2) Abrir Culqi Checkout con tarjeta + Yape
-      Culqi.publicKey = CULQI_PK;
-      Culqi.settings({
-        title: "EcoDrive+ Club",
-        currency: "PEN",
-        amount: Math.round(montoReal * 100),
-        description: `Membresía Club anual — N° ${numero}`,
-      });
-      Culqi.options({
-        lang: "es",
-        paymentMethods: { tarjeta: true, yape: true, billetera: false, bancaMovil: false },
-        style: { buttonText: "Pagar", buttonTextColor: "#0A0908", buttonBackgroundColor: "#E1811B" },
-      });
-
-      (window as unknown as { culqi?: () => void }).culqi = async () => {
-        if (Culqi.token) {
-          const token = Culqi.token.id as string;
-          const email = (Culqi.token.email as string) || `club_${dni}@ecodriveplus.com`;
-          setLoading(true);
-          try {
-            const res = await fetch("/api/ecodrive/club/culqi-charge", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ token, email, reserva_id: reservaId }),
-            });
-            const j = await res.json();
-            if (!j.ok) throw new Error(j.error || "No se pudo procesar el pago");
-            Culqi.close();
-            setOkResult({ numero: j.numero_correlativo ?? numero, fecha_fin: j.fecha_fin });
-            setStep("ok");
-          } catch (e) {
-            setErrorMsg((e as Error).message);
-            setStep("error");
-          } finally {
-            setLoading(false);
-          }
-        } else if (Culqi.error) {
-          setErrorMsg(Culqi.error.user_message || "El pago fue rechazado. Intentá con otro método o tarjeta.");
-        }
-      };
-
-      Culqi.open();
+      setReserva({ id: d.reserva_id, monto: Number(d.precio), numero: d.numero_correlativo });
+      setStep("metodo");
     } catch (e) {
       setErrorMsg((e as Error).message);
     } finally {
       setLoading(false);
     }
   };
+
+  // Paso 2: abrir Culqi con el método elegido (tarjeta O Yape).
+  const payWith = (metodo: "tarjeta" | "yape") => {
+    if (!reserva) return;
+    setErrorMsg("");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const Culqi = (window as unknown as { Culqi?: any }).Culqi;
+    if (!CULQI_PK || !Culqi || !culqiReady) {
+      setErrorMsg("El pago aún se está cargando, intentá en un segundo.");
+      return;
+    }
+
+    Culqi.publicKey = CULQI_PK;
+    Culqi.settings({
+      title: "EcoDrive+ Club",
+      currency: "PEN",
+      amount: Math.round(reserva.monto * 100),
+      description: `Membresía Club anual — N° ${reserva.numero}`,
+    });
+    Culqi.options({
+      lang: "es",
+      installments: false,
+      paymentMethods: {
+        tarjeta: metodo === "tarjeta",
+        yape: metodo === "yape",
+        billetera: false,
+        bancaMovil: false,
+        agente: false,
+        cuotealo: false,
+      },
+      style: { buttonText: "Pagar", buttonTextColor: "#0A0908", buttonBackgroundColor: "#E1811B" },
+    });
+
+    (window as unknown as { culqi?: () => void }).culqi = async () => {
+      if (Culqi.token) {
+        const token = Culqi.token.id as string;
+        const email = (Culqi.token.email as string) || `club_${dni}@ecodriveplus.com`;
+        setLoading(true);
+        try {
+          const res = await fetch("/api/ecodrive/club/culqi-charge", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ token, email, reserva_id: reserva.id }),
+          });
+          const j = await res.json();
+          if (!j.ok) throw new Error(j.error || "No se pudo procesar el pago");
+          Culqi.close();
+          setOkResult({ numero: j.numero_correlativo ?? reserva.numero, fecha_fin: j.fecha_fin });
+          setStep("ok");
+        } catch (e) {
+          setErrorMsg((e as Error).message);
+          setStep("error");
+        } finally {
+          setLoading(false);
+        }
+      } else if (Culqi.error) {
+        setErrorMsg(Culqi.error.user_message || "El pago fue rechazado. Intentá con otro método o tarjeta.");
+      }
+    };
+
+    Culqi.open();
+  };
+
+  // ---- Pantalla: elegir método de pago (Yape / tarjeta) ----
+  if (step === "metodo" && reserva) {
+    return (
+      <div className="bg-white/5 border border-white/10 rounded-2xl p-6 md:p-8 text-center">
+        <div className="eco-mono tracking-[0.2em] text-[11px] text-[var(--eco-ink-mute)] mb-3">
+          ECODRIVE+ CLUB · PAGO SEGURO
+        </div>
+        <div className="eco-display text-[56px] md:text-[64px] leading-none text-[#E1811B]">
+          S/ {reserva.monto.toFixed(2)}
+        </div>
+        <div className="text-gray-400 text-sm mt-3 mb-8">
+          Membresía Club anual · N° {String(reserva.numero).padStart(4, "0")}
+        </div>
+
+        <button
+          onClick={() => payWith("yape")}
+          disabled={loading || !culqiReady}
+          className="w-full flex items-center justify-center gap-3 bg-[#742284] hover:bg-[#8a2b9e] disabled:opacity-60 text-white font-bold text-lg rounded-2xl py-5 shadow-lg transition"
+        >
+          <span className="bg-white rounded-lg px-2 py-1 text-[#742284] italic font-extrabold text-sm leading-none">
+            Yape
+          </span>
+          {loading ? "Procesando…" : "Pagar con Yape"}
+        </button>
+
+        <button
+          onClick={() => payWith("tarjeta")}
+          disabled={loading || !culqiReady}
+          className="w-full mt-3 flex items-center justify-center gap-2 border-2 border-[#E1811B] text-[#E1811B] hover:bg-[#E1811B]/10 disabled:opacity-60 font-bold text-lg rounded-2xl py-5 transition"
+        >
+          💳 {loading ? "Procesando…" : "Pagar con tarjeta"}
+        </button>
+
+        {errorMsg && <p className="text-red-400 text-sm mt-4">⚠️ {errorMsg}</p>}
+
+        <p className="eco-mono text-[11px] text-[var(--eco-ink-mute)] mt-6">
+          Pago procesado por Culqi · se confirma al instante
+        </p>
+        <button
+          onClick={() => {
+            setStep("form");
+            setErrorMsg("");
+            setReserva(null);
+          }}
+          className="mt-4 text-xs text-gray-500 hover:text-gray-300 transition"
+        >
+          ← Volver
+        </button>
+      </div>
+    );
+  }
 
   if (step === "ok" && okResult) {
     return (
@@ -158,6 +221,7 @@ export function ClubCTA(props: {
           onClick={() => {
             setStep("form");
             setOkResult(null);
+            setReserva(null);
             setDni("");
             setNombre("");
             setWhatsapp("");
@@ -176,7 +240,7 @@ export function ClubCTA(props: {
         <h2 className="text-xl font-bold text-red-300 mb-3">⚠️ {errorMsg}</h2>
         <button
           onClick={() => {
-            setStep("form");
+            setStep(reserva ? "metodo" : "form");
             setErrorMsg("");
           }}
           className="bg-[#E1811B] text-black px-6 py-2 rounded-lg font-bold"
@@ -237,11 +301,11 @@ export function ClubCTA(props: {
       {errorMsg && <p className="text-red-400 text-sm mb-3">⚠️ {errorMsg}</p>}
 
       <button
-        onClick={pagar}
-        disabled={loading || !dni || !nombre || !whatsapp || !culqiReady}
+        onClick={iniciar}
+        disabled={loading || !dni || !nombre || !whatsapp}
         className="w-full bg-[#E1811B] hover:bg-[#FFA84A] text-black font-bold py-4 rounded-xl disabled:opacity-50 transition"
       >
-        {loading ? "Procesando..." : culqiReady ? `Pagar S/.${precio} →` : "Cargando pago…"}
+        {loading ? "Procesando..." : `Pagar S/.${precio} →`}
       </button>
       <p className="text-xs text-gray-500 mt-3 text-center">
         💳 Tarjeta o Yape · Pago seguro con Culqi · Sin suscripción
