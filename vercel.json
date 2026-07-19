@@ -53,6 +53,10 @@
       "schedule": "0 13 * * *"
     },
     {
+      "path": "/api/cron/club-recordar-pendientes",
+      "schedule": "0 15 * * 1"
+    },
+    {
       "path": "/api/cron/marketing-sync",
       "schedule": "0 8 * * *"
     },
