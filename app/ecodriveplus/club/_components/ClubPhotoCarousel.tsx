@@ -55,14 +55,18 @@ export default function ClubPhotoCarousel({ photos, alt }: Props) {
     });
   }, [index]);
 
-  // Auto-scroll del strip para mantener el activo visible
+  // Auto-scroll del strip para mantener el activo visible.
+  // OJO: solo movemos el scroll HORIZONTAL del strip; usar scrollIntoView
+  // arrastraba el scroll vertical de la página al carrusel al cargar.
   useEffect(() => {
     const strip = stripRef.current;
     if (!strip) return;
     const active = strip.querySelector<HTMLElement>(`[data-thumb-idx="${index}"]`);
-    if (active) {
-      active.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
-    }
+    if (!active) return;
+    const sRect = strip.getBoundingClientRect();
+    const aRect = active.getBoundingClientRect();
+    const target = strip.scrollLeft + (aRect.left - sRect.left) - (strip.clientWidth - active.clientWidth) / 2;
+    strip.scrollTo({ left: Math.max(0, target), behavior: "smooth" });
   }, [index]);
 
   // Touch swipe
