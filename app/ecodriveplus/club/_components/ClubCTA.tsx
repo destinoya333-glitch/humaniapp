@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 type Perfil = "publico" | "interno_pasajero" | "interno_conductor";
-type Step = "form" | "metodo" | "ok" | "error";
+type Step = "numero" | "form" | "metodo" | "ok" | "error";
 
 export function ClubCTA(props: {
   edicionId: string;
@@ -13,7 +13,7 @@ export function ClubCTA(props: {
   passInterno: number;
   meta: number;
 }) {
-  const [step, setStep] = useState<Step>("form");
+  const [step, setStep] = useState<Step>("numero");
   const [perfil, setPerfil] = useState<Perfil>("publico");
   const [dni, setDni] = useState("");
   const [nombre, setNombre] = useState("");
@@ -24,23 +24,65 @@ export function ClubCTA(props: {
   const [okResult, setOkResult] = useState<{ numero: number; fecha_fin?: string } | null>(null);
   const [reserva, setReserva] = useState<{ id: string; monto: number; numero: number } | null>(null);
 
+  // --- Selección de número (cartilla + ruleta) ---
+  const [numeroElegido, setNumeroElegido] = useState<number | null>(null);
+  const [ocupados, setOcupados] = useState<Set<number>>(new Set());
+  const [loadingNums, setLoadingNums] = useState(false);
+  const [spinning, setSpinning] = useState(false);
+  const [spinDisplay, setSpinDisplay] = useState<number | null>(null);
+  const [verGrilla, setVerGrilla] = useState(false);
+  const [busqueda, setBusqueda] = useState("");
+  const spinRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   const precio = perfil === "publico" ? props.passPublico : props.passInterno;
 
-  // Culqi Checkout v4 (tarjeta / Yape) — se carga una sola vez.
-  const CULQI_PK = process.env.NEXT_PUBLIC_CULQI_PUBLIC_KEY;
-  const [culqiReady, setCulqiReady] = useState(false);
-  useEffect(() => {
-    if (!CULQI_PK) return;
-    if ((window as unknown as { Culqi?: unknown }).Culqi) {
-      setCulqiReady(true);
-      return;
+  const cargarOcupados = useCallback(async () => {
+    setLoadingNums(true);
+    try {
+      const r = await fetch(`/api/ecodrive/club/numeros-ocupados?edicion_id=${props.edicionId}`);
+      const j = await r.json();
+      if (j.ok && Array.isArray(j.ocupados)) setOcupados(new Set<number>(j.ocupados));
+    } catch {
+      /* si falla, la cartilla muestra todo como libre; la reserva valida igual */
+    } finally {
+      setLoadingNums(false);
     }
-    const s = document.createElement("script");
-    s.src = "https://checkout.culqi.com/js/v4";
-    s.async = true;
-    s.onload = () => setCulqiReady(true);
-    document.body.appendChild(s);
-  }, [CULQI_PK]);
+  }, [props.edicionId]);
+
+  useEffect(() => {
+    void cargarOcupados();
+    return () => {
+      if (spinRef.current) clearInterval(spinRef.current);
+    };
+  }, [cargarOcupados]);
+
+  // Ruleta: gira ~1.4s y cae en un número LIBRE (lo elige el servidor).
+  const girarRuleta = async () => {
+    if (spinning) return;
+    setSpinning(true);
+    setErrorMsg("");
+    setNumeroElegido(null);
+    spinRef.current = setInterval(
+      () => setSpinDisplay(1 + Math.floor(Math.random() * props.meta)),
+      60,
+    );
+    try {
+      const r = await fetch(`/api/ecodrive/club/sugerir-numeros?edicion_id=${props.edicionId}&count=1`);
+      const j = await r.json();
+      const n =
+        Array.isArray(j.numeros) && j.numeros.length
+          ? (j.numeros[0] as number)
+          : 1 + Math.floor(Math.random() * props.meta);
+      await new Promise((res) => setTimeout(res, 1400));
+      if (spinRef.current) clearInterval(spinRef.current);
+      setSpinDisplay(n);
+      setNumeroElegido(n);
+    } catch {
+      if (spinRef.current) clearInterval(spinRef.current);
+    } finally {
+      setSpinning(false);
+    }
+  };
 
   const validar = (): string | null => {
     if (dni.length !== 8 || !/^\d{8}$/.test(dni)) return "DNI debe ser 8 dígitos";
@@ -49,12 +91,16 @@ export function ClubCTA(props: {
     return null;
   };
 
-  // Paso 1: reservar el número y pasar a la pantalla de elegir método de pago.
+  // Reserva el número ELEGIDO y pasa a elegir método de pago.
   const iniciar = async () => {
     setErrorMsg("");
     const invalido = validar();
     if (invalido) {
       setErrorMsg(invalido);
+      return;
+    }
+    if (!numeroElegido) {
+      setStep("numero");
       return;
     }
     setLoading(true);
@@ -69,11 +115,18 @@ export function ClubCTA(props: {
           nombre,
           whatsapp,
           tipo_perfil: perfil,
+          numero_correlativo: numeroElegido,
         }),
       });
       const d = await r.json();
       if (!r.ok) {
+        // Si el número se ocupó recién, volvemos a la cartilla.
         setErrorMsg(d.error || "No se pudo iniciar el pago");
+        if (/numero|correlativo|ocupad|disponible|duplicad|unique/i.test(d.error || "")) {
+          await cargarOcupados();
+          setNumeroElegido(null);
+          setStep("numero");
+        }
         return;
       }
       setReserva({ id: d.reserva_id, monto: Number(d.precio), numero: d.numero_correlativo });
@@ -85,7 +138,7 @@ export function ClubCTA(props: {
     }
   };
 
-  // Paso 2: abrir Culqi con el método elegido (tarjeta O Yape).
+  // Paso final: abrir Culqi con el método elegido (tarjeta O Yape).
   const payWith = (metodo: "tarjeta" | "yape") => {
     if (!reserva) return;
     setErrorMsg("");
@@ -146,6 +199,125 @@ export function ClubCTA(props: {
 
     Culqi.open();
   };
+
+  // Culqi Checkout v4 (tarjeta / Yape) — se carga una sola vez.
+  const CULQI_PK = process.env.NEXT_PUBLIC_CULQI_PUBLIC_KEY;
+  const [culqiReady, setCulqiReady] = useState(false);
+  useEffect(() => {
+    if (!CULQI_PK) return;
+    if ((window as unknown as { Culqi?: unknown }).Culqi) {
+      setCulqiReady(true);
+      return;
+    }
+    const s = document.createElement("script");
+    s.src = "https://checkout.culqi.com/js/v4";
+    s.async = true;
+    s.onload = () => setCulqiReady(true);
+    document.body.appendChild(s);
+  }, [CULQI_PK]);
+
+  // ---- Pantalla 1: elegir número (ruleta + cartilla) ----
+  if (step === "numero") {
+    const numerosFiltrados = busqueda.trim()
+      ? Array.from({ length: props.meta }, (_, i) => i + 1).filter((n) =>
+          String(n).includes(busqueda.trim().replace(/\D/g, "")),
+        )
+      : Array.from({ length: props.meta }, (_, i) => i + 1);
+    return (
+      <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+        <div className="text-center mb-5">
+          <div className="eco-mono tracking-[0.2em] text-[11px] text-[var(--eco-ink-mute)]">
+            ELEGÍ TU NÚMERO DE LA SUERTE
+          </div>
+          <p className="text-sm text-gray-400 mt-2">
+            {loadingNums
+              ? "Cargando disponibilidad…"
+              : `${ocupados.size.toLocaleString()} de ${props.meta.toLocaleString()} números ya vendidos`}
+          </p>
+        </div>
+
+        {/* Ruleta */}
+        <div className="flex flex-col items-center">
+          <div className="w-40 h-40 rounded-full border-4 border-[#E1811B] flex items-center justify-center bg-black/40 shadow-lg">
+            <span className={`eco-display text-5xl text-[#E1811B] ${spinning ? "opacity-70" : ""}`}>
+              {numeroElegido != null
+                ? `#${numeroElegido}`
+                : spinDisplay != null
+                  ? spinDisplay
+                  : "?"}
+            </span>
+          </div>
+          <button
+            onClick={girarRuleta}
+            disabled={spinning}
+            className="mt-5 w-full max-w-xs bg-[#E1811B] hover:bg-[#FFA84A] disabled:opacity-60 text-black font-bold py-4 rounded-xl transition"
+          >
+            {spinning ? "Girando…" : numeroElegido != null ? "🎰 Girar de nuevo" : "🎰 Número de la suerte"}
+          </button>
+        </div>
+
+        {/* Cartilla completa */}
+        <button
+          onClick={() => setVerGrilla((v) => !v)}
+          className="mt-6 w-full text-center text-sm text-[#E1811B] hover:text-[#FFA84A] transition"
+        >
+          {verGrilla ? "▲ Ocultar cartilla" : "▼ Prefiero elegir mi número de la cartilla"}
+        </button>
+
+        {verGrilla && (
+          <div className="mt-4">
+            <input
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              inputMode="numeric"
+              placeholder="Buscar número (ej. 777)"
+              className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white mb-3"
+            />
+            <div className="flex items-center gap-4 text-[11px] text-gray-400 mb-2">
+              <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded bg-white/10" /> libre</span>
+              <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded bg-white/[0.03] border border-white/10" /> ocupado</span>
+              <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded bg-[#E1811B]" /> tu número</span>
+            </div>
+            <div className="grid grid-cols-6 sm:grid-cols-8 gap-1 max-h-[320px] overflow-y-auto p-1 rounded-lg bg-black/20">
+              {numerosFiltrados.map((n) => {
+                const taken = ocupados.has(n);
+                const sel = numeroElegido === n;
+                return (
+                  <button
+                    key={n}
+                    disabled={taken}
+                    onClick={() => setNumeroElegido(n)}
+                    className={`text-[10px] leading-none py-2 rounded ${
+                      sel
+                        ? "bg-[#E1811B] text-black font-bold"
+                        : taken
+                          ? "bg-white/[0.03] text-gray-600 line-through cursor-not-allowed"
+                          : "bg-white/10 text-gray-200 hover:bg-white/20"
+                    }`}
+                  >
+                    {n}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {errorMsg && <p className="text-red-400 text-sm mt-3 text-center">⚠️ {errorMsg}</p>}
+
+        <button
+          onClick={() => setStep("form")}
+          disabled={numeroElegido == null}
+          className="mt-6 w-full bg-[#E1811B] hover:bg-[#FFA84A] text-black font-bold py-4 rounded-xl disabled:opacity-40 transition"
+        >
+          {numeroElegido != null ? `Continuar con el N° ${String(numeroElegido).padStart(4, "0")} →` : "Elegí un número para continuar"}
+        </button>
+        <p className="text-xs text-gray-500 mt-3 text-center">
+          Elegís tu número · luego tus datos · pagás con Culqi (tarjeta o Yape)
+        </p>
+      </div>
+    );
+  }
 
   // ---- Pantalla: elegir método de pago (Yape / tarjeta) ----
   if (step === "metodo" && reserva) {
@@ -208,7 +380,7 @@ export function ClubCTA(props: {
           {okResult.fecha_fin ? <> hasta <strong className="text-white">{okResult.fecha_fin}</strong></> : null}.
         </p>
         <p className="text-gray-400 text-xs mt-3">
-          Te enviamos la confirmación y tu número por WhatsApp. Participás en cada sorteo del año.
+          Te enviamos la confirmación y tu boleto por WhatsApp. Participás en el sorteo del auto.
         </p>
         <a
           href="/ecodriveplus/club/mi-cuenta"
@@ -218,12 +390,14 @@ export function ClubCTA(props: {
         </a>
         <button
           onClick={() => {
-            setStep("form");
+            setStep("numero");
             setOkResult(null);
             setReserva(null);
             setDni("");
             setNombre("");
             setWhatsapp("");
+            setNumeroElegido(null);
+            void cargarOcupados();
           }}
           className="mt-4 w-full bg-white/5 hover:bg-white/10 text-gray-300 py-2 rounded-lg text-sm transition"
         >
@@ -239,7 +413,7 @@ export function ClubCTA(props: {
         <h2 className="text-xl font-bold text-red-300 mb-3">⚠️ {errorMsg}</h2>
         <button
           onClick={() => {
-            setStep(reserva ? "metodo" : "form");
+            setStep(reserva ? "metodo" : "numero");
             setErrorMsg("");
           }}
           className="bg-[#E1811B] text-black px-6 py-2 rounded-lg font-bold"
@@ -250,16 +424,29 @@ export function ClubCTA(props: {
     );
   }
 
+  // ---- Pantalla 2: datos (form) ----
   return (
     <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-      <div className="mb-5">
+      <div className="flex items-center justify-between mb-4 bg-[#E1811B]/10 border border-[#E1811B]/30 rounded-xl px-4 py-3">
+        <div>
+          <div className="text-[11px] text-gray-400">TU NÚMERO</div>
+          <div className="eco-display text-2xl text-[#E1811B]">
+            #{numeroElegido != null ? String(numeroElegido).padStart(4, "0") : "----"}
+          </div>
+        </div>
+        <button
+          onClick={() => setStep("numero")}
+          className="text-xs text-[#E1811B] hover:text-[#FFA84A] underline"
+        >
+          Cambiar
+        </button>
+      </div>
+
+      <div className="mb-4">
         <div className="flex items-center justify-between mb-2">
           <span className="font-bold text-lg">👑 Membresía Club anual</span>
           <span className="text-xs bg-[#E1811B] text-black px-2 py-1 rounded-full">12 MESES</span>
         </div>
-        <p className="text-sm text-gray-300 mb-3">
-          Participás en <strong>TODOS</strong> los sorteos del año + bonus por lealtad (+1 número por edición consumida, cap 5).
-        </p>
         <p className="text-3xl font-bold">S/.{precio}</p>
       </div>
 
@@ -304,7 +491,7 @@ export function ClubCTA(props: {
         disabled={loading || !dni || !nombre || !whatsapp}
         className="w-full bg-[#E1811B] hover:bg-[#FFA84A] text-black font-bold py-4 rounded-xl disabled:opacity-50 transition"
       >
-        {loading ? "Procesando..." : `Pagar S/.${precio} →`}
+        {loading ? "Procesando..." : `Ir a pagar S/.${precio} →`}
       </button>
       <p className="text-xs text-gray-500 mt-3 text-center">
         💳 Tarjeta o Yape · Pago seguro con Culqi · Sin suscripción

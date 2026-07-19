@@ -127,8 +127,8 @@ async function sellMembership(waId: string, nombre: string | null): Promise<void
   await sendText(
     waId,
     `🎟️ *EcoDrive+ Club — Sorteo del BYD Yuan Pro 2023* 🚗⚡\n\n` +
-      `${saludo}con el *Club Pass (S/ 30)* te llevás *1 número* para el sorteo del auto eléctrico, más los beneficios del Club.\n\n` +
-      `🍀 *El sorteo se realiza apenas se completen los boletos de la edición* — no hay fecha fija: cuando se llena, se sortea ante notario público.\n\n` +
+      `${saludo}con tu *Membresía (S/ 30)* elegís *tu número* y participás del sorteo del auto eléctrico, más los beneficios del Club.\n\n` +
+      `🍀 *El sorteo se realiza apenas se completen todos los números de la edición* — no hay fecha fija: cuando se llena, se sortea ante notario público.\n\n` +
       `Elegí tu número y pagá seguro acá 👇\n${CLUB_URL}\n\n` +
       `Apenas confirmes el pago, te llega tu *boleto oficial (imagen)* por este mismo WhatsApp. 💚`
   );
@@ -149,7 +149,7 @@ async function sendMenuPrincipal(to: string, nombre: string | null): Promise<voi
         buttons: [
           { type: "reply", reply: { id: "soy_pasajero", title: "Pedir un viaje" } },
           { type: "reply", reply: { id: "soy_chofer", title: "Quiero ser chofer" } },
-          { type: "reply", reply: { id: "club_sorteo", title: "🎟️ Sorteo del auto" } },
+          { type: "reply", reply: { id: "club_sorteo", title: "🚗 Gana un auto" } },
         ],
       },
     },
