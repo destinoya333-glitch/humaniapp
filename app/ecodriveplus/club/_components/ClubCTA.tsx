@@ -164,11 +164,10 @@ export function ClubCTA(props: {
         <button
           onClick={() => payWith("yape")}
           disabled={loading || !culqiReady}
-          className="w-full flex items-center justify-center gap-3 bg-[#742284] hover:bg-[#8a2b9e] disabled:opacity-60 text-white font-bold text-lg rounded-2xl py-5 shadow-lg transition"
+          className="w-full flex items-center justify-center gap-3 bg-[#790699] hover:bg-[#8f1cb0] disabled:opacity-60 text-white font-bold text-lg rounded-2xl py-5 shadow-lg transition"
         >
-          <span className="bg-white rounded-lg px-2 py-1 text-[#742284] italic font-extrabold text-sm leading-none">
-            Yape
-          </span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/ecodriveplus/yape-logo.png" alt="Yape" className="h-9 w-auto" />
           {loading ? "Procesando…" : "Pagar con Yape"}
         </button>
 
