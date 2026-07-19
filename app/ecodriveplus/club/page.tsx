@@ -14,7 +14,7 @@ const HERO_IMG = "https://rfpmvnoaqibqiqxrmheb.supabase.co/storage/v1/object/pub
 const LOCAL_HERO = "/ecodriveplus/byd-yuan-pro.jpg";
 
 export const metadata: Metadata = {
-  title: "EcoDrive+ Club — Membresía por sorteo, gana un BYD Yuan Pro 2023",
+  title: "EcoDrive+ Club — Membresía con sorteo de auto, gana un BYD Yuan Pro 2023",
   description:
     "Programa de membresía con bonificación de sorteo. Membresía S/.30 por edición — cada Membresía = 1 número del carro en sorteo. Bonus de lealtad S/.27 si volvés en la siguiente edición.",
   alternates: { canonical: "https://ecodriveplus.com/club" },
@@ -162,7 +162,7 @@ export default async function ClubPage() {
           <div className="lg:col-span-6 relative min-w-0">
             <Reveal as="div" className="flex items-center gap-3 mb-10">
               <span className="h-px w-12 bg-[var(--eco-flame)]" />
-              <span className="eco-mono text-[var(--eco-flame)]">EDICIÓN 001 · MEMBRESÍA POR SORTEO</span>
+              <span className="eco-mono text-[var(--eco-flame)]">EDICIÓN 001 · MEMBRESÍA CON SORTEO DE AUTO</span>
             </Reveal>
 
             <h1 className="eco-display text-[58px] sm:text-[80px] md:text-[104px] xl:text-[128px] text-[var(--eco-ink)]">
@@ -176,9 +176,9 @@ export default async function ClubPage() {
 
             <Reveal delay={0.85} className="mt-10 max-w-md text-[17px] md:text-[18px] text-[var(--eco-ink-soft)] leading-[1.55]">
               <p>
-                <strong className="text-[var(--eco-ink)]">S/.30 por Membresía</strong> = 1 número del sorteo del carro de la edición vigente.
-                Cuando se sortea, abre el siguiente carro con tickets nuevos. Si ya compraste antes,{" "}
-                <strong className="text-[var(--eco-flame)]">tu próxima Membresía cuesta S/.27</strong> (bonus de lealtad).{" "}
+                <strong className="text-[var(--eco-ink)]">Por la suscripción de tu membresía (S/.30)</strong> tienes la opción de elegir un número para el sorteo del auto eléctrico de la edición vigente.
+                Cuando ese auto se sortea, abre la siguiente edición con un carro nuevo.{" "}
+                <strong className="text-[var(--eco-flame)]">Tu próxima membresía, la de la siguiente edición, será de S/.27</strong> (bonus de lealtad).{" "}
                 <strong className="text-[var(--eco-ink)]">Notario público + casino oficial + acta blockchain.</strong>
               </p>
             </Reveal>
@@ -295,7 +295,7 @@ export default async function ClubPage() {
           <div className="grid md:grid-cols-3 gap-8 relative">
             <div aria-hidden className="hidden md:block absolute top-12 left-[8%] right-[8%] h-px bg-gradient-to-r from-transparent via-[var(--eco-flame)] to-transparent opacity-40" />
             {[
-              ["01", "Te haces Miembro", "S/. 30 por Membresía = 1 número del sorteo del carro en la edición vigente. Si adquirís tu Membresía en una edición posterior, S/. 27 (bonus de lealtad)."],
+              ["01", "Te haces Miembro", "Con tu membresía (S/. 30) eliges 1 número para el sorteo del auto de la edición vigente. Tu próxima membresía, en la siguiente edición, te cuesta S/. 27 (bonus de lealtad)."],
               ["02", "Pagas", "Con tarjeta o Yape, seguro con Culqi. Apenas se aprueba el pago tu Membresía queda activada al instante y recibís tu número por WhatsApp."],
               ["03", "Participás todo el año", "En cada edición que se ejecuta durante tu vigencia participás con número(s). Bonus de lealtad +1 por edición consumida (cap 5)."],
             ].map(([code, title, desc], i) => (
