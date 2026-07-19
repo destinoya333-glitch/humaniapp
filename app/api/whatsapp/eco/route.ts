@@ -123,14 +123,44 @@ const CLUB_URL = process.env.ECODRIVE_CLUB_URL || "https://ecodriveplus.com/club
  * se sortea ante notario público.
  */
 async function sellMembership(waId: string, nombre: string | null): Promise<void> {
-  const saludo = nombre ? `${nombre.split(" ")[0]}, ` : "";
+  const primerNombre = nombre ? nombre.split(" ")[0] : null;
+
+  // Progreso en vivo (escasez + prueba social REAL). Si falla, se omite la línea.
+  let progreso = "";
+  try {
+    const { data } = await db().rpc("club_edicion_actual");
+    const ed = Array.isArray(data) ? data[0] : null;
+    const vendidos = Number(ed?.vendidos ?? 0);
+    const meta = Number(ed?.meta ?? 3000);
+    const cierre = `Cuando se completan los *${meta.toLocaleString("es-PE")} números*, se sortea ante *notario público* — no hay fecha fija, puede ser en cualquier momento.`;
+    // Con volumen: mostramos el conteo real (prueba social fuerte).
+    // Con pocos números aún: "sé de los primeros" (evita el negativo "0 de 3000").
+    if (meta > 0) {
+      progreso =
+        vendidos >= 50
+          ? `🔥 Ya van *${vendidos.toLocaleString("es-PE")} de ${meta.toLocaleString("es-PE")}* números tomados. ${cierre}\n\n`
+          : `🔥 La edición recién abrió: sé de los *primeros* en asegurar su número. ${cierre}\n\n`;
+    }
+  } catch {
+    /* sin dato en vivo, el mensaje igual se envía */
+  }
+
+  const abridor = primerNombre
+    ? `*${primerNombre}, tu número para el BYD Yuan Pro 2023 ya te está esperando* 🚗⚡`
+    : `*Tu número para el BYD Yuan Pro 2023 ya te está esperando* 🚗⚡`;
+
   await sendText(
     waId,
-    `🎟️ *EcoDrive+ Club — Sorteo del BYD Yuan Pro 2023* 🚗⚡\n\n` +
-      `${saludo}con tu *Membresía (S/ 30)* elegís *tu número* y participás del sorteo del auto eléctrico, más los beneficios del Club.\n\n` +
-      `🍀 *El sorteo se realiza apenas se completen todos los números de la edición* — no hay fecha fija: cuando se llena, se sortea ante notario público.\n\n` +
-      `Elegí tu número y pagá seguro acá 👇\n${CLUB_URL}\n\n` +
-      `Apenas confirmes el pago, te llega tu *boleto oficial (imagen)* por este mismo WhatsApp. 💚`
+    `🎟️ ${abridor}\n\n` +
+      `Imaginate manejando tu propio SUV eléctrico… y que todo empezó con *un número*.\n\n` +
+      `Es simple:\n` +
+      `1️⃣ Elegís *tu número de la suerte* — tu fecha, tu edad, el que sientas tuyo.\n` +
+      `2️⃣ Pagás seguro con Yape o tarjeta (*S/ 30*).\n` +
+      `3️⃣ Ese número queda *a tu nombre*. Nadie más lo puede tomar.\n\n` +
+      progreso +
+      `Un auto que cuesta una fortuna puede ser tuyo por un solo número. 🔑\n\n` +
+      `👉 Aparta tu número ahora, antes de que otro lo elija:\n${CLUB_URL}\n\n` +
+      `Apenas pagás, te llega tu *boleto oficial* por este mismo chat. 💚`
   );
 }
 
